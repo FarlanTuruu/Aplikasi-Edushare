@@ -2,20 +2,17 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
-import '../controllers/home_controller.dart';
+import '../controllers/list_speech_controller.dart';
 
-class HomeView extends GetView<HomeController> {
-  const HomeView({super.key});
+class ListSpeechView extends GetView<ListSpeechController> {
+  const ListSpeechView({super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('HomeView'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('ListSpeechView'), centerTitle: true),
       body: const Center(
         child: Text(
-          'HomeView is working',
+          'ListSpeechView is working',
           style: TextStyle(fontSize: 20),
         ),
       ),

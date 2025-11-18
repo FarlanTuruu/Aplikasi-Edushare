@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 
-class HomeController extends GetxController {
-  //TODO: Implement HomeController
+class DetailSpeechController extends GetxController {
+  //TODO: Implement DetailSpeechController
 
   final count = 0.obs;
   @override
