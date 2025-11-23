@@ -34,10 +34,10 @@ import '../modules/settings/profile/bindings/profile_settings_binding.dart';
 import '../modules/settings/profile/views/profile_settings_view.dart';
 import '../modules/settings/save_note/bindings/save_notes_binding.dart';
 import '../modules/settings/save_note/views/save_notes_view.dart';
-import '../modules/speech/create/bindings/create_speech_binding.dart';
-import '../modules/speech/create/views/create_speech_view.dart';
-import '../modules/speech/detail/bindings/detail_speech_binding.dart';
-import '../modules/speech/detail/views/detail_speech_view.dart';
+import '../modules/speech/start/bindings/start_speech_binding.dart';
+import '../modules/speech/start/views/start_speech_view.dart';
+import '../modules/speech/upload/bindings/upload_speech_binding.dart';
+import '../modules/speech/upload/views/upload_speech_view.dart';
 import '../modules/speech/list/bindings/list_speech_binding.dart';
 import '../modules/speech/list/views/list_speech_view.dart';
 import '../modules/speech/trash/bindings/trash_speech_binding.dart';
@@ -48,7 +48,7 @@ part 'app_routes.dart';
 class AppPages {
   AppPages._();
 
-  static const INITIAL = Routes.LOGIN;
+  static const INITIAL = Routes.COLLAB_CREATE;
 
   static final routes = [
     // -----------------------
@@ -79,14 +79,14 @@ class AppPages {
       binding: ListSpeechBinding(),
     ),
     GetPage(
-      name: _Paths.SPEECH_CREATE,
-      page: () => const CreateSpeechView(),
-      binding: CreateSpeechBinding(),
+      name: _Paths.SPEECH_START,
+      page: () => const StartSpeechView(),
+      binding: StartSpeechBinding(),
     ),
     GetPage(
-      name: _Paths.SPEECH_DETAIL,
-      page: () => const DetailSpeechView(),
-      binding: DetailSpeechBinding(),
+      name: _Paths.SPEECH_UPLOAD,
+      page: () => const UploadSpeechView(),
+      binding: UploadSpeechBinding(),
     ),
     GetPage(
       name: _Paths.SPEECH_TRASH,
