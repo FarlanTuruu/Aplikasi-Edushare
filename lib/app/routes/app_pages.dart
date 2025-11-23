@@ -6,7 +6,7 @@ import '../modules/auth/forgot_password/views/forgetpassowrd_view.dart';
 import '../modules/auth/login/bindings/login_binding.dart';
 import '../modules/auth/login/views/login_view.dart';
 import '../modules/auth/register/bindings/register_binding.dart';
-import '../modules/auth/register/views/home_view.dart';
+import '../modules/auth/register/views/register_view.dart';
 import '../modules/chat/messages/bindings/messages_binding.dart';
 import '../modules/chat/messages/views/messages_view.dart';
 import '../modules/chat/rooms/bindings/rooms_binding.dart';
@@ -63,7 +63,7 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.FORGOT_PASSWORD,
-      page: () => const ForgetView(),
+      page: () => const ForgetPasswordView(),
       binding: Forgetbinding(),
     ),
 

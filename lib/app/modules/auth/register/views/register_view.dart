@@ -1,11 +1,11 @@
-// File 1: /lib/app/modules/auth/login/views/login_view.dart
+// File 2: /lib/app/modules/auth/register/views/register_view.dart
 import 'package:appedushare/app/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/login_controller.dart';
+import '../controllers/register_controller.dart';
 
-class LoginView extends GetView<LoginController> {
-  const LoginView({super.key});
+class RegisterView extends GetView<RegisterController> {
+  const RegisterView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,28 +19,28 @@ class LoginView extends GetView<LoginController> {
             children: [
               // Logo
               Padding(
-                padding: const EdgeInsets.only(top: 40.0, bottom: 40.0),
+                padding: const EdgeInsets.only(top: 24.0, bottom: 20.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      width: 50,
-                      height: 50,
+                      width: 45,
+                      height: 45,
                       decoration: BoxDecoration(
                         color: const Color(0xFF5B7FFF),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(
                         Icons.bookmark,
                         color: Colors.white,
-                        size: 28,
+                        size: 24,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     const Text(
                       'EduShare',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: Color(0xFF5B7FFF),
                       ),
@@ -49,22 +49,40 @@ class LoginView extends GetView<LoginController> {
                 ),
               ),
 
-              // Welcome Text
-              const Text(
-                'Hi Welcome Back',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
+              // Illustration - You can replace with Image.asset if you have the image
+              Align(
+                alignment: Alignment.center,
+                child: Container(
+                  height: 200,
+                  margin: const EdgeInsets.only(bottom: 24),
+                  child: Image.asset(
+                    'assets/images/welcome_illustration.png',
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const SizedBox.expand(
+                        child: Center(
+                          child: Icon(
+                            Icons.image_not_supported,
+                            size: 60,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Username',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey[600],
+
+              // Welcome Text
+              const Align(
+                alignment: Alignment.center,
+                child: Text(
+                  'Hi Welcome!',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -202,22 +220,99 @@ class LoginView extends GetView<LoginController> {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
-              // Forgot Password
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () => Get.toNamed(Routes.FORGOT_PASSWORD),
-                  child: const Text(
-                    'Forgot Password?',
+              // Confirm Password Field
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Confirm Password',
                     style: TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF5B7FFF),
+                      fontSize: 14,
                       fontWeight: FontWeight.w500,
+                      color: Colors.black,
                     ),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Obx(
+                    () => TextField(
+                      controller: controller.confirmPasswordController,
+                      obscureText: controller.isConfirmPasswordHidden.value,
+                      decoration: InputDecoration(
+                        hintText: 'Confirm Password',
+                        hintStyle: TextStyle(color: Colors.grey[400]),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF5B7FFF),
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            controller.isConfirmPasswordHidden.value
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: Colors.grey[400],
+                          ),
+                          onPressed: controller.toggleConfirmPasswordVisibility,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Fakultas/Prodi Field
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Fakultas/Prodi',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: controller.fakultasProdiController,
+                    decoration: InputDecoration(
+                      hintText: 'Fakultas/Prodi',
+                      hintStyle: TextStyle(color: Colors.grey[400]),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Color(0xFF5B7FFF)),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 24),
 
@@ -244,11 +339,11 @@ class LoginView extends GetView<LoginController> {
               ),
               const SizedBox(height: 24),
 
-              // Login Button
+              // Sign Up Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: controller.login,
+                  onPressed: controller.register,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4A2D7F),
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -257,7 +352,7 @@ class LoginView extends GetView<LoginController> {
                     ),
                   ),
                   child: const Text(
-                    'LOG IN',
+                    'SIGN UP',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -267,21 +362,21 @@ class LoginView extends GetView<LoginController> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
-              // Sign Up Link
+              // Login Link
               Align(
                 alignment: Alignment.center,
                 child: RichText(
                   text: TextSpan(
-                    text: "Don't have an account yet? ",
+                    text: 'Already have an account? ',
                     style: TextStyle(fontSize: 13, color: Colors.grey[700]),
                     children: [
                       WidgetSpan(
                         child: GestureDetector(
-                          onTap: () => Get.toNamed(Routes.REGISTER),
+                          onTap: () => Get.toNamed(Routes.LOGIN),
                           child: const Text(
-                            'Register here!!!',
+                            'Login here!!!',
                             style: TextStyle(
                               fontSize: 13,
                               color: Color(0xFFE74C3C),
