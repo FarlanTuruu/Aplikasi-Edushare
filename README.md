@@ -1,17 +1,48 @@
-# appedushare
+# 📚 Edushare
 
-A new Flutter project.
+Edushare adalah sebuah aplikasi berbasis Flutter yang digunakan oleh mahasiswa untuk berbagi catatan mata kuliah. Aplikasi ini dikembangkan menggunakan state management **GetX** dan struktur pengembangan **GetCLI**.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 📝 Deskripsi Aplikasi
+Aplikasi **Edushare** memungkinkan mahasiswa untuk:
+- Mengunggah dan berbagi catatan materi perkuliahan
+- Melakukan kolaborasi catatan
+- Menggunakan fitur Speech-to-Text untuk mencatat lebih cepat
+- Berkomunikasi melalui chat mahasiswa
 
-A few resources to get you started if this is your first Flutter project:
+Aplikasi ini dibuat sebagai bentuk kolaborasi tim dalam mata kuliah Rekayasa Perangkat Lunak.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+---
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-"# Aplikasi-Edushare" 
+## 👨‍💻 Tim Pengembang
+
+| Nama | NIM | Kelas |
+|------|------|-------|
+| **Tegar Putra Gaori** | 202210370311106 | C |
+| **Nanda Adela Larasati Kuncoro** | 202210370311080 | C |
+| **Muh Farlan** | 202210370311106 | C |
+
+---
+
+## 🎨 Figma Low/High Fidelity
+Link desain prototipe:
+🔗 https://www.figma.com/design/na1EaLJPPvhmvXlhZuR5YP/Desain-RI--2022-076--2022-080--2022-106-?node-id=8-2&t=XFGsTS0BRs7ZQsv0-1
+
+---
+
+## 🗂 Pembagian Tugas
+
+| Anggota | Tugas |
+|---------|--------|
+| **Tegar Putra Gaori** | Notes, Settings |
+| **Nanda Adela Larasati Kuncoro** | Page Speech, Page Chat |
+| **Muh Farlan** | Page Collaboration, Page Auth (Login, Register, Reset Password) |
+
+---
+
+## 🛠 Teknologi yang Digunakan
+- **Flutter**
+- **Dart**
+- **GetX State Management**
+- **GetCLI Project Structure**
