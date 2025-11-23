@@ -13,15 +13,7 @@ class ListCollaborationController extends GetxController {
     loadCollaborations();
   }
 
-  @override
-  void onReady() {
-    super.onReady();
-  }
 
-  @override
-  void onClose() {
-    super.onClose();
-  }
 
   // ============= DATA METHODS =============
 

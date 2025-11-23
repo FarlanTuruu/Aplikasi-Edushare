@@ -1,23 +1,21 @@
 import 'package:get/get.dart';
+import '../../list/controllers/list_speech_controller.dart';
 
 class TrashSpeechController extends GetxController {
-  //TODO: Implement TrashSpeechController
+  final listController = Get.find<ListSpeechController>();
 
-  final count = 0.obs;
-  @override
-  void onInit() {
-    super.onInit();
+  RxList<Recording> get trashRecordings =>
+      listController.recordings.where((r) => r.isTrash).toList().obs;
+
+  void restoreRecording(Recording rec) {
+    final idx = listController.recordings.indexOf(rec);
+    if (idx != -1) {
+      listController.recordings[idx] = rec.copyWith(isTrash: false);
+      listController.recordings.refresh();
+    }
   }
 
-  @override
-  void onReady() {
-    super.onReady();
+  void deletePermanently(Recording rec) {
+    listController.recordings.remove(rec);
   }
-
-  @override
-  void onClose() {
-    super.onClose();
-  }
-
-  void increment() => count.value++;
 }
