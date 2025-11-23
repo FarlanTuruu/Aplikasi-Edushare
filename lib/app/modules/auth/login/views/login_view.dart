@@ -248,7 +248,7 @@ class LoginView extends GetView<LoginController> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: controller.login,
+                  onPressed: () => Get.toNamed(Routes.HOMEPAGE),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4A2D7F),
                     padding: const EdgeInsets.symmetric(vertical: 14),

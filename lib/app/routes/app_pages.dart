@@ -1,4 +1,5 @@
 // File: app_pages.dart
+import 'package:appedushare/app/modules/homepage/views/homepage_view.dart';
 import 'package:get/get.dart';
 
 import '../modules/auth/forgot_password/bindings/forgetpassword_binding.dart';
@@ -17,6 +18,8 @@ import '../modules/collaboration/detail/bindings/detail_collaboration_binding.da
 import '../modules/collaboration/detail/views/detail_collaboration_view.dart';
 import '../modules/collaboration/list/bindings/list_collaboration_binding.dart';
 import '../modules/collaboration/list/views/list_collaboration_view.dart';
+import '../modules/homepage/bindings/homepage_binding.dart';
+import '../modules/homepage/views/detailmateri_view.dart';
 import '../modules/notes/archived/bindings/archive_notes_binding.dart';
 import '../modules/notes/archived/views/archive_notes_view.dart';
 import '../modules/notes/create/bindings/create_notes_binding.dart';
@@ -165,6 +168,20 @@ class AppPages {
       name: _Paths.SAVE_NOTE,
       page: () => const SaveNotesView(),
       binding: SaveNotesBinding(),
+    ),
+
+    // -----------------------
+    // HOMEPAGE
+    // -----------------------
+    GetPage(
+      name: _Paths.HOMEPAGE,
+      page: () => const HomepageView(),
+      binding: HomepageBinding(),
+    ),
+    GetPage(
+      name: _Paths.HOMEPAGE_DETAIL,
+      page: () => DetailMateriView(data: Get.arguments),
+      binding: HomepageBinding(),
     ),
   ];
 }

@@ -9,6 +9,10 @@ abstract class Routes {
   static const REGISTER = _Paths.REGISTER;
   static const FORGOT_PASSWORD = _Paths.FORGOT_PASSWORD;
 
+  // HOMEPAGE
+  static const HOMEPAGE = _Paths.HOMEPAGE;
+  static const HOMEPAGE_DETAIL = _Paths.HOMEPAGE_DETAIL;
+
   // SPEECH
   static const SPEECH_LIST = _Paths.SPEECH_LIST;
   static const SPEECH_CREATE = _Paths.SPEECH_CREATE;
@@ -43,6 +47,10 @@ abstract class _Paths {
   static const LOGIN = '/login';
   static const REGISTER = '/register';
   static const FORGOT_PASSWORD = '/forgot-password';
+
+  // HOMEPAGE
+  static const HOMEPAGE = '/homepage';
+  static const HOMEPAGE_DETAIL = '/detail-materi';
 
   // SPEECH
   static const SPEECH_LIST = '/speech/list';

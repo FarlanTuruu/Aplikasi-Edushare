@@ -17,24 +17,29 @@ class CreateCollaborationController extends GetxController {
   }
 
   void submitCollaboration() {
-    final mataKuliah = mataKuliahController.text;
-    final judulCatatan = judulCatatanController.text;
-    final deskripsi = deskripsiController.text;
-    final linkDocs = linkDocsController.text;
-
-    if (mataKuliah.isEmpty ||
-        judulCatatan.isEmpty ||
-        deskripsi.isEmpty ||
-        linkDocs.isEmpty) {
-      Get.snackbar('Error', 'Please fill all fields');
+    if (mataKuliahController.text.isEmpty ||
+        judulCatatanController.text.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Harap isi semua field',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
       return;
     }
-
-    // TODO: Implement submission logic
-    Get.snackbar('Success', 'Collaboration created successfully');
+    // TODO: Implement logic simpan data
+    Get.back(); // Kembali ke halaman sebelumnya
+    Get.snackbar(
+      'Sukses',
+      'Catatan berhasil dibuat',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.green,
+      colorText: Colors.white,
+    );
   }
 
-  void uploadFile() {
-    submitCollaboration();
+  void goBack() {
+    Get.back();
   }
 }
