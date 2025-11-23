@@ -12,15 +12,7 @@ class LoginController extends GetxController {
   final isPasswordHidden = true.obs;
   final isLoading = false.obs;
 
-  @override
-  void onInit() {
-    super.onInit();
-  }
 
-  @override
-  void onReady() {
-    super.onReady();
-  }
 
   @override
   void onClose() {

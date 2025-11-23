@@ -9,10 +9,14 @@ abstract class Routes {
   static const REGISTER = _Paths.REGISTER;
   static const FORGOT_PASSWORD = _Paths.FORGOT_PASSWORD;
 
+  // HOMEPAGE
+  static const HOMEPAGE = _Paths.HOMEPAGE;
+  static const HOMEPAGE_DETAIL = _Paths.HOMEPAGE_DETAIL;
+
   // SPEECH
   static const SPEECH_LIST = _Paths.SPEECH_LIST;
-  static const SPEECH_CREATE = _Paths.SPEECH_CREATE;
-  static const SPEECH_DETAIL = _Paths.SPEECH_DETAIL;
+  static const SPEECH_START = _Paths.SPEECH_START; 
+  static const SPEECH_UPLOAD = _Paths.SPEECH_UPLOAD;
   static const SPEECH_TRASH = _Paths.SPEECH_TRASH;
 
   // NOTES
@@ -44,10 +48,14 @@ abstract class _Paths {
   static const REGISTER = '/register';
   static const FORGOT_PASSWORD = '/forgot-password';
 
+  // HOMEPAGE
+  static const HOMEPAGE = '/homepage';
+  static const HOMEPAGE_DETAIL = '/detail-materi';
+
   // SPEECH
   static const SPEECH_LIST = '/speech/list';
-  static const SPEECH_CREATE = '/speech/create';
-  static const SPEECH_DETAIL = '/speech/detail';
+  static const SPEECH_START = '/speech/start';
+  static const SPEECH_UPLOAD = '/speech/upload';
   static const SPEECH_TRASH = '/speech/trash';
 
   // NOTES

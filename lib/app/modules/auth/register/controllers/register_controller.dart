@@ -15,15 +15,7 @@ class RegisterController extends GetxController {
   final isConfirmPasswordHidden = true.obs;
   final isLoading = false.obs;
 
-  @override
-  void onInit() {
-    super.onInit();
-  }
 
-  @override
-  void onReady() {
-    super.onReady();
-  }
 
   @override
   void onClose() {

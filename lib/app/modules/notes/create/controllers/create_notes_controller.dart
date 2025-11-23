@@ -19,10 +19,6 @@ class CreateNotesController extends GetxController {
 
   @override
   void onClose() {
-    mataKuliahController.dispose();
-    judulCatatanController.dispose();
-    tanggalController.dispose();
-    deskripsiController.dispose();
     super.onClose();
   }
 

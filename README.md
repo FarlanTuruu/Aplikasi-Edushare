@@ -37,7 +37,7 @@ Link desain prototipe:
 |---------|--------|
 | **Tegar Putra Gaori** | Notes, Settings |
 | **Nanda Adela Larasati Kuncoro** | Page Speech, Page Chat |
-| **Muh Farlan** | Page Collaboration, Page Auth (Login, Register, Reset Password) |
+| **Muh Farlan** | Page Collaboration, Page Auth (Login, Register, Reset Password), Homepage |
 
 ---
 
