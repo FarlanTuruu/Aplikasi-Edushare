@@ -11,7 +11,7 @@ Aplikasi **Edushare** memungkinkan mahasiswa untuk:
 - Menggunakan fitur Speech-to-Text untuk mencatat lebih cepat
 - Berkomunikasi melalui chat mahasiswa
 
-Aplikasi ini dibuat sebagai bentuk kolaborasi tim dalam mata kuliah Rekayasa Perangkat Lunak.
+Aplikasi ini dibuat sebagai bentuk kolaborasi tim dalam mata kuliah Rekayasa Interaksi.
 
 ---
 
