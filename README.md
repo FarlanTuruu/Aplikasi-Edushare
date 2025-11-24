@@ -17,11 +17,11 @@ Aplikasi ini dibuat sebagai bentuk kolaborasi tim dalam mata kuliah Rekayasa Int
 
 ## 👨‍💻 Tim Pengembang
 
-| Nama | NIM | Kelas |
-|------|------|-------|
-| **Tegar Putra Gaori** | 202210370311106 | C |
-| **Nanda Adela Larasati Kuncoro** | 202210370311080 | C |
-| **Muh Farlan** | 202210370311106 | C |
+| Nama | NIM | Kelas | Alias |
+|------|------|-------|-------|
+| **Tegar Putra Gaori** | 202210370311106 | C | Tegar 04 |
+| **Nanda Adela Larasati Kuncoro** | 202210370311080 | C | GlooMy03 |
+| **Muh Farlan** | 202210370311106 | C | FarlanTuruu |
 
 ---
 
