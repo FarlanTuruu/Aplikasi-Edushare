@@ -1,124 +1,105 @@
-// ==================== VIEW ====================
-// File: create_notes_view.dart
+// File: /lib/app/modules/notes/create/views/create_notes_view.dart
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import '../controllers/create_notes_controller.dart';
 
 class CreateNotesView extends GetView<CreateNotesController> {
-  const CreateNotesView({Key? key}) : super(key: key);
+  const CreateNotesView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isTablet = size.width > 600;
+
     return Scaffold(
       backgroundColor: const Color(0xFF6B2C91),
       body: SafeArea(
         child: Column(
           children: [
-            // Header
-            _buildHeader(),
-
-            // Main Content Card
+            _buildHeader(context, isTablet),
             Expanded(
               child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(50),
-                    topRight: Radius.circular(50),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.white,
+                      const Color(0xFFE8D5F0).withOpacity(0.3),
+                    ],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(40),
+                    topRight: Radius.circular(40),
                   ),
                 ),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 30),
-
-                    // Tab Bar
-                    _buildTabBar(),
-
-                    const SizedBox(height: 30),
-
-                    // Form Container
-                    Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 20),
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE8D4F0),
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // User Info
-                              _buildUserInfo(),
-
-                              const SizedBox(height: 20),
-
-                              // Title
-                              const Text(
-                                'Bagikan Catatan Atau Materi',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-
-                              const SizedBox(height: 20),
-
-                              // Form Fields
-                              _buildFormFields(),
-
-                              const SizedBox(height: 30),
-
-                              // Action Buttons
-                              _buildActionButtons(),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Bottom Navigation
-                    _buildBottomNavigation(),
-                  ],
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.only(
+                    left: isTablet ? 30 : 20,
+                    right: isTablet ? 30 : 20,
+                    bottom: 30,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 24),
+                      _buildNavigationMenu(isTablet),
+                      const SizedBox(height: 20),
+                      _buildProfileCard(isTablet),
+                      const SizedBox(height: 24),
+                      _buildForm(isTablet),
+                    ],
+                  ),
                 ),
               ),
             ),
+            _buildBottomNavigation(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  // ============================================================
+  // TOP NAVBAR
+  // ============================================================
+  Widget _buildHeader(BuildContext context, bool isTablet) {
     return Padding(
-      padding: const EdgeInsets.all(20.0),
+      padding: EdgeInsets.symmetric(
+        horizontal: isTablet ? 40 : 20,
+        vertical: isTablet ? 20 : 16,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
+          Text(
             'Add Note',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 24,
+              fontSize: isTablet ? 28 : 24,
               fontWeight: FontWeight.bold,
             ),
           ),
           Row(
             children: [
               CircleAvatar(
-                radius: 20,
+                radius: isTablet ? 24 : 20,
                 backgroundColor: Colors.white,
-                child: Image.network(
-                  'https://via.placeholder.com/40',
-                  fit: BoxFit.cover,
+                backgroundImage: const NetworkImage(
+                  'https://i.pravatar.cc/150?img=5',
                 ),
               ),
-              const SizedBox(width: 12),
-              const Icon(Icons.settings, color: Colors.white, size: 28),
+              SizedBox(width: isTablet ? 16 : 12),
+              InkWell(
+                onTap: () {},
+                child: Icon(
+                  Icons.settings,
+                  color: Colors.white,
+                  size: isTablet ? 32 : 28,
+                ),
+              ),
             ],
           ),
         ],
@@ -126,294 +107,431 @@ class CreateNotesView extends GetView<CreateNotesController> {
     );
   }
 
-  Widget _buildTabBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
+  // ============================================================
+  // NAVIGATION MENU
+  // ============================================================
+  Widget _buildNavigationMenu(bool isTablet) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        _menuButton('List', false, () => Get.toNamed('/notes/list'), isTablet),
+        _menuButton(
+          'Draft',
+          false,
+          () => Get.toNamed('/notes/draft'),
+          isTablet,
+        ),
+        _menuButton(
+          'Archived',
+          false,
+          () => Get.toNamed('/notes/archived'),
+          isTablet,
+        ),
+        _menuButton(
+          'Scheduled',
+          false,
+          () => Get.toNamed('/notes/scheduled'),
+          isTablet,
+        ),
+      ],
+    );
+  }
+
+  Widget _menuButton(
+    String text,
+    bool active,
+    VoidCallback action,
+    bool isTablet,
+  ) {
+    return GestureDetector(
+      onTap: action,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: isTablet ? 24 : 18,
+          vertical: isTablet ? 10 : 8,
+        ),
+        decoration: BoxDecoration(
+          color: active ? const Color(0xFF6B2C91) : Colors.white,
+          borderRadius: BorderRadius.circular(25),
+          border: Border.all(
+            color: active ? const Color(0xFF6B2C91) : Colors.black,
+            width: 1.5,
+          ),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: isTablet ? 16 : 14,
+            fontWeight: FontWeight.w500,
+            color: active ? Colors.white : Colors.black,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // PROFILE CARD
+  // ============================================================
+  Widget _buildProfileCard(bool isTablet) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(isTablet ? 20 : 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8D5F0).withOpacity(0.6),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildTabButton('Draft', 0),
-          const SizedBox(width: 12),
-          _buildTabButton('Archived', 1),
-          const SizedBox(width: 12),
-          _buildTabButton('Scheduled', 2),
+          Row(
+            children: [
+              CircleAvatar(
+                radius: isTablet ? 30 : 25,
+                backgroundColor: Colors.white,
+                backgroundImage: const NetworkImage(
+                  'https://i.pravatar.cc/150?img=5',
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Nanda Adela',
+                    style: TextStyle(
+                      fontSize: isTablet ? 18 : 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Online',
+                    style: TextStyle(
+                      fontSize: isTablet ? 14 : 12,
+                      color: Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Bagikan Catatan Atau Materi',
+            style: TextStyle(
+              fontSize: isTablet ? 20 : 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildTabButton(String text, int index) {
-    return Obx(() {
-      bool isSelected = controller.selectedTab.value == index;
-      return GestureDetector(
-        onTap: () => controller.changeTab(index),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.black : Colors.transparent,
-            border: Border.all(color: Colors.black, width: 1),
-            borderRadius: BorderRadius.circular(25),
-          ),
-          child: Text(
-            text,
-            style: TextStyle(
-              color: isSelected ? Colors.white : Colors.black,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      );
-    });
-  }
-
-  Widget _buildUserInfo() {
-    return Row(
-      children: [
-        CircleAvatar(
-          radius: 25,
-          backgroundColor: Colors.white,
-          child: Image.network(
-            'https://via.placeholder.com/50',
-            fit: BoxFit.cover,
-          ),
-        ),
-        const SizedBox(width: 12),
-        const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Nanda Adela',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              'Online',
-              style: TextStyle(fontSize: 12, color: Colors.black54),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFormFields() {
+  // ============================================================
+  // FORM
+  // ============================================================
+  Widget _buildForm(bool isTablet) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Mata Kuliah
-        _buildLabel('Mata Kuliah'),
-        _buildTextField(controller.mataKuliahController, 'Enter Input'),
-
-        const SizedBox(height: 16),
-
-        // Judul Catatan
-        _buildLabel('Judul Catatan'),
-        _buildTextField(controller.judulCatatanController, 'Enter Input'),
-
-        const SizedBox(height: 16),
-
-        // Tanggal
-        _buildLabel('Tanggal'),
-        _buildTextField(controller.tanggalController, 'Enter Input'),
-
-        const SizedBox(height: 16),
-
-        // Deskripsi
-        _buildLabel('Deskripsi'),
-        _buildTextField(
-          controller.deskripsiController,
-          'Enter Input',
-          maxLines: 3,
-        ),
-
-        const SizedBox(height: 16),
-
-        // Upload File
-        _buildFileUpload(),
+        _field("Mata Kuliah", controller.mataKuliahController),
+        _field("Judul Catatan", controller.judulController),
+        _dateField("Tanggal", controller.tanggalController),
+        _field("Deskripsi", controller.deskripsiController, maxLines: 4),
+        const SizedBox(height: 10),
+        _uploadFileSection(),
+        const SizedBox(height: 30),
+        _actionButtons(),
       ],
     );
   }
 
-  Widget _buildLabel(String text) {
+  Widget _field(String label, TextEditingController c, {int maxLines = 1}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        text,
-        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.black, width: 1.5),
+            ),
+            child: TextField(
+              controller: c,
+              maxLines: maxLines,
+              style: const TextStyle(fontSize: 14),
+              decoration: const InputDecoration(
+                hintText: "Enter Input",
+                hintStyle: TextStyle(color: Colors.grey),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildTextField(
-    TextEditingController textController,
-    String hint, {
-    int maxLines = 1,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: TextField(
-        controller: textController,
-        maxLines: maxLines,
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: const TextStyle(color: Colors.black38, fontSize: 14),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide.none,
+  // 🔧 FIX UTAMA: Ganti dengan TextField + readOnly
+  Widget _dateField(String label, TextEditingController c) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: Colors.black87,
+            ),
           ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.black, width: 1.5),
+            ),
+            child: TextField(
+              controller: c,
+              readOnly: true, // ✅ Penting! Cegah keyboard muncul
+              onTap: controller.selectDate,
+              style: const TextStyle(fontSize: 14),
+              decoration: const InputDecoration(
+                hintText: "Enter Input",
+                hintStyle: TextStyle(color: Colors.grey),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(vertical: 12),
+                suffixIcon: Icon(
+                  Icons.calendar_today,
+                  color: Colors.grey,
+                  size: 20,
+                ),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildFileUpload() {
+  Widget _uploadFileSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Unggah File',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          "Unggah File",
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            color: Colors.black87,
+          ),
         ),
         const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: Container(
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Center(
-                  child: Obx(
-                    () => Text(
-                      controller.selectedFileName.value,
-                      style: const TextStyle(
-                        color: Colors.black54,
-                        fontSize: 14,
-                      ),
+        Container(
+          height: 55,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.black, width: 1.5),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Obx(
+                  () => Text(
+                    controller.selectedFileName.value.isEmpty
+                        ? "Enter Input"
+                        : controller.selectedFileName.value,
+                    style: TextStyle(
+                      color: controller.selectedFileName.value.isEmpty
+                          ? Colors.grey
+                          : Colors.black,
+                      fontSize: 14,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: controller.pickFile,
-              child: Container(
-                height: 40,
-                width: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: controller.pickFile,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6B2C91),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.upload_file,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
-                child: const Icon(Icons.upload_file, color: Colors.black87),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _actionButtons() {
+    return Obx(
+      () => Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          TextButton(
+            onPressed: controller.isLoading.value
+                ? null
+                : controller.cancelNote,
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
+            child: const Text(
+              "Batal",
+              style: TextStyle(
+                color: Colors.black54,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
               ),
             ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildActionButton('Batal', false, controller.cancel),
-        const SizedBox(width: 12),
-        _buildActionButton('Draft', false, controller.saveDraft),
-        const SizedBox(width: 12),
-        _buildActionButton('Unggah', true, controller.upload),
-      ],
-    );
-  }
-
-  Widget _buildActionButton(
-    String text,
-    bool isUnggah,
-    VoidCallback onPressed,
-  ) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isUnggah ? const Color(0xFF6B2C91) : Colors.white,
-        foregroundColor: isUnggah ? Colors.white : Colors.black,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(25),
-          side: const BorderSide(color: Colors.black, width: 1),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: controller.isLoading.value
+                ? null
+                : controller.saveAsDraft,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF6B2C91),
+              side: const BorderSide(color: Colors.black, width: 1.5),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(25),
+              ),
+            ),
+            child: controller.isLoading.value
+                ? const SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text(
+                    "Draft",
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  ),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: controller.isLoading.value
+                ? null
+                : controller.uploadNote,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6B2C91),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(25),
+              ),
+            ),
+            child: controller.isLoading.value
+                ? const SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text(
+                    "Unggah",
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  ),
+          ),
+        ],
       ),
-      child: Text(text),
     );
   }
 
+  // ============================================================
+  // BOTTOM NAVBAR
+  // ============================================================
   Widget _buildBottomNavigation() {
     return Container(
       height: 70,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black12,
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 10,
-            offset: Offset(0, -2),
+            offset: const Offset(0, -2),
           ),
         ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem(Icons.home_outlined, false),
-          _buildNavItem(Icons.chat_bubble_outline, true),
-          _buildNavItem(Icons.add_circle, false, isMain: true),
-          _buildNavItem(Icons.mic_none, false),
+          _bottomItem(
+            Icons.home_outlined,
+            false,
+            () => Get.toNamed('/homepage'),
+          ),
+          _bottomItem(
+            Icons.chat_bubble_outline,
+            false,
+            () => Get.toNamed('/chat/rooms'),
+          ),
+          _bottomItem(Icons.add_circle, true, () {}),
+          _bottomItem(
+            Icons.mic_outlined,
+            false,
+            () => Get.toNamed('/speech/list'),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem(
-    IconData icon,
-    bool hasNotification, {
-    bool isMain = false,
-  }) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: isMain ? const Color(0xFF6B2C91) : Colors.transparent,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            icon,
-            size: 30,
-            color: isMain ? Colors.white : Colors.black,
-          ),
+  Widget _bottomItem(IconData i, bool active, VoidCallback a) {
+    return InkWell(
+      onTap: a,
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          color: active ? const Color(0xFF6B2C91) : Colors.transparent,
+          shape: BoxShape.circle,
         ),
-        if (hasNotification)
-          Positioned(
-            right: 8,
-            top: 8,
-            child: Container(
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-      ],
+        child: Center(
+          child: Icon(i, color: active ? Colors.white : Colors.black, size: 30),
+        ),
+      ),
     );
   }
 }

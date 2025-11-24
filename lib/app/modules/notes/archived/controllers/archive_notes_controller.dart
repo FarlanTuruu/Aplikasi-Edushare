@@ -1,11 +1,7 @@
+// ============================================================
+// File 5: archive_notes_controller.dart
+// ============================================================
+
 import 'package:get/get.dart';
 
-class ArchiveNotesController extends GetxController {
-  //TODO: Implement ArchiveNotesController
-
-  final count = 0.obs;
-
-
-
-  void increment() => count.value++;
-}
+class ArchiveNotesController extends GetxController {}
