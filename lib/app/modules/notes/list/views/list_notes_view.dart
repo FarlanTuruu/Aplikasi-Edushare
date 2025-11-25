@@ -1,12 +1,7 @@
-// ============================================================
-// File: list_notes_view.dart (FIXED - Navigation Highlight)
-// ============================================================
-
 import 'package:appedushare/app/models/note_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/list_notes_controller.dart';
-// import 'package:appedushare/app/routes/app_pages.dart';
 
 class ListNotesView extends GetView<ListNotesController> {
   const ListNotesView({super.key});
@@ -77,7 +72,8 @@ class ListNotesView extends GetView<ListNotesController> {
                           );
                         }
 
-                        if (controller.notesList.isEmpty) {
+                        // 🔧 FIX: Gunakan filteredNotesList untuk check empty
+                        if (controller.filteredNotesList.isEmpty) {
                           return _buildEmptyState(isTablet);
                         }
 
@@ -278,16 +274,20 @@ class ListNotesView extends GetView<ListNotesController> {
   }
 
   Widget _buildNotesList(bool isTablet) {
-    return ListView.builder(
-      padding: EdgeInsets.symmetric(
-        horizontal: isTablet ? 24 : 20,
-        vertical: isTablet ? 16 : 12,
+    return RefreshIndicator(
+      onRefresh: controller.refreshNotes,
+      color: const Color(0xFF6B2C91),
+      child: ListView.builder(
+        padding: EdgeInsets.symmetric(
+          horizontal: isTablet ? 24 : 20,
+          vertical: isTablet ? 16 : 12,
+        ),
+        itemCount: controller.filteredNotesList.length,
+        itemBuilder: (context, index) {
+          final note = controller.filteredNotesList[index];
+          return _buildNoteCard(note, isTablet);
+        },
       ),
-      itemCount: controller.filteredNotesList.length,
-      itemBuilder: (context, index) {
-        final note = controller.filteredNotesList[index];
-        return _buildNoteCard(note, isTablet);
-      },
     );
   }
 
@@ -480,7 +480,6 @@ class ListNotesView extends GetView<ListNotesController> {
           _buildBottomNavItem(Icons.chat_bubble_outline, false, () {
             Get.toNamed('/chat/rooms');
           }),
-          // FIXED: Changed isActive from false to true for Add button
           _buildBottomNavItem(Icons.add_circle, true, () {
             Get.toNamed('/notes/create');
           }),

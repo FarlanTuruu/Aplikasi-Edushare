@@ -1,6 +1,3 @@
-// File 2: FIXED list_notes_controller.dart
-// ============================================================
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../services/notes_service.dart';
@@ -10,7 +7,7 @@ import '../../../../routes/app_pages.dart';
 class ListNotesController extends GetxController {
   final notesService = Get.find<NotesService>();
 
-  final notesList = <NoteModel>[].obs;
+  // 🔧 FIX: Hapus notesList terpisah, langsung gunakan service
   final filteredNotesList = <NoteModel>[].obs;
   final isLoading = false.obs;
   final searchController = TextEditingController();
@@ -19,15 +16,14 @@ class ListNotesController extends GetxController {
   void onInit() {
     super.onInit();
 
-    // 🔧 Bind langsung dengan service
-    notesList.bindStream(notesService.allNotes.stream);
-
-    // Update filtered setiap notesList berubah
-    ever<List<NoteModel>>(notesList, (_) {
-      filteredNotesList.value = notesList.toList();
+    // 🔧 FIX: Listen langsung ke allNotes dari service
+    ever(notesService.allNotes, (List<NoteModel> notes) {
+      filteredNotesList.value = notes.toList();
+      print('✅ List updated: ${notes.length} notes');
     });
 
-    // 🔧 HAPUS BAGIAN ARGUMENTS - sudah tidak perlu
+    // 🔧 FIX: Set initial value
+    filteredNotesList.value = notesService.allNotes.toList();
   }
 
   @override
@@ -38,12 +34,13 @@ class ListNotesController extends GetxController {
 
   void searchNotes(String query) {
     if (query.trim().isEmpty) {
-      filteredNotesList.value = notesList.toList();
+      // 🔧 FIX: Ambil dari service, bukan notesList lokal
+      filteredNotesList.value = notesService.allNotes.toList();
       return;
     }
 
     final q = query.toLowerCase();
-    filteredNotesList.value = notesList.where((note) {
+    filteredNotesList.value = notesService.allNotes.where((note) {
       return note.title.toLowerCase().contains(q) ||
           note.mataKuliah.toLowerCase().contains(q) ||
           note.description.toLowerCase().contains(q);
@@ -121,7 +118,8 @@ class ListNotesController extends GetxController {
   }
 
   void editNote(String noteId) {
-    final note = notesList.firstWhere((n) => n.id == noteId);
+    // 🔧 FIX: Cari di service.allNotes
+    final note = notesService.allNotes.firstWhere((n) => n.id == noteId);
     Get.toNamed(Routes.NOTE_CREATE, arguments: note.toMap());
   }
 
@@ -147,6 +145,10 @@ class ListNotesController extends GetxController {
   }
 
   Future<void> refreshNotes() async {
-    filteredNotesList.value = notesList.toList();
+    // 🔧 FIX: Refresh dari service
+    filteredNotesList.value = notesService.allNotes.toList();
   }
+
+  // 🔧 FIX: Getter untuk backward compatibility dengan view
+  List<NoteModel> get notesList => notesService.allNotes;
 }
