@@ -15,7 +15,7 @@ abstract class Routes {
 
   // SPEECH
   static const SPEECH_LIST = _Paths.SPEECH_LIST;
-  static const SPEECH_START = _Paths.SPEECH_START; 
+  static const SPEECH_START = _Paths.SPEECH_START;
   static const SPEECH_UPLOAD = _Paths.SPEECH_UPLOAD;
   static const SPEECH_TRASH = _Paths.SPEECH_TRASH;
 
@@ -37,6 +37,7 @@ abstract class Routes {
 
   // SETTINGS
   static const PROFILE = _Paths.PROFILE;
+  static const EDIT_PROFILE = _Paths.EDIT_PROFILE;
   static const SAVE_NOTE = _Paths.SAVE_NOTE;
 }
 
@@ -76,5 +77,6 @@ abstract class _Paths {
 
   // SETTINGS
   static const PROFILE = '/settings/profile';
+  static const EDIT_PROFILE = '/settings/edit_profile';
   static const SAVE_NOTE = '/settings/save-note';
 }

@@ -1,5 +1,6 @@
 // File: app_pages.dart
 import 'package:appedushare/app/modules/homepage/views/homepage_view.dart';
+import 'package:appedushare/app/modules/settings/profile/bindings/edit_profile_binding.dart';
 import 'package:get/get.dart';
 
 import '../modules/auth/forgot_password/bindings/forgetpassword_binding.dart';
@@ -31,6 +32,7 @@ import '../modules/notes/list/views/list_notes_view.dart';
 import '../modules/notes/scheduled/bindings/scheduled_notes_binding.dart';
 import '../modules/notes/scheduled/views/scheduled_notes_view.dart';
 import '../modules/settings/profile/bindings/profile_settings_binding.dart';
+import '../modules/settings/profile/views/edit_profile_view.dart';
 import '../modules/settings/profile/views/profile_settings_view.dart';
 import '../modules/settings/save_note/bindings/save_notes_binding.dart';
 import '../modules/settings/save_note/views/save_notes_view.dart';
@@ -48,7 +50,7 @@ part 'app_routes.dart';
 class AppPages {
   AppPages._();
 
-  static const INITIAL = Routes.LOGIN;
+  static const INITIAL = Routes.PROFILE;
 
   static final routes = [
     // -----------------------
@@ -163,6 +165,11 @@ class AppPages {
       name: _Paths.PROFILE,
       page: () => const ProfileSettingsView(),
       binding: ProfileSettingsBinding(),
+    ),
+    GetPage(
+      name: _Paths.EDIT_PROFILE,
+      page: () => const EditProfileView(),
+      binding: EditProfileBinding(),
     ),
     GetPage(
       name: _Paths.SAVE_NOTE,
