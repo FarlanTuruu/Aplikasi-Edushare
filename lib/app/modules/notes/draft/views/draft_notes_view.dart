@@ -1,9 +1,7 @@
-// File 1: draft_notes_view.dart
-// ============================================================
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/draft_notes_controller.dart';
+import '../../../../models/note_model.dart';
 
 class DraftNotesView extends GetView<DraftNotesController> {
   const DraftNotesView({Key? key}) : super(key: key);
@@ -41,28 +39,27 @@ class DraftNotesView extends GetView<DraftNotesController> {
                       ),
                       child: _buildNavigationMenu(isTablet),
                     ),
+                    SizedBox(height: isTablet ? 20 : 16),
+
+                    // 🔧 FIX: Tambahkan Obx untuk reactive UI
                     Expanded(
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.drafts_outlined,
-                              size: isTablet ? 100 : 80,
-                              color: Colors.grey[300],
+                      child: Obx(() {
+                        if (controller.isLoading.value) {
+                          return const Center(
+                            child: CircularProgressIndicator(
+                              color: Color(0xFF6B2C91),
                             ),
-                            SizedBox(height: isTablet ? 20 : 16),
-                            Text(
-                              'Belum ada draft',
-                              style: TextStyle(
-                                fontSize: isTablet ? 20 : 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey[400],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                          );
+                        }
+
+                        // 🔧 FIX: Check apakah ada draft
+                        if (controller.draftList.isEmpty) {
+                          return _buildEmptyState(isTablet);
+                        }
+
+                        // 🔧 FIX: Tampilkan list draft
+                        return _buildDraftList(isTablet);
+                      }),
                     ),
                   ],
                 ),
@@ -216,6 +213,195 @@ class DraftNotesView extends GetView<DraftNotesController> {
     );
   }
 
+  // 🔧 FIX: Tambahkan widget untuk list draft
+  Widget _buildDraftList(bool isTablet) {
+    return RefreshIndicator(
+      onRefresh: controller.refreshDrafts,
+      color: const Color(0xFF6B2C91),
+      child: ListView.builder(
+        padding: EdgeInsets.symmetric(
+          horizontal: isTablet ? 24 : 20,
+          vertical: isTablet ? 16 : 12,
+        ),
+        itemCount: controller.draftList.length,
+        itemBuilder: (context, index) {
+          final draft = controller.draftList[index];
+          return _buildDraftCard(draft, isTablet);
+        },
+      ),
+    );
+  }
+
+  // 🔧 FIX: Tambahkan widget untuk card draft
+  Widget _buildDraftCard(NoteModel draft, bool isTablet) {
+    return Container(
+      margin: EdgeInsets.only(bottom: isTablet ? 20 : 16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFFFFE5B4),
+            Color(0xFFFF9800),
+          ], // Orange gradient untuk draft
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(isTablet ? 20 : 16),
+        child: Row(
+          children: [
+            // Draft Icon
+            Container(
+              padding: EdgeInsets.all(isTablet ? 12 : 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.black, width: 1.5),
+              ),
+              child: Icon(
+                Icons.drafts,
+                size: isTablet ? 32 : 28,
+                color: const Color(0xFF6B2C91),
+              ),
+            ),
+
+            SizedBox(width: isTablet ? 16 : 12),
+
+            // Draft Title & Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    draft.title.isEmpty ? 'Untitled Draft' : draft.title,
+                    style: TextStyle(
+                      fontSize: isTablet ? 18 : 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    draft.mataKuliah.isEmpty ? 'No subject' : draft.mataKuliah,
+                    style: TextStyle(
+                      fontSize: isTablet ? 14 : 12,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            SizedBox(width: isTablet ? 16 : 12),
+
+            // Action Buttons
+            Row(
+              children: [
+                _buildActionButton(
+                  'Publish',
+                  isTablet,
+                  () => controller.publishDraft(draft.id),
+                ),
+                SizedBox(width: isTablet ? 12 : 8),
+                _buildActionButton(
+                  'Edit',
+                  isTablet,
+                  () => controller.editDraft(draft.id),
+                ),
+                SizedBox(width: isTablet ? 12 : 8),
+                _buildActionButton(
+                  'Delete',
+                  isTablet,
+                  () => controller.deleteDraft(draft.id),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton(String text, bool isTablet, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: isTablet ? 16 : 12,
+          vertical: isTablet ? 8 : 6,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.black, width: 1),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: isTablet ? 13 : 11,
+            fontWeight: FontWeight.w500,
+            color: Colors.black,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(bool isTablet) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.drafts_outlined,
+            size: isTablet ? 100 : 80,
+            color: Colors.grey[300],
+          ),
+          SizedBox(height: isTablet ? 20 : 16),
+          Text(
+            'Belum ada draft',
+            style: TextStyle(
+              fontSize: isTablet ? 20 : 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[400],
+            ),
+          ),
+          SizedBox(height: isTablet ? 12 : 8),
+          Text(
+            'Simpan catatan sebagai draft',
+            style: TextStyle(
+              fontSize: isTablet ? 16 : 14,
+              color: Colors.grey[400],
+            ),
+          ),
+          SizedBox(height: isTablet ? 32 : 24),
+          ElevatedButton.icon(
+            onPressed: () {
+              Get.toNamed('/notes/create');
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('Buat Catatan'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6B2C91),
+              padding: EdgeInsets.symmetric(
+                horizontal: isTablet ? 32 : 24,
+                vertical: isTablet ? 16 : 12,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBottomNavigation() {
     return Container(
       height: 70,
@@ -238,7 +424,6 @@ class DraftNotesView extends GetView<DraftNotesController> {
           _buildBottomNavItem(Icons.chat_bubble_outline, false, () {
             Get.toNamed('/chat/rooms');
           }),
-          // FIXED: Changed isActive from false to true for Add button
           _buildBottomNavItem(Icons.add_circle, true, () {
             Get.toNamed('/notes/create');
           }),

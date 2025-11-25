@@ -1,6 +1,3 @@
-// File 4: FIXED scheduled_notes_controller.dart
-// ============================================================
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../services/notes_service.dart';
@@ -16,8 +13,17 @@ class ScheduledNotesController extends GetxController {
   void onInit() {
     super.onInit();
 
-    // 🔧 Bind langsung dengan service
-    scheduledList.bindStream(notesService.scheduledNotes.stream);
+    // 🔧 FIX: Gunakan ever() listener, bukan bindStream()
+    ever(notesService.scheduledNotes, (List<NoteModel> scheduled) {
+      scheduledList.value = scheduled.toList();
+      print('✅ Scheduled list updated: ${scheduled.length} notes');
+    });
+
+    // 🔧 FIX: Set initial value
+    scheduledList.value = notesService.scheduledNotes.toList();
+
+    // 🔧 Check untuk auto-publish catatan yang sudah waktunya
+    checkAndPublishDueNotes();
   }
 
   Future<void> publishScheduled(String noteId) async {
@@ -75,6 +81,7 @@ class ScheduledNotesController extends GetxController {
     Get.toNamed('/notes/create', arguments: note.toMap());
   }
 
+  // 🔧 Check dan auto-publish catatan yang sudah waktunya
   void checkAndPublishDueNotes() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -87,5 +94,11 @@ class ScheduledNotesController extends GetxController {
     for (var note in dueNotes) {
       publishScheduled(note.id);
     }
+  }
+
+  // 🔧 Tambahkan refresh method
+  Future<void> refreshScheduled() async {
+    scheduledList.value = notesService.scheduledNotes.toList();
+    checkAndPublishDueNotes(); // Check lagi saat refresh
   }
 }

@@ -99,14 +99,8 @@ class ListNotesController extends GetxController {
   Future<void> archiveNote(String noteId) async {
     try {
       await Future.delayed(const Duration(milliseconds: 300));
-      notesService.deleteNote(noteId);
-
-      Get.snackbar(
-        'Success',
-        'Catatan berhasil diarsipkan',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-      );
+      // 🔧 FIX: Gunakan archiveNote() bukan deleteNote()
+      notesService.archiveNote(noteId);
     } catch (e) {
       Get.snackbar(
         'Error',

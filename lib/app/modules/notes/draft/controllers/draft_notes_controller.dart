@@ -1,6 +1,3 @@
-// File 3: FIXED draft_notes_controller.dart
-// ============================================================
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../services/notes_service.dart';
@@ -16,8 +13,14 @@ class DraftNotesController extends GetxController {
   void onInit() {
     super.onInit();
 
-    // 🔧 Bind langsung dengan service
-    draftList.bindStream(notesService.draftNotes.stream);
+    // 🔧 FIX: Gunakan ever() listener, bukan bindStream()
+    ever(notesService.draftNotes, (List<NoteModel> drafts) {
+      draftList.value = drafts.toList();
+      print('✅ Draft list updated: ${drafts.length} drafts');
+    });
+
+    // 🔧 FIX: Set initial value
+    draftList.value = notesService.draftNotes.toList();
   }
 
   Future<void> publishDraft(String noteId) async {
@@ -73,5 +76,10 @@ class DraftNotesController extends GetxController {
   void editDraft(String noteId) {
     final note = draftList.firstWhere((n) => n.id == noteId);
     Get.toNamed('/notes/create', arguments: note.toMap());
+  }
+
+  // 🔧 FIX: Tambahkan refresh method
+  Future<void> refreshDrafts() async {
+    draftList.value = notesService.draftNotes.toList();
   }
 }
