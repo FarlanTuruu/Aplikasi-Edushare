@@ -90,7 +90,7 @@ class EditProfileView extends GetView<EditProfileController> {
             children: [
               IconButton(
                 icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () => Get.back(),
+                onPressed: () => Get.toNamed('/settings/profile'),
               ),
               const SizedBox(width: 8),
               const Text(
@@ -105,9 +105,13 @@ class EditProfileView extends GetView<EditProfileController> {
           ),
           Row(
             children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundImage: NetworkImage(controller.profileImageUrl.value),
+              Obx(
+                () => CircleAvatar(
+                  radius: 20,
+                  backgroundImage: NetworkImage(
+                    controller.profileImageUrl.value,
+                  ),
+                ),
               ),
               const SizedBox(width: 12),
               InkWell(

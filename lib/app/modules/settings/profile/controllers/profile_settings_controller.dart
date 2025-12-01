@@ -9,11 +9,11 @@ class ProfileSettingsController extends GetxController {
   final userEmail = 'Nanda@gmail.com'.obs;
   final userLanguage = 'Bahasa Indonesia'.obs;
   final profileImageUrl = 'https://i.pravatar.cc/150?img=47'.obs;
+  final userPhone = '081234567890'.obs;
 
   @override
   void onInit() {
     super.onInit();
-    // Initialize data atau load dari local storage
     loadUserData();
   }
 
@@ -24,18 +24,31 @@ class ProfileSettingsController extends GetxController {
     // userEmail.value = await StorageService.getUserEmail();
   }
 
+  // Method untuk update profile dari Edit Profile
+  void updateProfile({
+    required String name,
+    required String email,
+    required String phone,
+    required String imageUrl,
+  }) {
+    userName.value = name;
+    userEmail.value = email;
+    userPhone.value = phone;
+    profileImageUrl.value = imageUrl;
+
+    // TODO: Save to local storage
+    // StorageService.saveUserData({...});
+  }
+
   void navigateToEditProfile() {
-    // Navigate ke halaman Edit Profile
-    Get.toNamed('/settings/profile/edit');
+    Get.toNamed('/settings/edit_profile');
   }
 
   void navigateToSaveNotes() {
-    // Navigate ke halaman Save Notes
     Get.toNamed('/settings/save-notes');
   }
 
   void logout() {
-    // Show confirmation dialog
     Get.defaultDialog(
       title: 'Logout',
       middleText: 'Apakah Anda yakin ingin keluar?',
@@ -46,13 +59,7 @@ class ProfileSettingsController extends GetxController {
       cancelTextColor: const Color(0xFF5B2C91),
       onConfirm: () {
         // TODO: Clear user session/token
-        // Contoh:
-        // StorageService.clearUserData();
-        // AuthService.logout();
-
-        Get.back(); // Close dialog
-
-        // Navigate to login page
+        Get.back();
         Get.offAllNamed('/login');
       },
     );
@@ -60,7 +67,6 @@ class ProfileSettingsController extends GetxController {
 
   @override
   void onClose() {
-    // Clean up resources
     super.onClose();
   }
 }

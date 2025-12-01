@@ -30,10 +30,12 @@ class ProfileSettingsView extends GetView<ProfileSettingsController> {
                   ),
                   Row(
                     children: [
-                      CircleAvatar(
-                        radius: 20,
-                        backgroundImage: NetworkImage(
-                          'https://i.pravatar.cc/150?img=47',
+                      Obx(
+                        () => CircleAvatar(
+                          radius: 20,
+                          backgroundImage: NetworkImage(
+                            controller.profileImageUrl.value,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -66,10 +68,12 @@ class ProfileSettingsView extends GetView<ProfileSettingsController> {
                     const SizedBox(height: 40),
 
                     // Profile Picture
-                    CircleAvatar(
-                      radius: 60,
-                      backgroundImage: NetworkImage(
-                        'https://i.pravatar.cc/150?img=47',
+                    Obx(
+                      () => CircleAvatar(
+                        radius: 60,
+                        backgroundImage: NetworkImage(
+                          controller.profileImageUrl.value,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),

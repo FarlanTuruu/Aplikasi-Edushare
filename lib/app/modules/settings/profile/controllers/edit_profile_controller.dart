@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import './profile_settings_controller.dart';
 
 class EditProfileController extends GetxController {
   // Text Controllers
@@ -15,15 +16,16 @@ class EditProfileController extends GetxController {
   final isLoading = false.obs;
   final ImagePicker _picker = ImagePicker();
 
+  // Reference ke ProfileSettingsController
+  final ProfileSettingsController profileController =
+      Get.find<ProfileSettingsController>();
+
   @override
   void onInit() {
     super.onInit();
-    // Initialize controllers
     nameController = TextEditingController();
     emailController = TextEditingController();
     phoneController = TextEditingController();
-
-    // Load user data
     loadUserData();
   }
 
@@ -33,22 +35,13 @@ class EditProfileController extends GetxController {
   Future<void> loadUserData() async {
     try {
       isLoading.value = true;
-
-      // TODO: Load data dari local storage atau API
-      // Simulasi loading
       await Future.delayed(const Duration(milliseconds: 500));
 
-      // Contoh data dummy
-      nameController.text = 'Nanda Adela';
-      emailController.text = 'Nanda@gmail.com';
-      phoneController.text = '081234567890';
-
-      // TODO: Implementasi actual
-      // final userData = await StorageService.getUserData();
-      // nameController.text = userData.name ?? '';
-      // emailController.text = userData.email ?? '';
-      // phoneController.text = userData.phone ?? '';
-      // profileImageUrl.value = userData.profileImage ?? profileImageUrl.value;
+      // Load data dari ProfileSettingsController
+      nameController.text = profileController.userName.value;
+      emailController.text = profileController.userEmail.value;
+      phoneController.text = profileController.userPhone.value;
+      profileImageUrl.value = profileController.profileImageUrl.value;
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -122,8 +115,7 @@ class EditProfileController extends GetxController {
   // ============================================================
   Future<void> _pickImageFromCamera() async {
     try {
-      Get.back(); // Close bottom sheet
-
+      Get.back();
       final XFile? image = await _picker.pickImage(
         source: ImageSource.camera,
         imageQuality: 80,
@@ -132,13 +124,7 @@ class EditProfileController extends GetxController {
       );
 
       if (image != null) {
-        // TODO: Upload ke server dan dapatkan URL
-        // final uploadedUrl = await uploadImageToServer(image.path);
-        // profileImageUrl.value = uploadedUrl;
-
-        // Sementara gunakan local path
         profileImageUrl.value = image.path;
-
         Get.snackbar(
           'Sukses',
           'Foto profile berhasil diubah',
@@ -165,8 +151,7 @@ class EditProfileController extends GetxController {
   // ============================================================
   Future<void> _pickImageFromGallery() async {
     try {
-      Get.back(); // Close bottom sheet
-
+      Get.back();
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 80,
@@ -175,13 +160,7 @@ class EditProfileController extends GetxController {
       );
 
       if (image != null) {
-        // TODO: Upload ke server dan dapatkan URL
-        // final uploadedUrl = await uploadImageToServer(image.path);
-        // profileImageUrl.value = uploadedUrl;
-
-        // Sementara gunakan local path
         profileImageUrl.value = image.path;
-
         Get.snackbar(
           'Sukses',
           'Foto profile berhasil diubah',
@@ -207,10 +186,8 @@ class EditProfileController extends GetxController {
   // REMOVE PROFILE PICTURE
   // ============================================================
   void _removeProfilePicture() {
-    Get.back(); // Close bottom sheet
-
+    Get.back();
     profileImageUrl.value = 'https://i.pravatar.cc/150?img=47';
-
     Get.snackbar(
       'Sukses',
       'Foto profile berhasil dihapus',
@@ -249,7 +226,6 @@ class EditProfileController extends GetxController {
       return false;
     }
 
-    // Validasi format email
     if (!GetUtils.isEmail(emailController.text.trim())) {
       Get.snackbar(
         'Error',
@@ -262,7 +238,6 @@ class EditProfileController extends GetxController {
       return false;
     }
 
-    // Validasi nomor telepon (opsional)
     if (phoneController.text.trim().isNotEmpty) {
       if (!GetUtils.isPhoneNumber(phoneController.text.trim())) {
         Get.snackbar(
@@ -284,41 +259,90 @@ class EditProfileController extends GetxController {
   // SAVE PROFILE
   // ============================================================
   Future<void> saveProfile() async {
-    // Validasi input
     if (!_validateInput()) return;
 
     try {
       isLoading.value = true;
-
-      // TODO: Save to API or local storage
-      // Simulasi API call
       await Future.delayed(const Duration(seconds: 1));
 
-      // Contoh implementasi:
-      // final response = await ApiService.updateProfile({
-      //   'name': nameController.text.trim(),
-      //   'email': emailController.text.trim(),
-      //   'phone': phoneController.text.trim(),
-      //   'profile_image': profileImageUrl.value,
-      // });
-
-      // if (response.success) {
-      //   await StorageService.saveUserData(response.data);
-      // }
-
-      Get.snackbar(
-        'Sukses',
-        'Profile berhasil diperbarui',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 2),
+      // Update ProfileSettingsController dengan data baru
+      profileController.updateProfile(
+        name: nameController.text.trim(),
+        email: emailController.text.trim(),
+        phone: phoneController.text.trim(),
+        imageUrl: profileImageUrl.value,
       );
 
-      // Kembali ke halaman profile
-      await Future.delayed(const Duration(milliseconds: 500));
-      Get.back();
+      isLoading.value = false;
+
+      // Tampilkan dialog sukses
+      Get.dialog(
+        Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF5B2C91),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.check, color: Colors.white, size: 40),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Berhasil!',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Profile Anda telah berhasil diperbarui',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Get.until(
+                        (route) => Get.currentRoute == '/settings/profile',
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF5B2C91),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'OK',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        barrierDismissible: false,
+      );
     } catch (e) {
+      isLoading.value = false;
       Get.snackbar(
         'Error',
         'Gagal menyimpan profile: ${e.toString()}',
@@ -327,8 +351,6 @@ class EditProfileController extends GetxController {
         colorText: Colors.white,
         duration: const Duration(seconds: 3),
       );
-    } finally {
-      isLoading.value = false;
     }
   }
 
