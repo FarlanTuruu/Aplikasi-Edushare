@@ -1,6 +1,3 @@
-// File 1: FIXED create_notes_controller.dart
-// ============================================================
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
@@ -139,7 +136,7 @@ class CreateNotesController extends GetxController {
     );
   }
 
-  // 🔧 FIX: Langsung tambahkan ke service, jangan kirim via arguments
+  // 🎯 ENHANCED: Pop-up notifikasi untuk Upload dengan dialog custom
   Future<void> uploadNote() async {
     if (!validateForm()) return;
 
@@ -150,35 +147,22 @@ class CreateNotesController extends GetxController {
       final note = _buildNote();
       final isScheduled = notesService.isScheduledDate(note.date);
 
-      // 🔧 TAMBAHKAN LANGSUNG KE SERVICE
+      // Tambahkan catatan ke service
       notesService.addNote(note, isScheduled: isScheduled);
 
-      if (isScheduled) {
-        Get.snackbar(
-          'Success',
-          'Catatan dijadwalkan untuk ${note.fullDate}',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 2),
-        );
-      } else {
-        Get.snackbar(
-          'Success',
-          'Catatan berhasil diunggah',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 2),
-        );
-      }
+      // 🎉 TAMPILKAN POP-UP DIALOG SUKSES
+      _showSuccessDialog(
+        title: isScheduled ? '📅 Catatan Dijadwalkan!' : '✅ Catatan Diunggah!',
+        message: isScheduled
+            ? 'Catatan "${note.title}" berhasil dijadwalkan untuk tanggal ${note.fullDate}.\n\nCatatan akan muncul di Scheduled Notes.'
+            : 'Catatan "${note.title}" berhasil diunggah!\n\nCatatan sudah tersimpan di List Notes.',
+        icon: isScheduled ? Icons.schedule : Icons.check_circle,
+        color: isScheduled ? const Color(0xFF6B2C91) : Colors.green,
+        destination: isScheduled ? 'Scheduled Notes' : 'List Notes',
+      );
 
-      // 🔧 CLEAR FORM tapi JANGAN tutup halaman
+      // Clear form
       clearForm();
-
-      // 🔧 OPTIONAL: Redirect ke list setelah 1 detik
-      // await Future.delayed(const Duration(seconds: 1));
-      // Get.toNamed('/notes/list');
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -192,7 +176,7 @@ class CreateNotesController extends GetxController {
     }
   }
 
-  // 🔧 FIX: Langsung tambahkan ke service untuk draft
+  // 🎯 ENHANCED: Pop-up notifikasi untuk Draft dengan dialog custom
   Future<void> saveAsDraft() async {
     if (mataKuliahController.text.trim().isEmpty &&
         judulController.text.trim().isEmpty) {
@@ -206,19 +190,20 @@ class CreateNotesController extends GetxController {
 
       final note = _buildNote();
 
-      // 🔧 TAMBAHKAN LANGSUNG KE SERVICE
+      // Tambahkan catatan sebagai draft
       notesService.addNote(note, isDraft: true);
 
-      Get.snackbar(
-        'Success',
-        'Catatan berhasil disimpan sebagai draft',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 2),
+      // 🎉 TAMPILKAN POP-UP DIALOG SUKSES UNTUK DRAFT
+      _showSuccessDialog(
+        title: '💾 Draft Tersimpan!',
+        message:
+            'Catatan "${note.title}" berhasil disimpan sebagai draft.\n\nAnda dapat melanjutkan pengeditan nanti dari List Notes.',
+        icon: Icons.save_outlined,
+        color: Colors.blue,
+        destination: 'List Notes (Draft)',
       );
 
-      // 🔧 CLEAR FORM tapi JANGAN tutup halaman
+      // Clear form
       clearForm();
     } catch (e) {
       Get.snackbar(
@@ -231,6 +216,131 @@ class CreateNotesController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  // 🎨 CUSTOM SUCCESS DIALOG dengan animasi dan design menarik
+  void _showSuccessDialog({
+    required String title,
+    required String message,
+    required IconData icon,
+    required Color color,
+    required String destination,
+  }) {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon dengan animasi
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 64, color: color),
+              ),
+              const SizedBox(height: 20),
+
+              // Title
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+
+              // Message
+              Text(
+                message,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.black87,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+
+              // Destination info
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.location_on, size: 16, color: color),
+                    const SizedBox(width: 8),
+                    Text(
+                      destination,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: color,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Action buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Get.back(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: BorderSide(color: color),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text('Tutup', style: TextStyle(color: color)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Get.back(); // Tutup dialog
+                        Get.toNamed('/notes/list'); // Navigate ke list notes
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: color,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Lihat Catatan',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
   }
 
   void cancelNote() {

@@ -40,8 +40,6 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
                       child: _buildNavigationMenu(isTablet),
                     ),
                     SizedBox(height: isTablet ? 20 : 16),
-
-                    // 🔧 Tambahkan Obx untuk reactive UI
                     Expanded(
                       child: Obx(() {
                         if (controller.isLoading.value) {
@@ -52,12 +50,10 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
                           );
                         }
 
-                        // 🔧 Check apakah ada archive
                         if (controller.archivedList.isEmpty) {
                           return _buildEmptyState(isTablet);
                         }
 
-                        // 🔧 Tampilkan list archive
                         return _buildArchiveList(isTablet);
                       }),
                     ),
@@ -213,7 +209,6 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
     );
   }
 
-  // 🔧 Widget untuk list archive
   Widget _buildArchiveList(bool isTablet) {
     return RefreshIndicator(
       onRefresh: controller.refreshArchives,
@@ -232,16 +227,12 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
     );
   }
 
-  // 🔧 Widget untuk card archive
   Widget _buildArchiveCard(NoteModel archive, bool isTablet) {
     return Container(
       margin: EdgeInsets.only(bottom: isTablet ? 20 : 16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [
-            Color(0xFFD6D6D6),
-            Color(0xFF757575),
-          ], // Gray gradient untuk archive
+          colors: [Color(0xFFD6D6D6), Color(0xFF757575)],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
@@ -301,7 +292,7 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
                         size: isTablet ? 18 : 16,
                         color: Colors.white,
                       ),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           archive.title,
@@ -314,7 +305,7 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     archive.mataKuliah,
                     style: TextStyle(
@@ -343,10 +334,11 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
                   () => controller.editArchive(archive.id),
                 ),
                 SizedBox(width: isTablet ? 12 : 8),
+                // 🔧 FIXED: Langsung panggil controller.deleteArchive()
                 _buildActionButton(
                   'Delete',
                   isTablet,
-                  () => _showDeleteConfirmation(archive.id),
+                  () => controller.deleteArchive(archive.id),
                 ),
               ],
             ),
@@ -381,28 +373,6 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
     );
   }
 
-  // 🔧 Konfirmasi delete permanen
-  void _showDeleteConfirmation(String noteId) {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Hapus Permanen?'),
-        content: const Text(
-          'Arsip yang dihapus tidak dapat dikembalikan. Apakah Anda yakin?',
-        ),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
-          TextButton(
-            onPressed: () {
-              Get.back();
-              controller.deleteArchive(noteId);
-            },
-            child: const Text('Hapus', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildEmptyState(bool isTablet) {
     return Center(
       child: Column(
@@ -432,9 +402,7 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
           ),
           SizedBox(height: isTablet ? 32 : 24),
           ElevatedButton.icon(
-            onPressed: () {
-              Get.toNamed('/notes/list');
-            },
+            onPressed: () => Get.toNamed('/notes/list'),
             icon: const Icon(Icons.arrow_back),
             label: const Text('Kembali ke List'),
             style: ElevatedButton.styleFrom(
@@ -457,7 +425,7 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -466,18 +434,26 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildBottomNavItem(Icons.home_outlined, false, () {
-            Get.toNamed('/homepage');
-          }),
-          _buildBottomNavItem(Icons.chat_bubble_outline, false, () {
-            Get.toNamed('/chat/rooms');
-          }),
-          _buildBottomNavItem(Icons.add_circle, true, () {
-            Get.toNamed('/notes/create');
-          }),
-          _buildBottomNavItem(Icons.mic_outlined, false, () {
-            Get.toNamed('/speech/list');
-          }),
+          _buildBottomNavItem(
+            Icons.home_outlined,
+            false,
+            () => Get.toNamed('/homepage'),
+          ),
+          _buildBottomNavItem(
+            Icons.chat_bubble_outline,
+            false,
+            () => Get.toNamed('/chat/rooms'),
+          ),
+          _buildBottomNavItem(
+            Icons.add_circle,
+            true,
+            () => Get.toNamed('/notes/create'),
+          ),
+          _buildBottomNavItem(
+            Icons.mic_outlined,
+            false,
+            () => Get.toNamed('/speech/list'),
+          ),
         ],
       ),
     );
