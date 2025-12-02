@@ -52,7 +52,7 @@ part 'app_routes.dart';
 class AppPages {
   AppPages._();
 
-  static const INITIAL = Routes.NOTE_CREATE;
+  static const INITIAL = Routes.LOGIN;
 
   static final routes = [
     // -----------------------

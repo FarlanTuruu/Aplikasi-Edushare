@@ -185,6 +185,107 @@ class HomepageController extends GetxController {
     );
   }
 
+  void showCreateActionDialog() {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        child: Container(
+          height: 320, // Sesuaikan tinggi card
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            // Gradient Ungu sesuai desain
+            gradient: const LinearGradient(
+              colors: [
+                Color(0xFFE1BEE7), // Ungu Muda (Kiri Atas)
+                Color(0xFF4A148C), // Ungu Gelap (Kanan Bawah)
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Judul Popup
+              const Text(
+                'Create Materi Or\nCatatan Colaboration',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                  height: 1.3,
+                ),
+              ),
+              const SizedBox(height: 40),
+
+              // Row untuk 2 Tombol Bulat
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // Tombol Materi
+                  _buildCreateOptionButton(
+                    title: 'Materi',
+                    onTap: () {
+                      Get.back(); // Tutup dialog dulu
+                      // Ganti dengan Route Materi Anda
+                      Get.toNamed('/notes/create');
+                      print("Pindah ke Create Materi");
+                    },
+                  ),
+
+                  // Spacer di tengah jika perlu
+                  const SizedBox(width: 16),
+
+                  // Tombol Catatan
+                  _buildCreateOptionButton(
+                    title: 'Catatan',
+                    onTap: () {
+                      Get.back(); // Tutup dialog dulu
+                      // Ganti dengan Route Catatan Anda (misal Create Collaboration yang kemarin)
+                      Get.toNamed('/collab/create');
+                      print("Pindah ke Create Catatan");
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Helper Widget untuk Tombol Putih Bulat
+  Widget _buildCreateOptionButton({
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: SizedBox(
+        height: 100, // Tinggi agar jadi agak bulat/lonjong besar
+        child: ElevatedButton(
+          onPressed: onTap,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+            shape: const CircleBorder(), // Membuat tombol benar-benar bulat
+            // Jika ingin lonjong (pill shape) ganti CircleBorder dengan:
+            // RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+            elevation: 4,
+          ),
+          child: Text(
+            title,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildChatBubble(String text, String time) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),

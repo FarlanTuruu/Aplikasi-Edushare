@@ -482,7 +482,7 @@ class HomepageView extends GetView<HomepageController> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // Tombol Home Aktif (Lingkaran Ungu)
+          // Tombol Home Aktif
           Container(
             width: 48,
             height: 48,
@@ -492,22 +492,31 @@ class HomepageView extends GetView<HomepageController> {
             ),
             child: const Icon(Icons.home, color: Colors.white, size: 28),
           ),
+
           IconButton(
             icon: const Icon(Icons.more_horiz, color: Colors.black54, size: 28),
             onPressed: () {},
           ),
-          // Tombol Tambah (Kotak Rounded Outline)
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(2),
+
+          // ============================================
+          // UPDATE BAGIAN INI (TOMBOL TAMBAH)
+          // ============================================
+          GestureDetector(
+            onTap: () =>
+                controller.showCreateActionDialog(), // Panggil Dialog Disini
+            child: Container(
+              padding: const EdgeInsets.all(
+                4,
+              ), // Padding agar border tidak mepet icon
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.black54, width: 1.5),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(Icons.add, color: Colors.black54, size: 24),
             ),
-            onPressed: () {},
           ),
+
+          // ============================================
           IconButton(
             icon: const Icon(
               Icons.mic_none_outlined,
