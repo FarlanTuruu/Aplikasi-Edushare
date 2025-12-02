@@ -1,4 +1,4 @@
-// File: /lib/app/modules/notes/create/controllers/create_notes_controller.dart
+// File: /lib/app/modules/notes/edit/controllers/edit_notes_controller.dart
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../../services/notes_service.dart';
 import '../../../../models/note_model.dart';
 
-class CreateNotesController extends GetxController {
+class EditNotesController extends GetxController {
   final notesService = Get.find<NotesService>();
 
   final selectedFileName = ''.obs;
@@ -19,6 +19,14 @@ class CreateNotesController extends GetxController {
   final deskripsiController = TextEditingController();
 
   PlatformFile? selectedFile;
+  late String noteId;
+  late NoteModel originalNote;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _loadNoteData();
+  }
 
   @override
   void onClose() {
@@ -27,6 +35,60 @@ class CreateNotesController extends GetxController {
     tanggalController.dispose();
     deskripsiController.dispose();
     super.onClose();
+  }
+
+  // 🔥 LOAD NOTE DATA - Dipanggil saat controller init
+  void _loadNoteData() {
+    try {
+      final args = Get.arguments;
+
+      if (args == null) {
+        Get.snackbar(
+          'Error',
+          'Data catatan tidak ditemukan',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        Get.back();
+        return;
+      }
+
+      // Parse note data dari arguments
+      if (args is Map<String, dynamic>) {
+        originalNote = NoteModel.fromMap(args);
+      } else if (args is NoteModel) {
+        originalNote = args;
+      } else {
+        throw Exception('Invalid argument type');
+      }
+
+      noteId = originalNote.id;
+
+      // Isi form dengan data existing
+      mataKuliahController.text = originalNote.mataKuliah;
+      judulController.text = originalNote.title;
+      deskripsiController.text = originalNote.description;
+      tanggalController.text = DateFormat(
+        'dd/MM/yyyy',
+      ).format(originalNote.date);
+
+      if (originalNote.fileName != null && originalNote.fileName!.isNotEmpty) {
+        selectedFileName.value = originalNote.fileName!;
+      }
+
+      print('✅ Note loaded for editing: ${originalNote.title}');
+    } catch (e) {
+      print('❌ Error loading note: $e');
+      Get.snackbar(
+        'Error',
+        'Gagal memuat data catatan: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      Get.back();
+    }
   }
 
   Future<void> pickFile() async {
@@ -65,7 +127,7 @@ class CreateNotesController extends GetxController {
 
     final pickedDate = await showDatePicker(
       context: ctx,
-      initialDate: DateTime.now(),
+      initialDate: originalNote.date,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
       builder: (context, child) {
@@ -86,7 +148,6 @@ class CreateNotesController extends GetxController {
       final formattedDate = DateFormat('dd/MM/yyyy').format(pickedDate);
       tanggalController.text = formattedDate;
       update();
-      print('✅ Tanggal dipilih: $formattedDate');
     }
   }
 
@@ -120,16 +181,16 @@ class CreateNotesController extends GetxController {
     );
   }
 
-  NoteModel _buildNote() {
+  NoteModel _buildUpdatedNote() {
     DateTime parsedDate;
     try {
       parsedDate = DateFormat('dd/MM/yyyy').parseStrict(tanggalController.text);
     } catch (_) {
-      parsedDate = DateTime.now();
+      parsedDate = originalNote.date;
     }
 
     return NoteModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: noteId, // Gunakan ID yang sama
       title: judulController.text.trim(),
       mataKuliah: mataKuliahController.text.trim(),
       date: parsedDate,
@@ -138,72 +199,31 @@ class CreateNotesController extends GetxController {
     );
   }
 
-  // Upload Note (Create New)
-  Future<void> uploadNote() async {
+  // 🎯 UPDATE NOTE
+  Future<void> updateNote() async {
     if (!validateForm()) return;
 
     try {
       isLoading.value = true;
       await Future.delayed(const Duration(milliseconds: 500));
 
-      final note = _buildNote();
-      final isScheduled = notesService.isScheduledDate(note.date);
+      final updatedNote = _buildUpdatedNote();
 
-      notesService.addNote(note, isScheduled: isScheduled);
+      // Update note di service
+      notesService.updateNote(updatedNote);
 
+      // Show success dialog
       _showSuccessDialog(
-        title: isScheduled ? '📅 Catatan Dijadwalkan!' : '✅ Catatan Diunggah!',
-        message: isScheduled
-            ? 'Catatan "${note.title}" berhasil dijadwalkan untuk tanggal ${note.fullDate}.\n\nCatatan akan muncul di Scheduled Notes.'
-            : 'Catatan "${note.title}" berhasil diunggah!\n\nCatatan sudah tersimpan di List Notes.',
-        icon: isScheduled ? Icons.schedule : Icons.check_circle,
-        color: isScheduled ? const Color(0xFF6B2C91) : Colors.green,
-        destination: isScheduled ? 'Scheduled Notes' : 'List Notes',
-      );
-
-      clearForm();
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Gagal mengunggah catatan: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  // Save as Draft
-  Future<void> saveAsDraft() async {
-    if (mataKuliahController.text.trim().isEmpty &&
-        judulController.text.trim().isEmpty) {
-      _validationError('Minimal isi Mata Kuliah atau Judul Catatan');
-      return;
-    }
-
-    try {
-      isLoading.value = true;
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      final note = _buildNote();
-      notesService.addNote(note, isDraft: true);
-
-      _showSuccessDialog(
-        title: '💾 Draft Tersimpan!',
+        title: '✅ Catatan Diperbarui!',
         message:
-            'Catatan "${note.title}" berhasil disimpan sebagai draft.\n\nAnda dapat melanjutkan pengeditan nanti dari List Notes.',
-        icon: Icons.save_outlined,
-        color: Colors.blue,
-        destination: 'List Notes (Draft)',
+            'Catatan "${updatedNote.title}" berhasil diperbarui!\n\nPerubahan telah disimpan.',
+        icon: Icons.check_circle,
+        color: Colors.green,
       );
-
-      clearForm();
     } catch (e) {
       Get.snackbar(
         'Error',
-        'Gagal menyimpan draft: $e',
+        'Gagal memperbarui catatan: $e',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -218,7 +238,6 @@ class CreateNotesController extends GetxController {
     required String message,
     required IconData icon,
     required Color color,
-    required String destination,
   }) {
     Get.dialog(
       Dialog(
@@ -257,37 +276,14 @@ class CreateNotesController extends GetxController {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.location_on, size: 16, color: color),
-                    const SizedBox(width: 8),
-                    Text(
-                      destination,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: color,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => Get.back(),
+                      onPressed: () {
+                        Get.back(); // Tutup dialog
+                        Get.back(); // Kembali ke list
+                      },
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         side: BorderSide(color: color),
@@ -302,8 +298,10 @@ class CreateNotesController extends GetxController {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        Get.back();
-                        Get.toNamed('/notes/list');
+                        Get.back(); // Tutup dialog
+                        Get.offAllNamed(
+                          '/notes/list',
+                        ); // Kembali ke list dan hapus history
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: color,
@@ -328,25 +326,28 @@ class CreateNotesController extends GetxController {
     );
   }
 
-  void cancelNote() {
-    if (mataKuliahController.text.isNotEmpty ||
-        judulController.text.isNotEmpty ||
-        tanggalController.text.isNotEmpty ||
-        deskripsiController.text.isNotEmpty ||
-        selectedFileName.value.isNotEmpty) {
+  void cancelEdit() {
+    // Check apakah ada perubahan
+    final hasChanges =
+        mataKuliahController.text != originalNote.mataKuliah ||
+        judulController.text != originalNote.title ||
+        deskripsiController.text != originalNote.description ||
+        tanggalController.text !=
+            DateFormat('dd/MM/yyyy').format(originalNote.date);
+
+    if (hasChanges) {
       Get.dialog(
         AlertDialog(
           title: const Text('Konfirmasi'),
           content: const Text(
-            'Apakah Anda yakin ingin membatalkan? Data yang telah diisi akan hilang.',
+            'Apakah Anda yakin ingin membatalkan perubahan?\n\nSemua perubahan tidak akan disimpan.',
           ),
           actions: [
             TextButton(onPressed: () => Get.back(), child: const Text('Tidak')),
             TextButton(
               onPressed: () {
-                Get.back();
-                clearForm();
-                Get.back();
+                Get.back(); // Tutup dialog
+                Get.back(); // Kembali ke list
               },
               child: const Text('Ya', style: TextStyle(color: Colors.red)),
             ),
@@ -354,16 +355,7 @@ class CreateNotesController extends GetxController {
         ),
       );
     } else {
-      Get.back();
+      Get.back(); // Langsung kembali jika tidak ada perubahan
     }
-  }
-
-  void clearForm() {
-    mataKuliahController.clear();
-    judulController.clear();
-    tanggalController.clear();
-    deskripsiController.clear();
-    selectedFileName.value = '';
-    selectedFile = null;
   }
 }

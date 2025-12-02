@@ -113,7 +113,7 @@ class ScheduledNotesController extends GetxController {
 
   void editScheduled(String noteId) {
     final note = scheduledList.firstWhere((n) => n.id == noteId);
-    Get.toNamed('/notes/create', arguments: note.toMap());
+    Get.toNamed('/notes/edit', arguments: note.toMap());
   }
 
   void checkAndPublishDueNotes() {

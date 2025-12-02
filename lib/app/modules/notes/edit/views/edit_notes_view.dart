@@ -1,9 +1,11 @@
+// File: /lib/app/modules/notes/edit/views/edit_notes_view.dart
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/create_notes_controller.dart';
+import '../controllers/edit_notes_controller.dart';
 
-class CreateNotesView extends GetView<CreateNotesController> {
-  const CreateNotesView({super.key});
+class EditNotesView extends GetView<EditNotesController> {
+  const EditNotesView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -60,9 +62,6 @@ class CreateNotesView extends GetView<CreateNotesController> {
     );
   }
 
-  // ============================================================
-  // TOP NAVBAR - 🆕 Dynamic title based on edit mode
-  // ============================================================
   Widget _buildHeader(BuildContext context, bool isTablet) {
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -72,14 +71,23 @@ class CreateNotesView extends GetView<CreateNotesController> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Static title untuk Create
-          Text(
-            'Add Note',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: isTablet ? 28 : 24,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            children: [
+              IconButton(
+                onPressed: () => Get.back(),
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                iconSize: isTablet ? 28 : 24,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Edit Note',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: isTablet ? 28 : 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
           Row(
             children: [
@@ -92,7 +100,7 @@ class CreateNotesView extends GetView<CreateNotesController> {
               ),
               SizedBox(width: isTablet ? 16 : 12),
               InkWell(
-                onTap: () {},
+                onTap: () => Get.toNamed('/settings/profile'),
                 child: Icon(
                   Icons.settings,
                   color: Colors.white,
@@ -106,9 +114,6 @@ class CreateNotesView extends GetView<CreateNotesController> {
     );
   }
 
-  // ============================================================
-  // NAVIGATION MENU
-  // ============================================================
   Widget _buildNavigationMenu(bool isTablet) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -169,9 +174,6 @@ class CreateNotesView extends GetView<CreateNotesController> {
     );
   }
 
-  // ============================================================
-  // PROFILE CARD
-  // ============================================================
   Widget _buildProfileCard(bool isTablet) {
     return Container(
       width: double.infinity,
@@ -217,9 +219,8 @@ class CreateNotesView extends GetView<CreateNotesController> {
             ],
           ),
           const SizedBox(height: 16),
-          // Static subtitle untuk Create
           Text(
-            'Bagikan Catatan Atau Materi',
+            'Edit Catatan Atau Materi',
             style: TextStyle(
               fontSize: isTablet ? 20 : 18,
               fontWeight: FontWeight.w600,
@@ -231,9 +232,6 @@ class CreateNotesView extends GetView<CreateNotesController> {
     );
   }
 
-  // ============================================================
-  // FORM
-  // ============================================================
   Widget _buildForm(bool isTablet) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -399,7 +397,6 @@ class CreateNotesView extends GetView<CreateNotesController> {
     );
   }
 
-  // 🆕 Dynamic button text based on edit mode
   Widget _actionButtons() {
     return Obx(
       () => Row(
@@ -408,7 +405,7 @@ class CreateNotesView extends GetView<CreateNotesController> {
           TextButton(
             onPressed: controller.isLoading.value
                 ? null
-                : controller.cancelNote,
+                : controller.cancelEdit,
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
@@ -422,43 +419,14 @@ class CreateNotesView extends GetView<CreateNotesController> {
             ),
           ),
           const SizedBox(width: 8),
-
-          // Draft button selalu muncul di Create mode
           ElevatedButton(
             onPressed: controller.isLoading.value
                 ? null
-                : controller.saveAsDraft,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF6B2C91),
-              side: const BorderSide(color: Colors.black, width: 1.5),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
-              ),
-            ),
-            child: controller.isLoading.value
-                ? const SizedBox(
-                    height: 18,
-                    width: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text(
-                    "Draft",
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                  ),
-          ),
-          const SizedBox(width: 8),
-
-          // Upload button dengan text static
-          ElevatedButton(
-            onPressed: controller.isLoading.value
-                ? null
-                : controller.uploadNote,
+                : controller.updateNote,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF6B2C91),
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(25),
               ),
@@ -473,11 +441,8 @@ class CreateNotesView extends GetView<CreateNotesController> {
                     ),
                   )
                 : const Text(
-                    "Unggah",
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
+                    "Simpan Perubahan",
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                   ),
           ),
         ],
@@ -485,9 +450,6 @@ class CreateNotesView extends GetView<CreateNotesController> {
     );
   }
 
-  // ============================================================
-  // BOTTOM NAVBAR
-  // ============================================================
   Widget _buildBottomNavigation() {
     return Container(
       height: 70,
@@ -514,7 +476,11 @@ class CreateNotesView extends GetView<CreateNotesController> {
             false,
             () => Get.toNamed('/chat/rooms'),
           ),
-          _bottomItem(Icons.add_circle, true, () {}),
+          _bottomItem(
+            Icons.add_circle,
+            false,
+            () => Get.toNamed('/notes/create'),
+          ),
           _bottomItem(
             Icons.mic_outlined,
             false,

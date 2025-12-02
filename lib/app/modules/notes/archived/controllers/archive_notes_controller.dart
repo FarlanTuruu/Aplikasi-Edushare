@@ -123,7 +123,7 @@ class ArchiveNotesController extends GetxController {
 
   void editArchive(String noteId) {
     final note = archivedList.firstWhere((n) => n.id == noteId);
-    Get.toNamed('/notes/create', arguments: note.toMap());
+    Get.toNamed('/notes/edit', arguments: note.toMap());
   }
 
   Future<void> refreshArchives() async {

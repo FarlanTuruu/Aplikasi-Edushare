@@ -113,7 +113,7 @@ class DraftNotesController extends GetxController {
 
   void editDraft(String noteId) {
     final note = draftList.firstWhere((n) => n.id == noteId);
-    Get.toNamed('/notes/create', arguments: note.toMap());
+    Get.toNamed('/notes/edit', arguments: note.toMap());
   }
 
   Future<void> refreshDrafts() async {

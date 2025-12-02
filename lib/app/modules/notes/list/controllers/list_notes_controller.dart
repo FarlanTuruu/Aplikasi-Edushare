@@ -141,7 +141,7 @@ class ListNotesController extends GetxController {
 
   void editNote(String noteId) {
     final note = notesService.allNotes.firstWhere((n) => n.id == noteId);
-    Get.toNamed(Routes.NOTE_CREATE, arguments: note.toMap());
+    Get.toNamed(Routes.NOTE_EDIT, arguments: note.toMap());
   }
 
   Future<void> deleteNote(String noteId) async {

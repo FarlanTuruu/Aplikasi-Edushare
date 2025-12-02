@@ -44,13 +44,15 @@ import '../modules/speech/list/bindings/list_speech_binding.dart';
 import '../modules/speech/list/views/list_speech_view.dart';
 import '../modules/speech/trash/bindings/trash_speech_binding.dart';
 import '../modules/speech/trash/views/trash_speech_view.dart';
+import '../modules/notes/edit/bindings/edit_notes_binding.dart';
+import '../modules/notes/edit/views/edit_notes_view.dart';
 
 part 'app_routes.dart';
 
 class AppPages {
   AppPages._();
 
-  static const INITIAL = Routes.PROFILE;
+  static const INITIAL = Routes.NOTE_CREATE;
 
   static final routes = [
     // -----------------------
@@ -123,6 +125,11 @@ class AppPages {
       name: _Paths.NOTE_SCHEDULED,
       page: () => const ScheduledNotesView(),
       binding: ScheduledNotesBinding(),
+    ),
+    GetPage(
+      name: Routes.NOTE_EDIT,
+      page: () => const EditNotesView(),
+      binding: EditNotesBinding(),
     ),
 
     // -----------------------
