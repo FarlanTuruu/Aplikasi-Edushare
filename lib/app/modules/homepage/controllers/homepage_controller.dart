@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../views/detailmateri_view.dart'; // Kita akan buat file ini di bawah
+import '../../collaboration/list/controllers/list_collaboration_controller.dart';
 
 class HomepageController extends GetxController {
   final selectedTab = 0.obs;
@@ -25,36 +26,41 @@ class HomepageController extends GetxController {
       'image': 'https://picsum.photos/seed/pdf2/400/200',
     },
   ];
-  final kolaborasiList = [
-    {
-      'title': 'Rangkuman Lengkap : Matakuliah Rekayasa Interaksi',
-      'desc':
-          'ini adalah catatan yang kutulis untuk matakuliah RI semoga membantu kalian semuanya dengan catatan yang saya tulis',
-      'viewers': '2',
-      'time': '3 menit yang lalu',
-    },
-    {
-      'title': 'Rangkuman Lengkap : Matakuliah Rekayasa Kebutuhan',
-      'desc':
-          'ini adalah catatan yang kutulis untuk matakuliah RK semoga membantu kalian semuanya dengan catatan yang saya tulis',
-      'viewers': '5',
-      'time': '10 menit yang lalu',
-    },
-    {
-      'title': 'Rangkuman Lengkap : Matakuliah Praskripsi',
-      'desc':
-          'ini adalah catatan yang kutulis untuk matakuliah Praskripsi semoga membantu kalian semuanya dengan catatan yang saya tulis',
-      'viewers': '2',
-      'time': '3 menit yang lalu',
-    },
-    {
-      'title': 'Rangkuman Lengkap : Matakuliah MPPL',
-      'desc':
-          'ini adalah catatan yang kutulis untuk matakuliah MPPL semoga membantu kalian semuanya dengan catatan yang saya tulis',
-      'viewers': '2',
-      'time': '3 menit yang lalu',
-    },
-  ];
+  // Kolaborasi di Homepage akan mengambil dari ListCollaborationController
+  final kolaborasiList = <Map<String, String>>[].obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    // Pastikan controller list kolaborasi tersedia
+    if (!Get.isRegistered<ListCollaborationController>()) {
+      Get.put(ListCollaborationController(), permanent: true);
+    }
+    final listController = Get.find<ListCollaborationController>();
+
+    // Sinkronkan data kolaborasi ke homepage (map field seperlunya)
+    _syncFromCollaborations(listController);
+
+    // Dengarkan perubahan selanjutnya
+    ever(listController.collaborations, (_) {
+      _syncFromCollaborations(listController);
+    });
+  }
+
+  void _syncFromCollaborations(ListCollaborationController listController) {
+    final mapped = listController.collaborations.map<Map<String, String>>((e) {
+      final title = (e['title'] ?? '').toString();
+      final desc = (e['deskripsi'] ?? '').toString();
+      final createdAt = (e['createdAt'] ?? '').toString();
+      return {
+        'title': title.isEmpty ? 'Tanpa Judul' : title,
+        'desc': desc.isEmpty ? createdAt : desc,
+        'viewers': '0',
+        'time': createdAt,
+      };
+    }).toList();
+    kolaborasiList.assignAll(mapped);
+  }
 
   // --- FITUR 1: Buka Halaman Detail ---
   void openDetailMateri(Map<String, dynamic> item) {

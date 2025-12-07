@@ -348,121 +348,127 @@ class HomepageView extends GetView<HomepageController> {
 
   // --- LIST 2: CATATAN KOLABORASI ---
   Widget _buildKolaborasiList() {
-    return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      itemCount: controller.kolaborasiList.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 16),
-      itemBuilder: (context, index) {
-        final item = controller.kolaborasiList[index];
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            // Gradient Ungu Terang
-            gradient: const LinearGradient(
-              colors: [
-                Color(0xFFE1BEE7), // Ungu pudar
-                Color(0xFF7B1FA2), // Ungu pekat
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+    return Obx(() {
+      final items = controller.kolaborasiList;
+      return ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        itemCount: items.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 16),
+        itemBuilder: (context, index) {
+          final item = items[index];
+          final title = item['title'] ?? 'Tanpa Judul';
+          final desc = item['desc'] ?? '';
+          final viewers = item['viewers'] ?? '0';
+          final time = item['time'] ?? '';
+
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: const LinearGradient(
+                colors: [Color(0xFFE1BEE7), Color(0xFF7B1FA2)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
             ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Judul & Tombol Buka
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      item['title']!,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        'Buka',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  desc,
+                  style: const TextStyle(fontSize: 11, color: Colors.black87),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 12),
+                const Divider(color: Colors.white54, height: 1),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 40,
+                      height: 20,
+                      child: Stack(
+                        children: const [
+                          Positioned(
+                            left: 0,
+                            child: CircleAvatar(
+                              radius: 10,
+                              backgroundImage: NetworkImage(
+                                'https://i.pravatar.cc/150?img=1',
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            left: 14,
+                            child: CircleAvatar(
+                              radius: 10,
+                              backgroundImage: NetworkImage(
+                                'https://i.pravatar.cc/150?img=2',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      '$viewers Orang sedang melihat',
                       style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      'Buka',
-                      style: TextStyle(
                         fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: Colors.black54,
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              // Deskripsi
-              Text(
-                item['desc']!,
-                style: const TextStyle(fontSize: 11, color: Colors.black87),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 12),
-              // Garis Pemisah
-              const Divider(color: Colors.white54, height: 1),
-              const SizedBox(height: 8),
-              // Footer (Viewers Stack & Time)
-              Row(
-                children: [
-                  SizedBox(
-                    width: 40,
-                    height: 20,
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          left: 0,
-                          child: const CircleAvatar(
-                            radius: 10,
-                            backgroundImage: NetworkImage(
-                              'https://i.pravatar.cc/150?img=1',
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          left: 14,
-                          child: const CircleAvatar(
-                            radius: 10,
-                            backgroundImage: NetworkImage(
-                              'https://i.pravatar.cc/150?img=2',
-                            ),
-                          ),
-                        ),
-                      ],
+                    const Spacer(),
+                    Text(
+                      time,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.black54,
+                      ),
                     ),
-                  ),
-                  Text(
-                    '${item['viewers']} Orang sedang melihat',
-                    style: const TextStyle(fontSize: 10, color: Colors.black54),
-                  ),
-                  const Spacer(),
-                  Text(
-                    item['time']!,
-                    style: const TextStyle(fontSize: 10, color: Colors.black54),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    });
   }
 
   // --- Bottom Navigation Bar ---
