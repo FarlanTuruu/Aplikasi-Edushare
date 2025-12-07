@@ -16,11 +16,17 @@ class ListCollaborationController extends GetxController {
 
   // Load collaborations from API or local storage
   void loadCollaborations() {
+    // Jika sudah ada data (mis. dari create), jangan timpa
+    if (collaborations.isNotEmpty) {
+      isLoading.value = false;
+      return;
+    }
+
     isLoading.value = true;
 
-    // Simulasi API Call dengan data sesuai gambar
+    // Simulasi API Call: hanya mengisi saat list kosong
     Future.delayed(const Duration(seconds: 1), () {
-      collaborations.assignAll([
+      collaborations.addAll([
         {
           'id': 1,
           'title': 'Rangkuman Praskripsi',
