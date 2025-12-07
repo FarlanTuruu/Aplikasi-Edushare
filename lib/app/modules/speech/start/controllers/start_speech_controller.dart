@@ -1,13 +1,22 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class StartSpeechController extends GetxController {
   final speech = stt.SpeechToText();
 
-  var isRecording = false.obs;
-  var recognizedText = "".obs;
-  var hasSpeech = false.obs;
-  var duration = 0.obs;
+  // state utama
+  final isRecording = false.obs;
+  final recognizedText = "".obs;
+  final hasSpeech = false.obs;
+  final duration = 0.obs;
+
+  // state untuk proses simpan materi
+  final isSaving = false.obs;
+
+  Timer? _timer;
+  String? _localeId; // kita pakai 'id_ID' untuk bahasa Indonesia
 
   @override
   void onInit() {
@@ -15,35 +24,114 @@ class StartSpeechController extends GetxController {
     _initSpeech();
   }
 
-  Future<void> _initSpeech() async {
-    hasSpeech.value = await speech.initialize(
-      onStatus: (status) => print(status),
-      onError: (error) => print(error),
-    );
+  @override
+  void onClose() {
+    speech.stop();
+    _timer?.cancel();
+    super.onClose();
   }
 
-  void startListening() async {
-    if (!hasSpeech.value) return;
-    isRecording.value = true;
+  Future<void> _initSpeech() async {
+    final available = await speech.initialize(
+      onStatus: (status) => print("speech status: $status"),
+      onError: (error) => print("speech error: $error"),
+    );
+    hasSpeech.value = available;
 
-    speech.listen(
+    if (available) {
+      try {
+        // coba ikuti bahasa system dulu
+        final systemLocale = await speech.systemLocale();
+        if (systemLocale!.localeId.toLowerCase().contains('id')) {
+          _localeId = systemLocale?.localeId; // contoh: id_ID
+        } else {
+          _localeId = 'id_ID';
+        }
+      } catch (_) {
+        _localeId = 'id_ID';
+      }
+    }
+  }
+
+  Future<void> startListening() async {
+    if (!hasSpeech.value) {
+      await _initSpeech();
+      if (!hasSpeech.value) return;
+    }
+
+    isRecording.value = true;
+    duration.value = 0;
+    _startTimer();
+
+    await speech.listen(
       onResult: (result) {
+        // hasil speech to text (Bahasa Indonesia)
         recognizedText.value = result.recognizedWords;
       },
-      listenMode: stt.ListenMode.confirmation,
+      localeId: _localeId ?? 'id_ID',      // 🔴 PENTING: Bahasa Indonesia
+      listenMode: stt.ListenMode.dictation, // cocok untuk materi panjang
+      partialResults: true,
     );
   }
 
-  void stopListening() {
-    speech.stop();
-    isRecording.value = false;
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      duration.value++;
+    });
   }
 
-  void toggleRecording() {
+  Future<void> stopListening() async {
+    await speech.stop();
+    isRecording.value = false;
+    _timer?.cancel();
+  }
+
+  Future<void> toggleRecording() async {
     if (isRecording.value) {
-      stopListening();
+      await stopListening();
     } else {
-      startListening();
+      await startListening();
     }
+  }
+
+  /// Dipanggil dari tombol "Simpan sebagai materi Edushare"
+  Future<void> saveCurrentSpeech() async {
+    final text = recognizedText.value.trim();
+    if (text.isEmpty || isSaving.value) return;
+
+    isSaving.value = true;
+    try {
+      // TODO: ganti dengan logic simpan ke DB / API / local storage Edushare
+      // contoh pseudo-code:
+      // await Get.find<SpeechRepository>().saveSpeech(
+      //   text: text,
+      //   duration: duration.value,
+      //   createdAt: DateTime.now(),
+      // );
+
+      await Future.delayed(const Duration(milliseconds: 300)); // dummy proses
+
+      Get.snackbar(
+        'Berhasil',
+        'Transkrip berhasil disimpan sebagai materi Edushare.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      // Optional: reset setelah simpan
+      // clearCurrentSpeech();
+    } catch (e) {
+      Get.snackbar(
+        'Gagal',
+        'Terjadi kesalahan saat menyimpan transkrip.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isSaving.value = false;
+    }
+  }
+
+  void clearCurrentSpeech() {
+    recognizedText.value = "";
+    duration.value = 0;
   }
 }
