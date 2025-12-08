@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -13,12 +15,17 @@ class UploadSpeechView extends GetView<UploadSpeechController> {
 
   @override
   Widget build(BuildContext context) {
-    const purple = Color(0xFF4A1F7A);
+  const purple = Color(0xFF4A1F7A);
 
-    // 🔹 Ambil argumen dari popup upload
-    final args = Get.arguments as Map<String, dynamic>? ?? {};
-    final PlatformFile? file = args['file'] as PlatformFile?;
-    final bool isVideo = args['isVideo'] == true;
+  // 🔹 Ambil argumen dari Get.to(..., arguments: {...})
+  final args = Get.arguments as Map<String, dynamic>? ?? {};
+  final PlatformFile? file = args['file'] as PlatformFile?;
+  final bool isVideo = args['isVideo'] == true;
+
+  // 🔹 Sangat penting: kirim file ke controller
+  if (file != null) {
+    controller.initWithFile(file, isVideo);
+  }
 
     return Scaffold(
       backgroundColor: purple,
@@ -80,16 +87,19 @@ class UploadSpeechView extends GetView<UploadSpeechController> {
                       ),
                       const SizedBox(height: 20),
 
-                      // 🔹 Mode (Video / Audio / Start)
+                      // 🔹 Tombol Mode (desain sama StartSpeechView)
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          _modeButton('Video', isVideo),
-                          _modeButton('Audio', !isVideo),
-                          _modeButton('Start', false),
+                          _modeButton("Start", false),
+                          _modeButton("Audio", false),
+                          _modeButton(
+                            isVideo ? "Video (dipilih)" : "Video",
+                            false,
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 24),
 
                       // 🔹 Info file yang dipilih
                       Container(
@@ -104,7 +114,9 @@ class UploadSpeechView extends GetView<UploadSpeechController> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Icon(
-                              isVideo ? Icons.videocam_outlined : Icons.audiotrack,
+                              isVideo
+                                  ? Icons.videocam_outlined
+                                  : Icons.audiotrack,
                               color: purple,
                               size: 28,
                             ),
@@ -159,7 +171,7 @@ class UploadSpeechView extends GetView<UploadSpeechController> {
                       Center(
                         child: Obx(
                           () => Text(
-                            controller.formattedTime,
+                            controller.formattedTime.value,
                             style: const TextStyle(
                               fontSize: 36,
                               fontWeight: FontWeight.bold,
@@ -169,7 +181,7 @@ class UploadSpeechView extends GetView<UploadSpeechController> {
                       ),
                       const SizedBox(height: 15),
 
-                      // 🔹 Waveform
+                      // 🔹 Waveform animasi bergerak selama audio diputar
                       _WaveformWidget(isPlaying: controller.isListening),
                       const SizedBox(height: 6),
 
@@ -202,17 +214,28 @@ class UploadSpeechView extends GetView<UploadSpeechController> {
                               ),
                             ),
                           ),
-                      ),
+                        ),
                       ),
                       const SizedBox(height: 20),
 
-                      // 🔹 Kotak teks hasil transkrip
+                      // 🔹 KOLUM TRANSKRIP
+                      const Text(
+                        "Transkrip materi",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(15),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: const Color(0xFFE2D6F0),
+                          ),
                         ),
                         child: Obx(
                           () => Text(
@@ -280,20 +303,20 @@ class UploadSpeechView extends GetView<UploadSpeechController> {
     );
   }
 
-  // 🔸 Tombol mode (Video / Audio / Start)
-  Widget _modeButton(String label, bool isActive) {
+  // 🔸 Tombol mode (Audio / Start / Video)
+  Widget _modeButton(String label, bool isActiveIgnored) {
     const purple = Color(0xFF4A1F7A);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+      margin: const EdgeInsets.all(5),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
       decoration: BoxDecoration(
-        color: isActive ? purple : Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: purple),
+        color: purple,
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         label,
-        style: TextStyle(
-          color: isActive ? Colors.white : purple,
+        style: const TextStyle(
+          color: Colors.white,
           fontWeight: FontWeight.w500,
           fontSize: 13,
         ),
@@ -370,35 +393,68 @@ class UploadSpeechView extends GetView<UploadSpeechController> {
   }
 }
 
-/// 🔹 Waveform animasi
-class _WaveformWidget extends StatelessWidget {
+/// 🔹 Waveform animasi bergerak selama audio diputar (visual saja)
+class _WaveformWidget extends StatefulWidget {
   final RxBool isPlaying;
   const _WaveformWidget({Key? key, required this.isPlaying}) : super(key: key);
 
   @override
+  State<_WaveformWidget> createState() => _WaveformWidgetState();
+}
+
+class _WaveformWidgetState extends State<_WaveformWidget> {
+  int _tick = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(milliseconds: 120), (_) {
+      if (!mounted) return;
+      setState(() {
+        if (widget.isPlaying.value) {
+          _tick++;
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     const purple = Color(0xFF4A1F7A);
-    return Obx(() {
-      return SizedBox(
-        height: 70,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: List.generate(20, (i) {
-            final height =
-                isPlaying.value ? (15 + (i * 5) % 50) : 10 + (i % 5) * 5;
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              width: 6,
-              height: height.toDouble(),
-              decoration: BoxDecoration(
-                color: i % 2 == 0 ? purple : Colors.grey[350],
-                borderRadius: BorderRadius.circular(4),
-              ),
-            );
-          }),
-        ),
-      );
-    });
+
+    return SizedBox(
+      height: 70,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: List.generate(20, (i) {
+          final playing = widget.isPlaying.value;
+
+          final baseHeight = playing ? 18.0 : 10.0;
+          final variableHeight = playing
+              ? (((i + _tick) % 5) * 6).toDouble()
+              : ((i % 3) * 4).toDouble();
+
+          final height = baseHeight + variableHeight;
+
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 120),
+            width: 6,
+            height: height,
+            decoration: BoxDecoration(
+              color: i % 2 == 0 ? purple : Colors.grey[350],
+              borderRadius: BorderRadius.circular(4),
+            ),
+          );
+        }),
+      ),
+    );
   }
 }
