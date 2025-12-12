@@ -209,9 +209,9 @@ class ProfileSettingsView extends GetView<ProfileSettingsController> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 1,
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 10,
+            offset: const Offset(0, -2),
           ),
         ],
       ),
@@ -234,7 +234,7 @@ class ProfileSettingsView extends GetView<ProfileSettingsController> {
             () => Get.toNamed('/notes/create'),
           ),
           _buildNavItem(
-            Icons.mic_none,
+            Icons.mic_outlined,
             false,
             () => Get.toNamed('/speech/list'),
           ),
@@ -246,10 +246,14 @@ class ProfileSettingsView extends GetView<ProfileSettingsController> {
   Widget _buildNavItem(IconData icon, bool isActive, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
-      child: Icon(
-        icon,
-        size: 30,
-        color: isActive ? const Color(0xFF5B2C91) : Colors.grey,
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: const BoxDecoration(
+          color: Colors.transparent,
+          shape: BoxShape.circle,
+        ),
+        child: Center(child: Icon(icon, color: Colors.black, size: 30)),
       ),
     );
   }
