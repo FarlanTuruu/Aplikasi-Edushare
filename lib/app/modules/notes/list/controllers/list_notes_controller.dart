@@ -9,41 +9,89 @@ class ListNotesController extends GetxController {
 
   final filteredNotesList = <NoteModel>[].obs;
   final isLoading = false.obs;
-  late final TextEditingController searchController;
+  final searchQuery = ''.obs;
 
-  bool _isDisposed = false;
+  // 🔧 FIX: Gunakan TextEditingController yang lebih aman
+  TextEditingController? _searchController;
+  TextEditingController get searchController {
+    _searchController ??= TextEditingController();
+    return _searchController!;
+  }
+
+  Worker? _notesWorker;
 
   @override
   void onInit() {
     super.onInit();
-    searchController = TextEditingController();
+    print('🟢 ListNotesController onInit');
 
-    ever(notesService.allNotes, (List<NoteModel> notes) {
-      if (!_isDisposed) {
-        filteredNotesList.value = notes.toList();
-        print('✅ List updated: ${notes.length} notes');
-      }
-    });
+    // Initialize controller
+    _searchController = TextEditingController();
 
-    if (!_isDisposed) {
-      filteredNotesList.value = notesService.allNotes.toList();
-    }
+    // Setup worker dengan onError handler
+    _notesWorker = ever(
+      notesService.allNotes,
+      _updateNotesList,
+      onError: (error) {
+        print('❌ Worker error: $error');
+      },
+    );
+
+    // Load initial data
+    _updateNotesList(notesService.allNotes);
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
+    print('🟢 ListNotesController onReady');
+    refreshNotes();
   }
 
   @override
   void onClose() {
-    _isDisposed = true;
+    print('🔴 ListNotesController onClose - START');
 
-    if (searchController.hasListeners) {
-      searchController.clear();
+    // 1. Dispose worker terlebih dahulu
+    try {
+      _notesWorker?.dispose();
+      _notesWorker = null;
+      print('✅ Worker disposed');
+    } catch (e) {
+      print('⚠️ Error disposing worker: $e');
     }
-    searchController.dispose();
 
+    // 2. Dispose search controller dengan aman
+    try {
+      if (_searchController != null) {
+        _searchController!.clear();
+        _searchController!.dispose();
+        _searchController = null;
+        print('✅ SearchController disposed');
+      }
+    } catch (e) {
+      print('⚠️ Error disposing searchController: $e');
+    }
+
+    print('🔴 ListNotesController onClose - END');
     super.onClose();
   }
 
+  void _updateNotesList(List<NoteModel> notes) {
+    try {
+      if (searchQuery.value.trim().isEmpty) {
+        filteredNotesList.value = notes.toList();
+      } else {
+        searchNotes(searchQuery.value);
+      }
+      print('✅ List updated: ${notes.length} notes');
+    } catch (e) {
+      print('❌ Error updating notes list: $e');
+    }
+  }
+
   void searchNotes(String query) {
-    if (_isDisposed) return;
+    searchQuery.value = query;
 
     if (query.trim().isEmpty) {
       filteredNotesList.value = notesService.allNotes.toList();
@@ -56,6 +104,14 @@ class ListNotesController extends GetxController {
           note.mataKuliah.toLowerCase().contains(q) ||
           note.description.toLowerCase().contains(q);
     }).toList();
+  }
+
+  void clearSearch() {
+    if (_searchController != null && _searchController!.text.isNotEmpty) {
+      _searchController!.clear();
+    }
+    searchQuery.value = '';
+    filteredNotesList.value = notesService.allNotes.toList();
   }
 
   void showFilterDialog() {
@@ -93,19 +149,16 @@ class ListNotesController extends GetxController {
   }
 
   void sortByNewest() {
-    if (_isDisposed) return;
     filteredNotesList.sort((a, b) => b.date.compareTo(a.date));
     filteredNotesList.refresh();
   }
 
   void sortByOldest() {
-    if (_isDisposed) return;
     filteredNotesList.sort((a, b) => a.date.compareTo(b.date));
     filteredNotesList.refresh();
   }
 
   void sortByTitle() {
-    if (_isDisposed) return;
     filteredNotesList.sort((a, b) => a.title.compareTo(b.title));
     filteredNotesList.refresh();
   }
@@ -165,13 +218,12 @@ class ListNotesController extends GetxController {
           TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
           ElevatedButton(
             onPressed: () async {
-              Get.back(); // Tutup dialog konfirmasi
+              Get.back();
 
               try {
                 await Future.delayed(const Duration(milliseconds: 200));
                 notesService.deleteNote(noteId, isArchived: false);
 
-                // 🔧 FIX: Tutup semua dialog yang mungkin terbuka
                 _showSuccessDialog(
                   title: '🗑️ Catatan Dihapus Permanen',
                   message:
@@ -180,7 +232,6 @@ class ListNotesController extends GetxController {
                   color: Colors.red,
                   actionText: 'Tutup',
                   onActionPressed: () {
-                    // Tutup dialog success dengan Until
                     Get.until((route) => route.isFirst || !Get.isDialogOpen!);
                   },
                 );
@@ -206,8 +257,12 @@ class ListNotesController extends GetxController {
   }
 
   Future<void> refreshNotes() async {
-    if (_isDisposed) return;
-    filteredNotesList.value = notesService.allNotes.toList();
+    try {
+      filteredNotesList.value = notesService.allNotes.toList();
+      print('🔄 Notes refreshed: ${filteredNotesList.length}');
+    } catch (e) {
+      print('❌ Error refreshing notes: $e');
+    }
   }
 
   List<NoteModel> get notesList => notesService.allNotes;

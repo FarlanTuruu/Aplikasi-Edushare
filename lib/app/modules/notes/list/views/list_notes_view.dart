@@ -1,7 +1,7 @@
-import 'package:appedushare/app/models/note_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/list_notes_controller.dart';
+import '../../../../models/note_model.dart';
 
 class ListNotesView extends GetView<ListNotesController> {
   const ListNotesView({super.key});
@@ -16,10 +16,7 @@ class ListNotesView extends GetView<ListNotesController> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
             _buildHeader(context, isTablet),
-
-            // Main Content
             Expanded(
               child: Container(
                 width: double.infinity,
@@ -32,23 +29,20 @@ class ListNotesView extends GetView<ListNotesController> {
                 ),
                 child: Column(
                   children: [
-                    // Search Bar
-                    Padding(
-                      padding: EdgeInsets.all(isTablet ? 24 : 20),
-                      child: _buildSearchBar(isTablet),
+                    // 🔧 FIX: Wrap TextField dengan GetBuilder untuk rebuild safety
+                    GetBuilder<ListNotesController>(
+                      builder: (ctrl) => Padding(
+                        padding: EdgeInsets.all(isTablet ? 24 : 20),
+                        child: _buildSearchBar(isTablet),
+                      ),
                     ),
-
-                    // Navigation Menu
                     Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: isTablet ? 24 : 20,
                       ),
                       child: _buildNavigationMenu(isTablet),
                     ),
-
                     SizedBox(height: isTablet ? 20 : 16),
-
-                    // Filter Button
                     Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: isTablet ? 24 : 20,
@@ -58,10 +52,7 @@ class ListNotesView extends GetView<ListNotesController> {
                         child: _buildFilterButton(isTablet),
                       ),
                     ),
-
                     SizedBox(height: isTablet ? 20 : 16),
-
-                    // Notes List
                     Expanded(
                       child: Obx(() {
                         if (controller.isLoading.value) {
@@ -72,7 +63,6 @@ class ListNotesView extends GetView<ListNotesController> {
                           );
                         }
 
-                        // 🔧 FIX: Gunakan filteredNotesList untuk check empty
                         if (controller.filteredNotesList.isEmpty) {
                           return _buildEmptyState(isTablet);
                         }
@@ -84,8 +74,6 @@ class ListNotesView extends GetView<ListNotesController> {
                 ),
               ),
             ),
-
-            // Bottom Navigation
             _buildBottomNavigation(),
           ],
         ),
@@ -119,9 +107,7 @@ class ListNotesView extends GetView<ListNotesController> {
               ),
               SizedBox(width: isTablet ? 16 : 12),
               InkWell(
-                onTap: () {
-                  Get.toNamed('/settings/profile');
-                },
+                onTap: () => Get.toNamed('/settings/profile'),
                 child: Icon(
                   Icons.settings,
                   color: Colors.white,
@@ -149,6 +135,8 @@ class ListNotesView extends GetView<ListNotesController> {
         ],
       ),
       child: TextField(
+        // 🔧 FIX: Tambahkan key unik untuk force rebuild
+        key: ValueKey('search_${controller.hashCode}'),
         controller: controller.searchController,
         onChanged: (value) => controller.searchNotes(value),
         decoration: InputDecoration(
@@ -162,6 +150,16 @@ class ListNotesView extends GetView<ListNotesController> {
             color: Colors.grey[400],
             size: isTablet ? 24 : 20,
           ),
+          suffixIcon: Obx(() {
+            // Clear button jika ada text
+            if (controller.searchQuery.value.isNotEmpty) {
+              return IconButton(
+                icon: Icon(Icons.clear, color: Colors.grey[400]),
+                onPressed: () => controller.clearSearch(),
+              );
+            }
+            return const SizedBox.shrink();
+          }),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25),
             borderSide: BorderSide.none,
@@ -182,12 +180,7 @@ class ListNotesView extends GetView<ListNotesController> {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          _buildNavButton(
-            'List',
-            true,
-            isTablet,
-            () {}, // Current page, no navigation needed
-          ),
+          _buildNavButton('List', true, isTablet, () {}),
           SizedBox(width: isTablet ? 16 : 12),
           _buildNavButton(
             'Draft',
@@ -249,9 +242,7 @@ class ListNotesView extends GetView<ListNotesController> {
 
   Widget _buildFilterButton(bool isTablet) {
     return GestureDetector(
-      onTap: () {
-        controller.showFilterDialog();
-      },
+      onTap: () => controller.showFilterDialog(),
       child: Container(
         padding: EdgeInsets.symmetric(
           horizontal: isTablet ? 20 : 16,
@@ -262,7 +253,7 @@ class ListNotesView extends GetView<ListNotesController> {
           borderRadius: BorderRadius.circular(25),
         ),
         child: Text(
-          'Tanggal',
+          'Sort By',
           style: TextStyle(
             color: Colors.black,
             fontSize: isTablet ? 15 : 13,
@@ -313,7 +304,6 @@ class ListNotesView extends GetView<ListNotesController> {
         padding: EdgeInsets.all(isTablet ? 20 : 16),
         child: Row(
           children: [
-            // Date Box
             Container(
               padding: EdgeInsets.all(isTablet ? 12 : 10),
               decoration: BoxDecoration(
@@ -341,10 +331,7 @@ class ListNotesView extends GetView<ListNotesController> {
                 ],
               ),
             ),
-
             SizedBox(width: isTablet ? 16 : 12),
-
-            // Note Title
             Expanded(
               child: Text(
                 note.title,
@@ -355,10 +342,7 @@ class ListNotesView extends GetView<ListNotesController> {
                 ),
               ),
             ),
-
             SizedBox(width: isTablet ? 16 : 12),
-
-            // Action Buttons
             Row(
               children: [
                 _buildActionButton(
@@ -440,9 +424,7 @@ class ListNotesView extends GetView<ListNotesController> {
           ),
           SizedBox(height: isTablet ? 32 : 24),
           ElevatedButton.icon(
-            onPressed: () {
-              Get.toNamed('/notes/create');
-            },
+            onPressed: () => Get.toNamed('/notes/create'),
             icon: const Icon(Icons.add),
             label: const Text('Tambah Catatan'),
             style: ElevatedButton.styleFrom(
@@ -474,18 +456,26 @@ class ListNotesView extends GetView<ListNotesController> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildBottomNavItem(Icons.home_outlined, false, () {
-            Get.toNamed('/homepage');
-          }),
-          _buildBottomNavItem(Icons.chat_bubble_outline, false, () {
-            Get.toNamed('/chat/rooms');
-          }),
-          _buildBottomNavItem(Icons.add_circle, true, () {
-            Get.toNamed('/notes/create');
-          }),
-          _buildBottomNavItem(Icons.mic_outlined, false, () {
-            Get.toNamed('/speech/list');
-          }),
+          _buildBottomNavItem(
+            Icons.home_outlined,
+            false,
+            () => Get.toNamed('/homepage'),
+          ),
+          _buildBottomNavItem(
+            Icons.chat_bubble_outline,
+            false,
+            () => Get.toNamed('/chat/rooms'),
+          ),
+          _buildBottomNavItem(
+            Icons.add_circle,
+            true,
+            () => Get.toNamed('/notes/create'),
+          ),
+          _buildBottomNavItem(
+            Icons.mic_outlined,
+            false,
+            () => Get.toNamed('/speech/list'),
+          ),
         ],
       ),
     );

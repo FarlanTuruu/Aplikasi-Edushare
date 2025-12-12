@@ -450,6 +450,9 @@ class EditNotesView extends GetView<EditNotesController> {
     );
   }
 
+  // ============================================================
+  // BOTTOM NAVBAR
+  // ============================================================
   Widget _buildBottomNavigation() {
     return Container(
       height: 70,
@@ -476,11 +479,7 @@ class EditNotesView extends GetView<EditNotesController> {
             false,
             () => Get.toNamed('/chat/rooms'),
           ),
-          _bottomItem(
-            Icons.add_circle,
-            false,
-            () => Get.toNamed('/notes/create'),
-          ),
+          _bottomItem(Icons.add_circle, true, () {}),
           _bottomItem(
             Icons.mic_outlined,
             false,
