@@ -247,23 +247,38 @@ class LoginView extends GetView<LoginController> {
               // Login Button
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Get.toNamed(Routes.HOMEPAGE),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4A2D7F),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                child: Obx(
+                  () => ElevatedButton(
+                    onPressed: controller.isLoading.value
+                        ? null
+                        : () => controller.login(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4A2D7F),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                  ),
-                  child: const Text(
-                    'LOG IN',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 0.5,
-                    ),
+                    child: controller.isLoading.value
+                        ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                        : const Text(
+                            'LOG IN',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
                   ),
                 ),
               ),

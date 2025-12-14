@@ -1,6 +1,7 @@
 // File 1: /lib/app/modules/auth/register/controllers/register_controller.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../services/auth_service.dart';
 
 class RegisterController extends GetxController {
   // Text Controllers
@@ -14,8 +15,6 @@ class RegisterController extends GetxController {
   final isPasswordHidden = true.obs;
   final isConfirmPasswordHidden = true.obs;
   final isLoading = false.obs;
-
-
 
   @override
   void onClose() {
@@ -38,7 +37,7 @@ class RegisterController extends GetxController {
   }
 
   // Register Method
-  void register() {
+  Future<void> register() async {
     final fullName = fullNameController.text.trim();
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
@@ -91,33 +90,42 @@ class RegisterController extends GetxController {
     }
 
     isLoading.value = true;
-
-    // TODO: Implement actual registration API call
-    // Example:
-    // try {
-    //   final response = await authService.register(
-    //     fullName: fullName,
-    //     email: email,
-    //     password: password,
-    //     fakultasProdi: fakultasProdi,
-    //   );
-    //   Get.offAllNamed(Routes.LOGIN);
-    // } catch (e) {
-    //   Get.snackbar('Error', e.toString());
-    // } finally {
-    //   isLoading.value = false;
-    // }
-
-    Future.delayed(const Duration(seconds: 2), () {
-      isLoading.value = false;
+    final auth = Get.find<AuthService>();
+    try {
+      final ok = await auth.register({
+        'name': fullName,
+        'email': email,
+        'password': password,
+        'password_confirmation': confirmPassword,
+        'fakultas_prodi': fakultasProdi,
+      });
+      if (ok) {
+        Get.snackbar(
+          'Success',
+          'Registration Successful! Please login',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+        // Navigate to login page after successful registration
+        Get.offAllNamed('/login');
+      } else {
+        Get.snackbar(
+          'Error',
+          'Registrasi gagal. Coba lagi.',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
       Get.snackbar(
-        'Success',
-        'Registration Successful! Please login',
-        backgroundColor: Colors.green,
+        'Error',
+        e.toString(),
+        backgroundColor: Colors.red,
         colorText: Colors.white,
       );
-      // Get.offAllNamed(Routes.LOGIN);
-    });
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   // Google Registration

@@ -8,8 +8,9 @@ class ForgetPasswordView extends GetView<ForgetPasswordController> {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => controller.isResetStep.value
+    // Use GetBuilder for page switching to avoid heavy Obx at root
+    return GetBuilder<ForgetPasswordController>(
+      builder: (c) => c.isResetStep.value
           ? _buildResetPasswordScreen()
           : _buildForgotPasswordScreen(),
     );
@@ -102,32 +103,37 @@ class ForgetPasswordView extends GetView<ForgetPasswordController> {
             const SizedBox(height: 32),
 
             // Send Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: controller.sendResetEmail,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4A2D7F),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.send, size: 18),
-                    SizedBox(width: 8),
-                    Text(
-                      'Send',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
-                      ),
+            Obx(
+              () => SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: controller.isLoading.value
+                      ? null
+                      : controller.sendResetEmail,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4A2D7F),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (!controller.isLoading.value)
+                        const Icon(Icons.send, size: 18),
+                      if (!controller.isLoading.value) const SizedBox(width: 8),
+                      Text(
+                        controller.isLoading.value ? 'Sending…' : 'Send',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -167,6 +173,23 @@ class ForgetPasswordView extends GetView<ForgetPasswordController> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 24),
+
+              // Token tidak diperlukan di UI; jika tersedia dari email, diisi otomatis
+              // Target Email (info) - read via GetBuilder updates
+              GetBuilder<ForgetPasswordController>(
+                builder: (c) => c.resetEmailHint.value.isNotEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: Text(
+                          'Resetting for: ' + c.resetEmailHint.value,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
 
               // New Password Label
               const Text(
@@ -267,24 +290,50 @@ class ForgetPasswordView extends GetView<ForgetPasswordController> {
               const SizedBox(height: 32),
 
               // Submit Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: controller.submitNewPassword,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4A2D7F),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+              Obx(
+                () => SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: controller.isLoading.value
+                        ? null
+                        : controller.submitNewPassword,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4A2D7F),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      controller.isLoading.value ? 'Submitting…' : 'Submit',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
-                  child: const Text(
-                    'Submit',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 0.5,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Resend Reset Email (fallback)
+              Obx(
+                () => SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: controller.isLoading.value
+                        ? null
+                        : () => controller.resendResetEmail(),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: Text(
+                      controller.isLoading.value
+                          ? 'Please wait…'
+                          : 'Resend reset email',
                     ),
                   ),
                 ),

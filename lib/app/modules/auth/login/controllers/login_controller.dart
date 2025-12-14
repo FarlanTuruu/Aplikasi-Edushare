@@ -1,6 +1,7 @@
 // File 2: /lib/app/modules/auth/login/controllers/login_controller.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../services/auth_service.dart';
 
 class LoginController extends GetxController {
   // Text Controllers
@@ -11,8 +12,6 @@ class LoginController extends GetxController {
   // Observable
   final isPasswordHidden = true.obs;
   final isLoading = false.obs;
-
-
 
   @override
   void onClose() {
@@ -28,7 +27,7 @@ class LoginController extends GetxController {
   }
 
   // Login Method
-  void login() {
+  Future<void> login() async {
     final fullName = fullNameController.text.trim();
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
@@ -65,28 +64,37 @@ class LoginController extends GetxController {
     }
 
     isLoading.value = true;
-
-    // TODO: Implement actual login API call
-    // Example:
-    // try {
-    //   final response = await authService.login(email, password);
-    //   Get.offAllNamed(Routes.HOME);
-    // } catch (e) {
-    //   Get.snackbar('Error', e.toString());
-    // } finally {
-    //   isLoading.value = false;
-    // }
-
-    Future.delayed(const Duration(seconds: 2), () {
-      isLoading.value = false;
+    final auth = Get.find<AuthService>();
+    try {
+      final ok = await auth.login(email, password);
+      if (ok) {
+        Get.snackbar(
+          'Success',
+          'Login Successful!',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+        // Navigate to homepage on success
+        Get.offAllNamed('/homepage');
+      } else {
+        Get.snackbar(
+          'Error',
+          'Invalid credentials. Please check your email or password.',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      // Show friendly error on exceptions (e.g., 401/422)
       Get.snackbar(
-        'Success',
-        'Login Successful!',
-        backgroundColor: Colors.green,
+        'Error',
+        'Invalid credentials. Please check your email or password.',
+        backgroundColor: Colors.red,
         colorText: Colors.white,
       );
-      // Get.offAllNamed(Routes.HOME);
-    });
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   // Google Login
