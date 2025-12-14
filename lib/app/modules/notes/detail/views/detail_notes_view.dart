@@ -35,45 +35,68 @@ class DetailNotesView extends GetView<DetailNotesController> {
                   controller.editNote();
                   break;
                 case 'archive':
-                  controller.archiveNote();
+                  controller.toggleArchive();
                   break;
                 case 'delete':
                   controller.deleteNote();
                   break;
               }
             },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'edit',
-                child: Row(
-                  children: [
-                    Icon(Icons.edit, color: Colors.blue, size: 20),
-                    SizedBox(width: 12),
-                    Text('Edit Catatan'),
-                  ],
+            itemBuilder: (context) {
+              final isFromArchive = controller.isFromArchive.value;
+              final isFromScheduled = controller.isFromScheduled.value;
+              return [
+                const PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit, color: Colors.blue, size: 20),
+                      SizedBox(width: 12),
+                      Text('Edit Catatan'),
+                    ],
+                  ),
                 ),
-              ),
-              const PopupMenuItem(
-                value: 'archive',
-                child: Row(
-                  children: [
-                    Icon(Icons.archive, color: Colors.orange, size: 20),
-                    SizedBox(width: 12),
-                    Text('Arsipkan'),
-                  ],
+                // 🔧 Dynamic menu item based on source
+                PopupMenuItem(
+                  value: 'archive',
+                  child: Row(
+                    children: [
+                      Icon(
+                        isFromArchive
+                            ? Icons.unarchive
+                            : isFromScheduled
+                            ? Icons.publish
+                            : Icons.archive,
+                        color: isFromArchive
+                            ? Colors.green
+                            : isFromScheduled
+                            ? Colors.green
+                            : Colors.orange,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        isFromArchive
+                            ? 'Kembalikan'
+                            : isFromScheduled
+                            ? 'Publikasikan'
+                            : 'Arsipkan',
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete, color: Colors.red, size: 20),
-                    SizedBox(width: 12),
-                    Text('Hapus'),
-                  ],
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete, color: Colors.red, size: 20),
+                      SizedBox(width: 12),
+                      Text('Hapus'),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ];
+            },
           ),
         ],
       ),
@@ -109,7 +132,7 @@ class DetailNotesView extends GetView<DetailNotesController> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -171,7 +194,7 @@ class DetailNotesView extends GetView<DetailNotesController> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 2),
                           ),
@@ -222,7 +245,7 @@ class DetailNotesView extends GetView<DetailNotesController> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 10,
                               offset: const Offset(0, 2),
                             ),
@@ -236,7 +259,9 @@ class DetailNotesView extends GetView<DetailNotesController> {
                           leading: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF6B2C91).withOpacity(0.1),
+                              color: const Color(
+                                0xFF6B2C91,
+                              ).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(
@@ -265,42 +290,70 @@ class DetailNotesView extends GetView<DetailNotesController> {
                       const SizedBox(height: 16),
                     ],
 
-                    // Action Buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: controller.editNote,
-                            icon: const Icon(Icons.edit, size: 20),
-                            label: const Text('Edit'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF6B2C91),
-                              side: const BorderSide(color: Color(0xFF6B2C91)),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                    // 🔧 Dynamic Action Buttons based on source
+                    Obx(() {
+                      final isFromArchive = controller.isFromArchive.value;
+                      final isFromScheduled = controller.isFromScheduled.value;
+
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: controller.editNote,
+                              icon: const Icon(Icons.edit, size: 20),
+                              label: const Text('Edit'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFF6B2C91),
+                                side: const BorderSide(
+                                  color: Color(0xFF6B2C91),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: controller.archiveNote,
-                            icon: const Icon(Icons.archive, size: 20),
-                            label: const Text('Arsipkan'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: controller.toggleArchive,
+                              icon: Icon(
+                                isFromArchive
+                                    ? Icons.unarchive
+                                    : isFromScheduled
+                                    ? Icons.publish
+                                    : Icons.archive,
+                                size: 20,
+                              ),
+                              label: Text(
+                                isFromArchive
+                                    ? 'Kembalikan'
+                                    : isFromScheduled
+                                    ? 'Publikasikan'
+                                    : 'Arsipkan',
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: isFromArchive
+                                    ? Colors.green
+                                    : isFromScheduled
+                                    ? Colors.green
+                                    : Colors.orange,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      );
+                    }),
 
                     const SizedBox(height: 12),
 

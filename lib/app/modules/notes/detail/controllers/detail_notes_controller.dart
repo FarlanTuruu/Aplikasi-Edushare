@@ -12,20 +12,108 @@ class DetailNotesController extends GetxController {
   late Rx<NoteModel> note;
   final isLoading = false.obs;
 
+  // 🔧 NEW: Deteksi dari mana catatan berasal
+  final isFromArchive = false.obs;
+  final isFromDraft = false.obs;
+  final isFromScheduled = false.obs;
+
   @override
   void onInit() {
     super.onInit();
     print('🟢 DetailNotesController onInit');
 
     // Ambil data note dari arguments
-    final noteData = Get.arguments as Map<String, dynamic>;
-    note = NoteModel.fromMap(noteData).obs;
+    final args = Get.arguments as Map<String, dynamic>;
+    note = NoteModel.fromMap(args).obs;
+
+    // 🔧 NEW: Deteksi source dari arguments
+    isFromArchive.value = args['isFromArchive'] == true;
+    isFromDraft.value = args['isFromDraft'] == true;
+    isFromScheduled.value = args['isFromScheduled'] == true;
 
     print('📝 Note loaded: ${note.value.title}');
+    print(
+      '📍 Source - Archive: ${isFromArchive.value}, Draft: ${isFromDraft.value}, Scheduled: ${isFromScheduled.value}',
+    );
   }
 
-  // Archive Note
-  Future<void> archiveNote() async {
+  // Archive/Unarchive/Publish Note (Context-aware)
+  Future<void> toggleArchive() async {
+    if (isFromArchive.value) {
+      // Unarchive (Restore)
+      await _unarchiveNote();
+    } else if (isFromScheduled.value) {
+      // Publish Scheduled
+      await _publishScheduled();
+    } else {
+      // Archive
+      await _archiveNote();
+    }
+  }
+
+  // Publish Scheduled Note
+  Future<void> _publishScheduled() async {
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.publish, color: Colors.green, size: 28),
+            SizedBox(width: 8),
+            Text('Publikasikan Catatan'),
+          ],
+        ),
+        content: Text(
+          'Apakah Anda yakin ingin mempublikasikan catatan terjadwal "${note.value.title}"?\n\nCatatan akan dipindahkan ke List Notes.',
+          style: const TextStyle(height: 1.5),
+        ),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
+          ElevatedButton(
+            onPressed: () async {
+              Get.back(); // Tutup dialog
+
+              try {
+                isLoading.value = true;
+                await Future.delayed(const Duration(milliseconds: 300));
+                notesService.publishScheduled(note.value.id);
+
+                _showSuccessDialog(
+                  title: '✅ Catatan Dipublikasikan',
+                  message:
+                      'Catatan "${note.value.title}" berhasil dipublikasikan ke List Notes.',
+                  icon: Icons.publish,
+                  color: Colors.green,
+                  actionText: 'Kembali ke List',
+                  onActionPressed: () {
+                    Get.back(); // Tutup dialog
+                    Get.back(); // Kembali ke scheduled
+                  },
+                );
+              } catch (e) {
+                Get.snackbar(
+                  'Error',
+                  'Gagal mempublikasikan: $e',
+                  snackPosition: SnackPosition.BOTTOM,
+                  backgroundColor: Colors.red,
+                  colorText: Colors.white,
+                );
+              } finally {
+                isLoading.value = false;
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            child: const Text(
+              'Publikasikan',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _archiveNote() async {
     Get.dialog(
       AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -86,12 +174,73 @@ class DetailNotesController extends GetxController {
     );
   }
 
+  Future<void> _unarchiveNote() async {
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.unarchive, color: Colors.green, size: 28),
+            SizedBox(width: 8),
+            Text('Kembalikan Catatan'),
+          ],
+        ),
+        content: Text(
+          'Apakah Anda yakin ingin mengembalikan catatan "${note.value.title}" dari Archive?\n\nCatatan akan dipindahkan kembali ke List Notes.',
+          style: const TextStyle(height: 1.5),
+        ),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
+          ElevatedButton(
+            onPressed: () async {
+              Get.back(); // Tutup dialog
+
+              try {
+                isLoading.value = true;
+                await Future.delayed(const Duration(milliseconds: 300));
+                notesService.unarchiveNote(note.value.id);
+
+                _showSuccessDialog(
+                  title: '📤 Catatan Dikembalikan',
+                  message:
+                      'Catatan "${note.value.title}" berhasil dikembalikan ke List Notes.',
+                  icon: Icons.unarchive,
+                  color: Colors.green,
+                  actionText: 'Kembali ke Archive',
+                  onActionPressed: () {
+                    Get.back(); // Tutup dialog
+                    Get.back(); // Kembali ke archive
+                  },
+                );
+              } catch (e) {
+                Get.snackbar(
+                  'Error',
+                  'Gagal mengembalikan: $e',
+                  snackPosition: SnackPosition.BOTTOM,
+                  backgroundColor: Colors.red,
+                  colorText: Colors.white,
+                );
+              } finally {
+                isLoading.value = false;
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            child: const Text(
+              'Kembalikan',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // Edit Note
   void editNote() {
     Get.toNamed(Routes.NOTE_EDIT, arguments: note.value.toMap());
   }
 
-  // Delete Note
+  // Delete Note (Context-aware)
   Future<void> deleteNote() async {
     Get.dialog(
       AlertDialog(
@@ -116,7 +265,14 @@ class DetailNotesController extends GetxController {
               try {
                 isLoading.value = true;
                 await Future.delayed(const Duration(milliseconds: 200));
-                notesService.deleteNote(note.value.id, isArchived: false);
+
+                // 🔧 NEW: Delete berdasarkan source
+                notesService.deleteNote(
+                  note.value.id,
+                  isArchived: isFromArchive.value,
+                  isDraft: isFromDraft.value,
+                  isScheduled: isFromScheduled.value,
+                );
 
                 _showSuccessDialog(
                   title: '🗑️ Catatan Dihapus',
@@ -124,10 +280,10 @@ class DetailNotesController extends GetxController {
                       'Catatan "${note.value.title}" telah dihapus secara permanen.',
                   icon: Icons.delete_forever,
                   color: Colors.red,
-                  actionText: 'Kembali ke List',
+                  actionText: 'Tutup',
                   onActionPressed: () {
                     Get.back(); // Tutup dialog
-                    Get.back(); // Kembali ke list
+                    Get.back(); // Kembali ke halaman sebelumnya
                   },
                 );
               } catch (e) {
@@ -207,7 +363,7 @@ class DetailNotesController extends GetxController {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, size: 64, color: color),
