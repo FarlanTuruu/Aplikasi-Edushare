@@ -22,6 +22,11 @@ class EditNotesController extends GetxController {
   late String noteId;
   late NoteModel originalNote;
 
+  // 🔧 FIXED: Tambahkan tracking untuk source catatan
+  bool isFromArchive = false;
+  bool isFromScheduled = false;
+  bool isFromDraft = false;
+
   @override
   void onInit() {
     super.onInit();
@@ -54,11 +59,25 @@ class EditNotesController extends GetxController {
         return;
       }
 
-      // Parse note data dari arguments
+      // 🔧 FIXED: Parse source information dari arguments
       if (args is Map<String, dynamic>) {
         originalNote = NoteModel.fromMap(args);
+        // Extract source flags dengan pengecekan yang lebih teliti
+        isFromArchive = args['isFromArchive'] == true;
+        isFromScheduled = args['isFromScheduled'] == true;
+        isFromDraft = args['isFromDraft'] == true;
+
+        print('🔍 Arguments received in EditNotesController:');
+        print('   - isFromArchive: ${args['isFromArchive']}');
+        print('   - isFromScheduled: ${args['isFromScheduled']}');
+        print('   - isFromDraft: ${args['isFromDraft']}');
       } else if (args is NoteModel) {
         originalNote = args;
+        // Jika langsung NoteModel, default semua false
+        isFromArchive = false;
+        isFromScheduled = false;
+        isFromDraft = false;
+        print('⚠️ Warning: Received NoteModel directly without source flags');
       } else {
         throw Exception('Invalid argument type');
       }
@@ -78,6 +97,9 @@ class EditNotesController extends GetxController {
       }
 
       print('✅ Note loaded for editing: ${originalNote.title}');
+      print(
+        '📍 Source Context - Archive: $isFromArchive, Scheduled: $isFromScheduled, Draft: $isFromDraft',
+      );
     } catch (e) {
       print('❌ Error loading note: $e');
       Get.snackbar(
@@ -190,7 +212,7 @@ class EditNotesController extends GetxController {
     }
 
     return NoteModel(
-      id: noteId, // Gunakan ID yang sama
+      id: noteId,
       title: judulController.text.trim(),
       mataKuliah: mataKuliahController.text.trim(),
       date: parsedDate,
@@ -199,7 +221,7 @@ class EditNotesController extends GetxController {
     );
   }
 
-  // 🎯 UPDATE NOTE
+  // 🎯 UPDATE NOTE - FIXED VERSION
   Future<void> updateNote() async {
     if (!validateForm()) return;
 
@@ -209,8 +231,25 @@ class EditNotesController extends GetxController {
 
       final updatedNote = _buildUpdatedNote();
 
-      // Update note di service
-      notesService.updateNote(updatedNote);
+      // 🔧 FIXED: Update note dengan informasi source yang tepat
+      print('🔄 Updating note with context:');
+      print('   - isArchived: $isFromArchive');
+      print('   - isScheduled: $isFromScheduled');
+      print('   - isDraft: $isFromDraft');
+
+      if (isFromArchive) {
+        notesService.updateNote(updatedNote, isArchived: true);
+        print('✅ Updated archived note: ${updatedNote.title}');
+      } else if (isFromScheduled) {
+        notesService.updateNote(updatedNote, isScheduled: true);
+        print('✅ Updated scheduled note: ${updatedNote.title}');
+      } else if (isFromDraft) {
+        notesService.updateNote(updatedNote, isDraft: true);
+        print('✅ Updated draft note: ${updatedNote.title}');
+      } else {
+        notesService.updateNote(updatedNote);
+        print('✅ Updated regular note: ${updatedNote.title}');
+      }
 
       // Show success dialog
       _showSuccessDialog(
@@ -221,6 +260,7 @@ class EditNotesController extends GetxController {
         color: Colors.green,
       );
     } catch (e) {
+      print('❌ Error updating note: $e');
       Get.snackbar(
         'Error',
         'Gagal memperbarui catatan: $e',
@@ -239,6 +279,23 @@ class EditNotesController extends GetxController {
     required IconData icon,
     required Color color,
   }) {
+    // 🔧 FIXED: Tentukan route kembali berdasarkan source
+    String returnRoute = '/notes/list';
+    String sourceName = 'List Notes';
+
+    if (isFromArchive) {
+      returnRoute = '/notes/archived';
+      sourceName = 'Archive';
+    } else if (isFromScheduled) {
+      returnRoute = '/notes/scheduled';
+      sourceName = 'Scheduled';
+    } else if (isFromDraft) {
+      returnRoute = '/notes/draft';
+      sourceName = 'Draft';
+    }
+
+    print('📍 Success dialog - Will return to: $returnRoute ($sourceName)');
+
     Get.dialog(
       Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -282,7 +339,7 @@ class EditNotesController extends GetxController {
                     child: OutlinedButton(
                       onPressed: () {
                         Get.back(); // Tutup dialog
-                        Get.back(); // Kembali ke list
+                        Get.back(); // Kembali ke source page
                       },
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -300,8 +357,8 @@ class EditNotesController extends GetxController {
                       onPressed: () {
                         Get.back(); // Tutup dialog
                         Get.offAllNamed(
-                          '/notes/list',
-                        ); // Kembali ke list dan hapus history
+                          returnRoute,
+                        ); // 🔧 FIXED: Kembali ke source page yang sesuai
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: color,
@@ -310,9 +367,12 @@ class EditNotesController extends GetxController {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        'Lihat Catatan',
-                        style: TextStyle(color: Colors.white),
+                      child: Text(
+                        'Lihat $sourceName',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
@@ -327,7 +387,6 @@ class EditNotesController extends GetxController {
   }
 
   void cancelEdit() {
-    // Check apakah ada perubahan
     final hasChanges =
         mataKuliahController.text != originalNote.mataKuliah ||
         judulController.text != originalNote.title ||
@@ -355,7 +414,7 @@ class EditNotesController extends GetxController {
         ),
       );
     } else {
-      Get.back(); // Langsung kembali jika tidak ada perubahan
+      Get.back();
     }
   }
 }

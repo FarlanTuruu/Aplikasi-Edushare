@@ -12,7 +12,7 @@ class DetailNotesController extends GetxController {
   late Rx<NoteModel> note;
   final isLoading = false.obs;
 
-  // 🔧 NEW: Deteksi dari mana catatan berasal
+  // 🔧 Deteksi dari mana catatan berasal
   final isFromArchive = false.obs;
   final isFromDraft = false.obs;
   final isFromScheduled = false.obs;
@@ -26,7 +26,7 @@ class DetailNotesController extends GetxController {
     final args = Get.arguments as Map<String, dynamic>;
     note = NoteModel.fromMap(args).obs;
 
-    // 🔧 NEW: Deteksi source dari arguments
+    // 🔧 Deteksi source dari arguments
     isFromArchive.value = args['isFromArchive'] == true;
     isFromDraft.value = args['isFromDraft'] == true;
     isFromScheduled.value = args['isFromScheduled'] == true;
@@ -40,18 +40,14 @@ class DetailNotesController extends GetxController {
   // Archive/Unarchive/Publish Note (Context-aware)
   Future<void> toggleArchive() async {
     if (isFromArchive.value) {
-      // Unarchive (Restore)
       await _unarchiveNote();
     } else if (isFromScheduled.value) {
-      // Publish Scheduled
       await _publishScheduled();
     } else {
-      // Archive
       await _archiveNote();
     }
   }
 
-  // Publish Scheduled Note
   Future<void> _publishScheduled() async {
     Get.dialog(
       AlertDialog(
@@ -71,7 +67,7 @@ class DetailNotesController extends GetxController {
           TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
           ElevatedButton(
             onPressed: () async {
-              Get.back(); // Tutup dialog
+              Get.back();
 
               try {
                 isLoading.value = true;
@@ -86,8 +82,8 @@ class DetailNotesController extends GetxController {
                   color: Colors.green,
                   actionText: 'Kembali ke List',
                   onActionPressed: () {
-                    Get.back(); // Tutup dialog
-                    Get.back(); // Kembali ke scheduled
+                    Get.back();
+                    Get.back();
                   },
                 );
               } catch (e) {
@@ -132,7 +128,7 @@ class DetailNotesController extends GetxController {
           TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
           ElevatedButton(
             onPressed: () async {
-              Get.back(); // Tutup dialog
+              Get.back();
 
               try {
                 isLoading.value = true;
@@ -147,8 +143,8 @@ class DetailNotesController extends GetxController {
                   color: Colors.orange,
                   actionText: 'Kembali ke List',
                   onActionPressed: () {
-                    Get.back(); // Tutup dialog
-                    Get.back(); // Kembali ke list
+                    Get.back();
+                    Get.back();
                   },
                 );
               } catch (e) {
@@ -193,7 +189,7 @@ class DetailNotesController extends GetxController {
           TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
           ElevatedButton(
             onPressed: () async {
-              Get.back(); // Tutup dialog
+              Get.back();
 
               try {
                 isLoading.value = true;
@@ -208,8 +204,8 @@ class DetailNotesController extends GetxController {
                   color: Colors.green,
                   actionText: 'Kembali ke Archive',
                   onActionPressed: () {
-                    Get.back(); // Tutup dialog
-                    Get.back(); // Kembali ke archive
+                    Get.back();
+                    Get.back();
                   },
                 );
               } catch (e) {
@@ -235,9 +231,21 @@ class DetailNotesController extends GetxController {
     );
   }
 
-  // Edit Note
+  // 🔧 FIXED: Edit Note - Kirim flags ke halaman edit
   void editNote() {
-    Get.toNamed(Routes.NOTE_EDIT, arguments: note.value.toMap());
+    final noteMap = note.value.toMap();
+
+    // 🎯 Tambahkan flags source ke arguments
+    noteMap['isFromArchive'] = isFromArchive.value;
+    noteMap['isFromDraft'] = isFromDraft.value;
+    noteMap['isFromScheduled'] = isFromScheduled.value;
+
+    print('🔧 Navigating to edit with flags:');
+    print('   - Archive: ${noteMap['isFromArchive']}');
+    print('   - Draft: ${noteMap['isFromDraft']}');
+    print('   - Scheduled: ${noteMap['isFromScheduled']}');
+
+    Get.toNamed(Routes.NOTE_EDIT, arguments: noteMap);
   }
 
   // Delete Note (Context-aware)
@@ -260,13 +268,12 @@ class DetailNotesController extends GetxController {
           TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
           ElevatedButton(
             onPressed: () async {
-              Get.back(); // Tutup dialog
+              Get.back();
 
               try {
                 isLoading.value = true;
                 await Future.delayed(const Duration(milliseconds: 200));
 
-                // 🔧 NEW: Delete berdasarkan source
                 notesService.deleteNote(
                   note.value.id,
                   isArchived: isFromArchive.value,
@@ -282,8 +289,8 @@ class DetailNotesController extends GetxController {
                   color: Colors.red,
                   actionText: 'Tutup',
                   onActionPressed: () {
-                    Get.back(); // Tutup dialog
-                    Get.back(); // Kembali ke halaman sebelumnya
+                    Get.back();
+                    Get.back();
                   },
                 );
               } catch (e) {
@@ -309,7 +316,6 @@ class DetailNotesController extends GetxController {
     );
   }
 
-  // Share Note (placeholder)
   void shareNote() {
     Get.snackbar(
       'Share',
@@ -321,7 +327,6 @@ class DetailNotesController extends GetxController {
     );
   }
 
-  // Download File (placeholder)
   void downloadFile() {
     if (note.value.fileName == null) {
       Get.snackbar(
