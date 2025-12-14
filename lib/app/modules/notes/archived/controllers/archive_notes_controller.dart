@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../routes/app_pages.dart';
 import '../../../../services/notes_service.dart';
 import '../../../../models/note_model.dart';
 
@@ -130,6 +131,15 @@ class ArchiveNotesController extends GetxController {
     archivedList.value = notesService.archivedNotes.toList();
   }
 
+  void viewArchiveDetail(String noteId) {
+    final archive = archivedList.firstWhere((n) => n.id == noteId);
+    final noteMap = archive.toMap();
+    noteMap['isFromArchive'] = true; // 🔧 Tandai dari Archive
+    noteMap['isFromDraft'] = false;
+    noteMap['isFromScheduled'] = false;
+    Get.toNamed(Routes.NOTE_DETAIL, arguments: noteMap);
+  }
+
   // 🎨 CUSTOM SUCCESS DIALOG
   void _showSuccessDialog({
     required String title,
@@ -150,7 +160,7 @@ class ArchiveNotesController extends GetxController {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, size: 64, color: color),

@@ -282,94 +282,107 @@ class ListNotesView extends GetView<ListNotesController> {
     );
   }
 
+  // 🔧 FIXED: Tanpa stopPropagation untuk list_notes_view.dart
+
   Widget _buildNoteCard(NoteModel note, bool isTablet) {
-    return Container(
-      margin: EdgeInsets.only(bottom: isTablet ? 20 : 16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFE8D5F0), Color(0xFF6B2C91)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    return GestureDetector(
+      // 👇 Tap card untuk buka detail
+      onTap: () => controller.viewNoteDetail(note.id),
+      child: Container(
+        margin: EdgeInsets.only(bottom: isTablet ? 20 : 16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFE8D5F0), Color(0xFF6B2C91)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-        ],
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(isTablet ? 20 : 16),
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(isTablet ? 12 : 10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.black, width: 1.5),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    note.day,
-                    style: TextStyle(
-                      fontSize: isTablet ? 20 : 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  Text(
-                    note.month,
-                    style: TextStyle(
-                      fontSize: isTablet ? 14 : 12,
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(width: isTablet ? 16 : 12),
-            Expanded(
-              child: Text(
-                note.title,
-                style: TextStyle(
-                  fontSize: isTablet ? 18 : 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-            ),
-            SizedBox(width: isTablet ? 16 : 12),
-            Row(
-              children: [
-                _buildActionButton(
-                  'Archive',
-                  isTablet,
-                  () => controller.archiveNote(note.id),
-                ),
-                SizedBox(width: isTablet ? 12 : 8),
-                _buildActionButton(
-                  'Edit',
-                  isTablet,
-                  () => controller.editNote(note.id),
-                ),
-                SizedBox(width: isTablet ? 12 : 8),
-                _buildActionButton(
-                  'Delete',
-                  isTablet,
-                  () => controller.deleteNote(note.id),
-                ),
-              ],
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(isTablet ? 20 : 16),
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(isTablet ? 12 : 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.black, width: 1.5),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      note.day,
+                      style: TextStyle(
+                        fontSize: isTablet ? 20 : 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    Text(
+                      note.month,
+                      style: TextStyle(
+                        fontSize: isTablet ? 14 : 12,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: isTablet ? 16 : 12),
+              Expanded(
+                child: Text(
+                  note.title,
+                  style: TextStyle(
+                    fontSize: isTablet ? 18 : 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              SizedBox(width: isTablet ? 16 : 12),
+
+              // 🔑 Wrap tombol-tombol dengan GestureDetector untuk block parent tap
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {}, // Empty onTap untuk block parent tap
+                child: Row(
+                  children: [
+                    _buildActionButton(
+                      'Archive',
+                      isTablet,
+                      () => controller.archiveNote(note.id),
+                    ),
+                    SizedBox(width: isTablet ? 12 : 8),
+                    _buildActionButton(
+                      'Edit',
+                      isTablet,
+                      () => controller.editNote(note.id),
+                    ),
+                    SizedBox(width: isTablet ? 12 : 8),
+                    _buildActionButton(
+                      'Delete',
+                      isTablet,
+                      () => controller.deleteNote(note.id),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  // 🔧 Kembali ke VoidCallback normal
   Widget _buildActionButton(String text, bool isTablet, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,

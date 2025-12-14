@@ -163,6 +163,15 @@ class ListNotesController extends GetxController {
     filteredNotesList.refresh();
   }
 
+  void viewNoteDetail(String noteId) {
+    final note = notesService.allNotes.firstWhere((n) => n.id == noteId);
+    final noteMap = note.toMap();
+    noteMap['isFromArchive'] = false; // 🔧 Tandai dari List
+    noteMap['isFromDraft'] = false;
+    noteMap['isFromScheduled'] = false;
+    Get.toNamed(Routes.NOTE_DETAIL, arguments: noteMap);
+  }
+
   Future<void> archiveNote(String noteId) async {
     final note = notesService.allNotes.firstWhere((n) => n.id == noteId);
 
@@ -286,7 +295,7 @@ class ListNotesController extends GetxController {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, size: 64, color: color),

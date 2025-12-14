@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../routes/app_pages.dart';
 import '../../../../services/notes_service.dart';
 import '../../../../models/note_model.dart';
 
@@ -135,6 +136,15 @@ class ScheduledNotesController extends GetxController {
     checkAndPublishDueNotes();
   }
 
+  void viewScheduledDetail(String noteId) {
+    final scheduled = scheduledList.firstWhere((n) => n.id == noteId);
+    final noteMap = scheduled.toMap();
+    noteMap['isFromArchive'] = false;
+    noteMap['isFromDraft'] = false;
+    noteMap['isFromScheduled'] = true; // 🔧 Tandai dari Scheduled
+    Get.toNamed(Routes.NOTE_DETAIL, arguments: noteMap);
+  }
+
   // 🎨 CUSTOM SUCCESS DIALOG
   void _showSuccessDialog({
     required String title,
@@ -155,7 +165,7 @@ class ScheduledNotesController extends GetxController {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, size: 64, color: color),

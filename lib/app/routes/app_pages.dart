@@ -25,6 +25,8 @@ import '../modules/notes/archived/bindings/archive_notes_binding.dart';
 import '../modules/notes/archived/views/archive_notes_view.dart';
 import '../modules/notes/create/bindings/create_notes_binding.dart';
 import '../modules/notes/create/views/create_notes_view.dart';
+import '../modules/notes/detail/bindings/detail_notes_binding.dart';
+import '../modules/notes/detail/views/detail_notes_view.dart';
 import '../modules/notes/draft/bindings/draft_notes_binding.dart';
 import '../modules/notes/draft/views/draft_notes_view.dart';
 import '../modules/notes/list/bindings/list_notes_binding.dart';
@@ -52,7 +54,7 @@ part 'app_routes.dart';
 class AppPages {
   AppPages._();
 
-  static const INITIAL = Routes.LOGIN;
+  static const INITIAL = Routes.PROFILE;
 
   static final routes = [
     // -----------------------
@@ -130,6 +132,11 @@ class AppPages {
       name: Routes.NOTE_EDIT,
       page: () => const EditNotesView(),
       binding: EditNotesBinding(),
+    ),
+    GetPage(
+      name: _Paths.NOTE_DETAIL,
+      page: () => const DetailNotesView(),
+      binding: DetailNotesBinding(),
     ),
 
     // -----------------------
