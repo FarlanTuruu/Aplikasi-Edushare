@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../routes/app_pages.dart';
 import '../../../../services/notes_service.dart';
 import '../../../../models/note_model.dart';
 
@@ -116,6 +117,11 @@ class DraftNotesController extends GetxController {
     Get.toNamed('/notes/edit', arguments: note.toMap());
   }
 
+  void viewDraftDetail(String noteId) {
+    final draft = draftList.firstWhere((n) => n.id == noteId);
+    Get.toNamed(Routes.NOTE_DETAIL, arguments: draft.toMap());
+  }
+
   Future<void> refreshDrafts() async {
     draftList.value = notesService.draftNotes.toList();
   }
@@ -140,7 +146,7 @@ class DraftNotesController extends GetxController {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, size: 64, color: color),

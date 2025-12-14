@@ -26,6 +26,7 @@ abstract class Routes {
   static const NOTE_DRAFT = _Paths.NOTE_DRAFT;
   static const NOTE_SCHEDULED = _Paths.NOTE_SCHEDULED;
   static const NOTE_EDIT = _Paths.NOTE_EDIT;
+  static const NOTE_DETAIL = _Paths.NOTE_DETAIL;
 
   // COLLAB
   static const COLLAB_LIST = _Paths.COLLAB_LIST;
@@ -67,6 +68,7 @@ abstract class _Paths {
   static const NOTE_DRAFT = '/notes/draft';
   static const NOTE_SCHEDULED = '/notes/scheduled';
   static const NOTE_EDIT = '/notes/edit';
+  static const NOTE_DETAIL = '/notes/detail';
 
   // COLLABORATION
   static const COLLAB_LIST = '/collab/list';

@@ -119,7 +119,7 @@ class ScheduledNotesView extends GetView<ScheduledNotesController> {
         borderRadius: BorderRadius.circular(25),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -244,166 +244,174 @@ class ScheduledNotesView extends GetView<ScheduledNotesController> {
     );
     final isDue = noteDay.isBefore(today) || noteDay.isAtSameMomentAs(today);
 
-    return Container(
-      margin: EdgeInsets.only(bottom: isTablet ? 20 : 16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          // Blue/Cyan gradient untuk scheduled
-          colors: isDue
-              ? [
-                  const Color(0xFFFFE082),
-                  const Color(0xFFFFA726),
-                ] // Yellow jika sudah waktunya
-              : [
-                  const Color(0xFFB3E5FC),
-                  const Color(0xFF0277BD),
-                ], // Blue jika masih future
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    return GestureDetector(
+      // 👇 Tap card untuk buka detail
+      onTap: () => controller.viewScheduledDetail(scheduled.id),
+      child: Container(
+        margin: EdgeInsets.only(bottom: isTablet ? 20 : 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDue
+                ? [
+                    const Color(0xFFFFE082),
+                    const Color(0xFFFFA726),
+                  ] // Yellow jika sudah waktunya
+                : [
+                    const Color(0xFFB3E5FC),
+                    const Color(0xFF0277BD),
+                  ], // Blue jika masih future
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-        ],
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(isTablet ? 20 : 16),
-        child: Row(
-          children: [
-            // Date Box with indicator
-            Container(
-              padding: EdgeInsets.all(isTablet ? 12 : 10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isDue ? Colors.orange : Colors.blue,
-                  width: 2,
-                ),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    scheduled.day,
-                    style: TextStyle(
-                      fontSize: isTablet ? 20 : 18,
-                      fontWeight: FontWeight.bold,
-                      color: isDue ? Colors.orange : Colors.blue,
-                    ),
-                  ),
-                  Text(
-                    scheduled.month,
-                    style: TextStyle(
-                      fontSize: isTablet ? 14 : 12,
-                      color: isDue ? Colors.orange : Colors.blue,
-                    ),
-                  ),
-                  if (isDue)
-                    Container(
-                      margin: const EdgeInsets.only(top: 4),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.orange,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        'DUE',
-                        style: TextStyle(
-                          fontSize: isTablet ? 10 : 8,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-
-            SizedBox(width: isTablet ? 16 : 12),
-
-            // Note Title & Info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        isDue ? Icons.schedule : Icons.schedule_outlined,
-                        size: isTablet ? 18 : 16,
-                        color: Colors.white,
+          ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(isTablet ? 20 : 16),
+          child: Row(
+            children: [
+              // Date Box with indicator
+              Container(
+                padding: EdgeInsets.all(isTablet ? 12 : 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isDue ? Colors.orange : Colors.blue,
+                    width: 2,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      scheduled.day,
+                      style: TextStyle(
+                        fontSize: isTablet ? 20 : 18,
+                        fontWeight: FontWeight.bold,
+                        color: isDue ? Colors.orange : Colors.blue,
                       ),
-                      SizedBox(width: 8),
-                      Expanded(
+                    ),
+                    Text(
+                      scheduled.month,
+                      style: TextStyle(
+                        fontSize: isTablet ? 14 : 12,
+                        color: isDue ? Colors.orange : Colors.blue,
+                      ),
+                    ),
+                    if (isDue)
+                      Container(
+                        margin: const EdgeInsets.only(top: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.orange,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                         child: Text(
-                          scheduled.title,
+                          'DUE',
                           style: TextStyle(
-                            fontSize: isTablet ? 18 : 16,
-                            fontWeight: FontWeight.bold,
+                            fontSize: isTablet ? 10 : 8,
                             color: Colors.white,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    scheduled.mataKuliah,
-                    style: TextStyle(
-                      fontSize: isTablet ? 14 : 12,
-                      color: Colors.white70,
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Dijadwalkan: ${scheduled.fullDate}',
-                    style: TextStyle(
-                      fontSize: isTablet ? 12 : 10,
-                      color: Colors.white60,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
-            SizedBox(width: isTablet ? 16 : 12),
+              SizedBox(width: isTablet ? 16 : 12),
 
-            // Action Buttons
-            Row(
-              children: [
-                _buildActionButton(
-                  'Publish',
-                  isTablet,
-                  () => controller.publishScheduled(scheduled.id),
+              // Note Title & Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          isDue ? Icons.schedule : Icons.schedule_outlined,
+                          size: isTablet ? 18 : 16,
+                          color: Colors.white,
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            scheduled.title,
+                            style: TextStyle(
+                              fontSize: isTablet ? 18 : 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      scheduled.mataKuliah,
+                      style: TextStyle(
+                        fontSize: isTablet ? 14 : 12,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Dijadwalkan: ${scheduled.fullDate}',
+                      style: TextStyle(
+                        fontSize: isTablet ? 12 : 10,
+                        color: Colors.white60,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(width: isTablet ? 12 : 8),
-                _buildActionButton(
-                  'Edit',
-                  isTablet,
-                  () => controller.editScheduled(scheduled.id),
+              ),
+
+              SizedBox(width: isTablet ? 16 : 12),
+
+              // 🔑 Wrap tombol-tombol dengan GestureDetector untuk block parent tap
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {}, // Empty onTap untuk block parent tap
+                child: Row(
+                  children: [
+                    _buildActionButton(
+                      'Publish',
+                      isTablet,
+                      () => controller.publishScheduled(scheduled.id),
+                    ),
+                    SizedBox(width: isTablet ? 12 : 8),
+                    _buildActionButton(
+                      'Edit',
+                      isTablet,
+                      () => controller.editScheduled(scheduled.id),
+                    ),
+                    SizedBox(width: isTablet ? 12 : 8),
+                    _buildActionButton(
+                      'Delete',
+                      isTablet,
+                      () => controller.deleteScheduled(scheduled.id),
+                    ),
+                  ],
                 ),
-                SizedBox(width: isTablet ? 12 : 8),
-                _buildActionButton(
-                  'Delete',
-                  isTablet,
-                  () => controller.deleteScheduled(scheduled.id),
-                ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  // Method _buildActionButton tetap sama (sudah benar)
   Widget _buildActionButton(String text, bool isTablet, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,

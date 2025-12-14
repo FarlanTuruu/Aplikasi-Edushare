@@ -115,7 +115,7 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
         borderRadius: BorderRadius.circular(25),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -228,126 +228,134 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
   }
 
   Widget _buildArchiveCard(NoteModel archive, bool isTablet) {
-    return Container(
-      margin: EdgeInsets.only(bottom: isTablet ? 20 : 16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFD6D6D6), Color(0xFF757575)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    return GestureDetector(
+      // 👇 Tap card untuk buka detail
+      onTap: () => controller.viewArchiveDetail(archive.id),
+      child: Container(
+        margin: EdgeInsets.only(bottom: isTablet ? 20 : 16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFD6D6D6), Color(0xFF757575)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-        ],
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(isTablet ? 20 : 16),
-        child: Row(
-          children: [
-            // Date Box
-            Container(
-              padding: EdgeInsets.all(isTablet ? 12 : 10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.black, width: 1.5),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    archive.day,
-                    style: TextStyle(
-                      fontSize: isTablet ? 20 : 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  Text(
-                    archive.month,
-                    style: TextStyle(
-                      fontSize: isTablet ? 14 : 12,
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(width: isTablet ? 16 : 12),
-
-            // Archive Title & Info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.archive,
-                        size: isTablet ? 18 : 16,
-                        color: Colors.white,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          archive.title,
-                          style: TextStyle(
-                            fontSize: isTablet ? 18 : 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    archive.mataKuliah,
-                    style: TextStyle(
-                      fontSize: isTablet ? 14 : 12,
-                      color: Colors.white70,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(width: isTablet ? 16 : 12),
-
-            // Action Buttons
-            Row(
-              children: [
-                _buildActionButton(
-                  'Restore',
-                  isTablet,
-                  () => controller.unarchiveNote(archive.id),
-                ),
-                SizedBox(width: isTablet ? 12 : 8),
-                _buildActionButton(
-                  'Edit',
-                  isTablet,
-                  () => controller.editArchive(archive.id),
-                ),
-                SizedBox(width: isTablet ? 12 : 8),
-                // 🔧 FIXED: Langsung panggil controller.deleteArchive()
-                _buildActionButton(
-                  'Delete',
-                  isTablet,
-                  () => controller.deleteArchive(archive.id),
-                ),
-              ],
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(isTablet ? 20 : 16),
+          child: Row(
+            children: [
+              // Date Box
+              Container(
+                padding: EdgeInsets.all(isTablet ? 12 : 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.black, width: 1.5),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      archive.day,
+                      style: TextStyle(
+                        fontSize: isTablet ? 20 : 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    Text(
+                      archive.month,
+                      style: TextStyle(
+                        fontSize: isTablet ? 14 : 12,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(width: isTablet ? 16 : 12),
+
+              // Archive Title & Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.archive,
+                          size: isTablet ? 18 : 16,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            archive.title,
+                            style: TextStyle(
+                              fontSize: isTablet ? 18 : 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      archive.mataKuliah,
+                      style: TextStyle(
+                        fontSize: isTablet ? 14 : 12,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(width: isTablet ? 16 : 12),
+
+              // 🔑 Wrap tombol-tombol dengan GestureDetector untuk block parent tap
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {}, // Empty onTap untuk block parent tap
+                child: Row(
+                  children: [
+                    _buildActionButton(
+                      'Restore',
+                      isTablet,
+                      () => controller.unarchiveNote(archive.id),
+                    ),
+                    SizedBox(width: isTablet ? 12 : 8),
+                    _buildActionButton(
+                      'Edit',
+                      isTablet,
+                      () => controller.editArchive(archive.id),
+                    ),
+                    SizedBox(width: isTablet ? 12 : 8),
+                    _buildActionButton(
+                      'Delete',
+                      isTablet,
+                      () => controller.deleteArchive(archive.id),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  // Method _buildActionButton tetap sama (sudah benar)
   Widget _buildActionButton(String text, bool isTablet, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
@@ -425,7 +433,7 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),

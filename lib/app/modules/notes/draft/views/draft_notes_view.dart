@@ -119,7 +119,7 @@ class DraftNotesView extends GetView<DraftNotesController> {
         borderRadius: BorderRadius.circular(25),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -232,105 +232,118 @@ class DraftNotesView extends GetView<DraftNotesController> {
     );
   }
 
-  // 🔧 FIX: Tambahkan widget untuk card draft
+  // 🔧 FIXED: Tanpa stopPropagation
   Widget _buildDraftCard(NoteModel draft, bool isTablet) {
-    return Container(
-      margin: EdgeInsets.only(bottom: isTablet ? 20 : 16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFFFFE5B4),
-            Color(0xFFFF9800),
-          ], // Orange gradient untuk draft
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    return GestureDetector(
+      // 👇 Tap card untuk edit
+      onTap: () => controller.editDraft(draft.id),
+      child: Container(
+        margin: EdgeInsets.only(bottom: isTablet ? 20 : 16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFFE5B4), Color(0xFFFF9800)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-        ],
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(isTablet ? 20 : 16),
-        child: Row(
-          children: [
-            // Draft Icon
-            Container(
-              padding: EdgeInsets.all(isTablet ? 12 : 10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.black, width: 1.5),
-              ),
-              child: Icon(
-                Icons.drafts,
-                size: isTablet ? 32 : 28,
-                color: const Color(0xFF6B2C91),
-              ),
-            ),
-
-            SizedBox(width: isTablet ? 16 : 12),
-
-            // Draft Title & Info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    draft.title.isEmpty ? 'Untitled Draft' : draft.title,
-                    style: TextStyle(
-                      fontSize: isTablet ? 18 : 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    draft.mataKuliah.isEmpty ? 'No subject' : draft.mataKuliah,
-                    style: TextStyle(
-                      fontSize: isTablet ? 14 : 12,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(width: isTablet ? 16 : 12),
-
-            // Action Buttons
-            Row(
-              children: [
-                _buildActionButton(
-                  'Publish',
-                  isTablet,
-                  () => controller.publishDraft(draft.id),
-                ),
-                SizedBox(width: isTablet ? 12 : 8),
-                _buildActionButton(
-                  'Edit',
-                  isTablet,
-                  () => controller.editDraft(draft.id),
-                ),
-                SizedBox(width: isTablet ? 12 : 8),
-                _buildActionButton(
-                  'Delete',
-                  isTablet,
-                  () => controller.deleteDraft(draft.id),
-                ),
-              ],
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(isTablet ? 20 : 16),
+          child: Row(
+            children: [
+              // Draft Icon
+              Container(
+                padding: EdgeInsets.all(isTablet ? 12 : 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.black, width: 1.5),
+                ),
+                child: Icon(
+                  Icons.drafts,
+                  size: isTablet ? 32 : 28,
+                  color: const Color(0xFF6B2C91),
+                ),
+              ),
+
+              SizedBox(width: isTablet ? 16 : 12),
+
+              // Draft Title & Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      draft.title.isEmpty ? 'Untitled Draft' : draft.title,
+                      style: TextStyle(
+                        fontSize: isTablet ? 18 : 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      draft.mataKuliah.isEmpty
+                          ? 'No subject'
+                          : draft.mataKuliah,
+                      style: TextStyle(
+                        fontSize: isTablet ? 14 : 12,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(width: isTablet ? 16 : 12),
+
+              // Action Buttons - Wrap dengan GestureDetector behavior: opaque
+              GestureDetector(
+                behavior:
+                    HitTestBehavior.opaque, // 🔑 Ini yang mencegah bubbling
+                onTap: () {}, // Empty onTap untuk block parent tap
+                child: Row(
+                  children: [
+                    _buildActionButton(
+                      'Publish',
+                      isTablet,
+                      () => controller.publishDraft(draft.id),
+                    ),
+                    SizedBox(width: isTablet ? 12 : 8),
+                    _buildActionButton(
+                      'Edit',
+                      isTablet,
+                      () => controller.editDraft(draft.id),
+                    ),
+                    SizedBox(width: isTablet ? 12 : 8),
+                    _buildActionButton(
+                      'Delete',
+                      isTablet,
+                      () => controller.deleteDraft(draft.id),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildActionButton(String text, bool isTablet, VoidCallback onTap) {
+  // 👇 Kembali ke signature normal VoidCallback
+  Widget _buildActionButton(
+    String text,
+    bool isTablet,
+    VoidCallback onTap, // 🔧 Kembali ke VoidCallback
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
