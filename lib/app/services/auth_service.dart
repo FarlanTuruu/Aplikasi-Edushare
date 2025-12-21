@@ -31,6 +31,21 @@ class AuthService extends GetxService {
     if (token != null && token.isNotEmpty) {
       setApiToken(token);
       user.value = res['user'] as Map<String, dynamic>?;
+      // If backend login does not include user payload, fetch it
+      if (user.value == null || user.value!['id'] == null) {
+        try {
+          final me = await _repo.getMe();
+          // Laravel may return {id, name, email} or wrap in {data}
+          final meData = me['data'] is Map<String, dynamic>
+              ? me['data'] as Map<String, dynamic>
+              : me;
+          if (meData is Map<String, dynamic>) {
+            user.value = meData;
+          }
+        } catch (_) {
+          // Ignore; user info may be fetched later
+        }
+      }
       isLoggedIn.value = true;
       return true;
     }
@@ -43,6 +58,17 @@ class AuthService extends GetxService {
     if (token != null && token.isNotEmpty) {
       setApiToken(token);
       user.value = res['user'] as Map<String, dynamic>?;
+      if (user.value == null || user.value!['id'] == null) {
+        try {
+          final me = await _repo.getMe();
+          final meData = me['data'] is Map<String, dynamic>
+              ? me['data'] as Map<String, dynamic>
+              : me;
+          if (meData is Map<String, dynamic>) {
+            user.value = meData;
+          }
+        } catch (_) {}
+      }
       isLoggedIn.value = true;
       return true;
     }
