@@ -22,11 +22,16 @@ class RoomsView extends GetView<RoomsController> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: const [
-                  Text("Chat",
-                      style: TextStyle(color: Colors.white, fontSize: 20)),
+                  Text(
+                    "Chat",
+                    style: TextStyle(color: Colors.white, fontSize: 20),
+                  ),
                   Row(
                     children: [
-                      CircleAvatar(radius: 20, backgroundImage: AssetImage('assets/avatar.png')),
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundImage: AssetImage('assets/avatar.png'),
+                      ),
                       SizedBox(width: 8),
                       Icon(Icons.settings, color: Colors.white),
                     ],
@@ -47,7 +52,10 @@ class RoomsView extends GetView<RoomsController> {
                   ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 20,
+                  ),
                   child: Column(
                     children: [
                       // 🔸 Search bar
@@ -110,7 +118,11 @@ class RoomsView extends GetView<RoomsController> {
                     color: purple,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.chat_outlined, color: Colors.white, size: 30),
+                  child: const Icon(
+                    Icons.chat_outlined,
+                    color: Colors.white,
+                    size: 30,
+                  ),
                 ),
               ],
             ),
@@ -124,42 +136,29 @@ class RoomsView extends GetView<RoomsController> {
 
   // 🔹 Chat Item dengan Navigasi ke MessagesView
   Widget _chatTile(Map<String, dynamic> room) {
-    IconData? icon;
-    Color? iconColor;
-    switch (room['icon']) {
-      case 'mic':
-        icon = Icons.mic_none;
-        iconColor = Colors.black87;
-        break;
-      case 'article':
-        icon = Icons.article_outlined;
-        iconColor = Colors.pinkAccent;
-        break;
-      case 'group':
-        icon = Icons.groups;
-        iconColor = Colors.black87;
-        break;
-    }
-
+    // room: {id, name, avatar, ...}
     return ListTile(
-      leading: room['avatar'] != null
-          ? CircleAvatar(backgroundImage: AssetImage(room['avatar']))
-          : Container(
-              width: 45,
-              height: 45,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.black12),
-              ),
-              child: Icon(icon, color: iconColor),
-            ),
-      title: Text(room['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-      subtitle: Text(room['status'], style: const TextStyle(color: Colors.grey)),
+      leading: (room['avatar'] != null && room['avatar'].toString().isNotEmpty)
+          ? CircleAvatar(backgroundImage: NetworkImage(room['avatar']))
+          : const CircleAvatar(child: Icon(Icons.person)),
+      title: Text(
+        room['name']?.toString() ?? '-',
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+      subtitle: Text(
+        room['status']?.toString() ?? '',
+        style: const TextStyle(color: Colors.grey),
+      ),
       onTap: () {
         Get.put(MessagesController());
-        Get.to(() => const MessagesView(),
-            arguments: {'contactName': room['name'], 'avatar': room['avatar']});
+        Get.to(
+          () => const MessagesView(),
+          arguments: {
+            'roomId': room['id'],
+            'contactName': room['name'],
+            'avatar': room['avatar'],
+          },
+        );
       },
     );
   }

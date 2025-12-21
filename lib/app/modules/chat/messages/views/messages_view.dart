@@ -37,8 +37,10 @@ class MessagesView extends GetView<MessagesController> {
             child: Obx(() {
               final msgs = controller.messages;
               return ListView.builder(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 itemCount: msgs.length,
                 itemBuilder: (context, index) {
                   final msg = msgs[index];
@@ -51,8 +53,7 @@ class MessagesView extends GetView<MessagesController> {
           // Kolom input pesan
           Container(
             color: Colors.white,
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(
               children: [
                 IconButton(
@@ -68,6 +69,9 @@ class MessagesView extends GetView<MessagesController> {
                       border: Border.all(color: Colors.grey.shade300),
                     ),
                     child: TextField(
+                      controller: controller.textEditingController,
+                      onChanged: (text) =>
+                          controller.textController.value = text,
                       onSubmitted: (text) => controller.sendMessage(text),
                       decoration: const InputDecoration(
                         hintText: "Message...",
@@ -78,9 +82,9 @@ class MessagesView extends GetView<MessagesController> {
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  onPressed: () {},
-                  icon:
-                      const Icon(Icons.send, color: Color(0xFF4A1F7A)),
+                  onPressed: () =>
+                      controller.sendMessage(controller.textController.value),
+                  icon: const Icon(Icons.send, color: Color(0xFF4A1F7A)),
                 ),
               ],
             ),
@@ -96,12 +100,10 @@ class MessagesView extends GetView<MessagesController> {
     final Color myBlue = const Color(0xFF1E40AF);
 
     return Align(
-      alignment:
-          fromMe ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: fromMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         constraints: const BoxConstraints(maxWidth: 280),
         decoration: BoxDecoration(
           color: fromMe ? myBlue : Colors.grey.shade300,

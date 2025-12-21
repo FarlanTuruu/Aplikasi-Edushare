@@ -1,20 +1,29 @@
 import 'package:get/get.dart';
+import '../../../../services/rooms_service.dart';
 
 class RoomsController extends GetxController {
   final searchQuery = ''.obs;
+  final api = Get.put(RoomsService());
+  final rooms = <Map<String, dynamic>>[].obs;
 
-  final rooms = [
-    {'name': 'Nanda Adela', 'status': 'Seen 2h ago', 'avatar': 'assets/avatar.png'},
-    {'name': 'Tegar Putra', 'status': 'Seen 16h ago', 'icon': 'mic'},
-    {'name': 'Muh Farlan', 'status': '2d', 'icon': 'article'},
-    {'name': 'Alfi Aulia', 'status': 'Sent', 'icon': 'group'},
-  ].obs;
+  @override
+  void onInit() {
+    super.onInit();
+    _bootstrap();
+  }
+
+  Future<void> _bootstrap() async {
+    await api.init();
+    await api.loadRooms();
+    rooms.assignAll(api.rooms);
+    api.rooms.listen((val) => rooms.assignAll(val));
+  }
 
   List<Map<String, dynamic>> get filteredRooms {
     final q = searchQuery.value.toLowerCase();
     if (q.isEmpty) return rooms;
     return rooms
-        .where((r) => r['name'].toString().toLowerCase().contains(q))
+        .where((r) => (r['name'] ?? '').toString().toLowerCase().contains(q))
         .toList();
   }
 
