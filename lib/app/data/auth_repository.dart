@@ -37,4 +37,9 @@ class AuthRepository {
     };
     return await api.postJson('reset-password', body);
   }
+
+  /// Get current authenticated user (Laravel default route /user)
+  Future<Map<String, dynamic>> getMe() async {
+    return await api.getJson('user');
+  }
 }

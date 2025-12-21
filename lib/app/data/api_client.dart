@@ -21,7 +21,7 @@ class ApiClient {
   }
 
   /// Get current token
-  String? getToken() => _token;
+  String? getToken() => _token ?? getApiToken();
 
   /// GET request - returns Map
   Future<Map<String, dynamic>> get(String endpoint) async {
@@ -157,8 +157,9 @@ class ApiClient {
   /// Get headers dengan token jika ada
   Map<String, String> _getHeaders() {
     final headers = Map<String, String>.from(_defaultHeaders);
-    if (_token != null && _token!.isNotEmpty) {
-      headers['Authorization'] = 'Bearer $_token';
+    final token = _token ?? getApiToken();
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
     }
     return headers;
   }
