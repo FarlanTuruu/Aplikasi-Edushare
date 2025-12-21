@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../controllers/homepage_controller.dart';
 
 class HomepageView extends GetView<HomepageController> {
@@ -388,21 +389,31 @@ class HomepageView extends GetView<HomepageController> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        'Buka',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                    GestureDetector(
+                      onTap: () {
+                        final url = item['link'];
+                        if (url is String && url.isNotEmpty) {
+                          _launchUrl(url);
+                        } else {
+                          Get.snackbar('Info', 'Link tidak tersedia');
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text(
+                          'Buka',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
                         ),
                       ),
                     ),
@@ -500,8 +511,15 @@ class HomepageView extends GetView<HomepageController> {
           ),
 
           IconButton(
-            icon: const Icon(Icons.more_horiz, color: Colors.black54, size: 28),
-            onPressed: () {},
+            icon: const Icon(
+              Icons.chat_bubble_outline,
+              color: Colors.black54,
+              size: 28,
+            ),
+            onPressed: () {
+              // Navigasi ke halaman messages (chat)
+              Get.toNamed('/chat/rooms');
+            },
           ),
 
           // ============================================
@@ -525,14 +543,31 @@ class HomepageView extends GetView<HomepageController> {
           // ============================================
           IconButton(
             icon: const Icon(
-              Icons.mic_none_outlined,
+              Icons.mic_outlined,
               color: Colors.black54,
               size: 28,
             ),
-            onPressed: () {},
+            onPressed: () {
+              // Navigasi ke halaman speech
+              Get.toNamed('/speech/upload');
+            },
           ),
         ],
       ),
     );
+  }
+
+  // Util: launch external URL
+  Future<void> _launchUrl(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        Get.snackbar('Error', 'Tidak dapat membuka link');
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Gagal membuka link: $e');
+    }
   }
 }

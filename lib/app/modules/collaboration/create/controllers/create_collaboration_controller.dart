@@ -1,3 +1,5 @@
+import 'package:appedushare/app/data/api_client.dart';
+import 'package:appedushare/app/data/collaboration_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../collaboration/list/controllers/list_collaboration_controller.dart';
@@ -9,6 +11,9 @@ class CreateCollaborationController extends GetxController {
   final deskripsiController = TextEditingController();
   final linkDocsController = TextEditingController();
 
+  late final CollaborationRepository _repo;
+  late final ApiClient _api;
+
   @override
   void onClose() {
     mataKuliahController.dispose();
@@ -16,6 +21,18 @@ class CreateCollaborationController extends GetxController {
     deskripsiController.dispose();
     linkDocsController.dispose();
     super.onClose();
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+    // Gunakan instance ApiClient global jika sudah ada
+    if (!Get.isRegistered<ApiClient>()) {
+      Get.put(ApiClient(), permanent: true);
+    }
+    _api = Get.find<ApiClient>();
+    // Repo tidak diregister untuk menghindari instance dengan ApiClient berbeda
+    _repo = CollaborationRepository(_api);
   }
 
   void submitCollaboration() {
@@ -28,6 +45,18 @@ class CreateCollaborationController extends GetxController {
         backgroundColor: Colors.redAccent,
         colorText: Colors.white,
       );
+      return;
+    }
+    // Token guard: pastikan user telah login
+    if ((_api.getToken() ?? '').isEmpty) {
+      Get.snackbar(
+        'Autentikasi',
+        'Silakan login terlebih dahulu',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+      // TODO: arahkan ke halaman login jika tersedia
       return;
     }
     // Pastikan ListCollaborationController terdaftar dan tidak dihapus saat navigasi
@@ -56,21 +85,16 @@ class CreateCollaborationController extends GetxController {
     final createdAtStr =
         '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
-    final newItem = {
-      'id': (listController.collaborations.isEmpty
-          ? 1
-          : (listController.collaborations.last['id'] ?? 0) + 1),
+    // Sesuaikan dengan Laravel Sanctum API (snake_case)
+    final payload = {
       'title': judulCatatanController.text.trim(),
-      'date': dateStr,
-      'day': monthStr,
-      'createdAt': createdAtStr,
-      // Optional fields if needed later
-      'mataKuliah': mataKuliahController.text.trim(),
-      'deskripsi': deskripsiController.text.trim(),
+      'mata_kuliah': mataKuliahController.text.trim(),
+      'description': deskripsiController.text.trim(),
       'link': linkDocsController.text.trim(),
+      'created_at_date': createdAtStr,
     };
 
-    listController.collaborations.add(newItem);
+    _storeToApi(payload, listController, dateStr, monthStr);
 
     // Bersihkan form setelah submit
     mataKuliahController.clear();
@@ -79,18 +103,40 @@ class CreateCollaborationController extends GetxController {
     linkDocsController.clear();
 
     // Navigasi ke halaman list agar terlihat
-    Get.offNamed(Routes.COLLAB_LIST);
-
-    Get.snackbar(
-      'Sukses',
-      'Catatan dummy berhasil ditambahkan',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-    );
+    // Navigasi akan dilakukan setelah API sukses melalui _storeToApi
   }
 
   void goBack() {
     Get.back();
+  }
+
+  Future<void> _storeToApi(
+    Map<String, dynamic> payload,
+    ListCollaborationController listController,
+    String dateStr,
+    String monthStr,
+  ) async {
+    try {
+      final created = await _repo.store(payload);
+      // Setelah sukses, refresh list dari server agar data yang tampil adalah data DB sebenarnya
+      await listController.loadCollaborations(force: true);
+
+      Get.offNamed(Routes.COLLAB_LIST);
+      Get.snackbar(
+        'Sukses',
+        'Catatan berhasil diunggah',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Gagal upload: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+    }
   }
 }

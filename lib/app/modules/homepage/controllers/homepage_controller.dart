@@ -52,11 +52,13 @@ class HomepageController extends GetxController {
       final title = (e['title'] ?? '').toString();
       final desc = (e['deskripsi'] ?? '').toString();
       final createdAt = (e['createdAt'] ?? '').toString();
+      final link = (e['link'] ?? '').toString();
       return {
         'title': title.isEmpty ? 'Tanpa Judul' : title,
         'desc': desc.isEmpty ? createdAt : desc,
         'viewers': '0',
         'time': createdAt,
+        'link': link,
       };
     }).toList();
     kolaborasiList.assignAll(mapped);
@@ -321,4 +323,14 @@ class HomepageController extends GetxController {
   // Dummy Navigasi
   void goToProfile() {}
   void goToSettings() {}
+
+  // Open docs link in browser
+  Future<void> openDocsLink(String? url) async {
+    if (url == null || url.isEmpty) {
+      Get.snackbar('Info', 'Link tidak tersedia');
+      return;
+    }
+    // Defer to view layer for calling launcher; keep controller minimal
+    // This method can be expanded if you prefer central handling
+  }
 }
