@@ -25,6 +25,12 @@ class DraftNotesController extends GetxController {
     draftList.value = notesService.draftNotes.toList();
   }
 
+  @override
+  void onReady() {
+    super.onReady();
+    _loadFromServer();
+  }
+
   Future<void> publishDraft(String noteId) async {
     try {
       isLoading.value = true;
@@ -123,7 +129,27 @@ class DraftNotesController extends GetxController {
   }
 
   Future<void> refreshDrafts() async {
-    draftList.value = notesService.draftNotes.toList();
+    try {
+      isLoading.value = true;
+      await notesService.refreshAll();
+      draftList.value = notesService.draftNotes.toList();
+    } catch (e) {
+      print('❌ Error refreshing drafts from server: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> _loadFromServer() async {
+    try {
+      isLoading.value = true;
+      await notesService.refreshAll();
+      draftList.value = notesService.draftNotes.toList();
+    } catch (e) {
+      print('❌ Error loading drafts from server: $e');
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   // 🎨 CUSTOM SUCCESS DIALOG

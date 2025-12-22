@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../models/note_model.dart';
+import '../data/api_client.dart';
+import '../data/note_repository.dart';
 
 class NotesService extends GetxService {
+  late final ApiClient _apiClient;
+  late final NoteRepository _repo;
+
   final allNotes = <NoteModel>[].obs;
   final draftNotes = <NoteModel>[].obs;
   final scheduledNotes = <NoteModel>[].obs;
   final archivedNotes = <NoteModel>[].obs; // 🆕 TAMBAHAN
+
+  @override
+  void onInit() {
+    super.onInit();
+    _apiClient = ApiClient();
+    _repo = NoteRepository(_apiClient);
+  }
 
   // -------------------------------------------------------------
   // ADD NOTE
@@ -32,74 +44,130 @@ class NotesService extends GetxService {
   }
 
   // -------------------------------------------------------------
-  // ARCHIVE NOTE (🆕 NEW METHOD)
+  // API INTEGRATION
   // -------------------------------------------------------------
-  void archiveNote(String noteId) {
-    final index = allNotes.indexWhere((e) => e.id == noteId);
+  Future<NoteModel?> createNoteOnServer(
+    NoteModel note, {
+    bool isDraft = false,
+    bool isScheduled = false,
+    String? filePath,
+  }) async {
+    final status = isDraft ? 'draft' : (isScheduled ? 'scheduled' : 'list');
 
-    if (index != -1) {
-      final note = allNotes.removeAt(index);
-      allNotes.refresh();
-      archivedNotes.insert(0, note);
-      archivedNotes.refresh();
-      _showSnack('Catatan berhasil diarsipkan');
-    }
-  }
+    final toSend = NoteModel(
+      id: note.id,
+      title: note.title,
+      mataKuliah: note.mataKuliah,
+      date: note.date,
+      description: note.description,
+      fileName: note.fileName,
+      status: status,
+    );
 
-  // -------------------------------------------------------------
-  // UNARCHIVE NOTE (🆕 NEW METHOD)
-  // -------------------------------------------------------------
-  void unarchiveNote(String noteId) {
-    final index = archivedNotes.indexWhere((e) => e.id == noteId);
+    final created = (filePath != null && filePath.isNotEmpty)
+        ? await _repo.createNoteWithFile(toSend, filePath)
+        : await _repo.createNote(toSend);
 
-    if (index != -1) {
-      final note = archivedNotes.removeAt(index);
-      archivedNotes.refresh();
-      allNotes.insert(0, note);
-      allNotes.refresh();
-      _showSnack('Catatan berhasil dikembalikan');
-    }
-  }
-
-  // -------------------------------------------------------------
-  // PUBLISH DRAFT
-  // -------------------------------------------------------------
-  void publishDraft(String noteId) {
-    final index = draftNotes.indexWhere((e) => e.id == noteId);
-
-    if (index != -1) {
-      final note = draftNotes.removeAt(index);
+    if (status == 'draft') {
+      draftNotes.insert(0, created);
       draftNotes.refresh();
-      allNotes.insert(0, note);
-      allNotes.refresh();
-      _showSnack('Draft berhasil dipublikasikan');
-    }
-  }
-
-  // -------------------------------------------------------------
-  // PUBLISH SCHEDULED
-  // -------------------------------------------------------------
-  void publishScheduled(String noteId) {
-    final index = scheduledNotes.indexWhere((e) => e.id == noteId);
-
-    if (index != -1) {
-      final note = scheduledNotes.removeAt(index);
+    } else if (status == 'scheduled') {
+      scheduledNotes.insert(0, created);
       scheduledNotes.refresh();
-      allNotes.insert(0, note);
+    } else {
+      allNotes.insert(0, created);
       allNotes.refresh();
-      _showSnack('Catatan terjadwal berhasil dipublikasikan');
     }
+    return created;
+  }
+
+  Future<void> loadAllFromServer() async {
+    // Fetch each bucket from its dedicated endpoint. Some APIs return only
+    // list notes on /notes, so rely on specific routes for others.
+    final results = await Future.wait<List<NoteModel>>([
+      _repo.fetchNotes(),
+      _repo.fetchDrafts(),
+      _repo.fetchScheduled(),
+      _repo.fetchArchived(),
+    ]);
+
+    final all = results[0];
+    final drafts = results[1];
+    final scheduled = results[2];
+    final archived = results[3];
+
+    allNotes.assignAll(all);
+    draftNotes.assignAll(drafts);
+    scheduledNotes.assignAll(scheduled);
+    archivedNotes.assignAll(archived);
+  }
+
+  Future<void> refreshAll() async {
+    await loadAllFromServer();
   }
 
   // -------------------------------------------------------------
-  // DELETE NOTE
+  // SERVER-DRIVEN STATE CHANGES
   // -------------------------------------------------------------
-  void deleteNote(
+  Future<void> archiveNote(String noteId) async {
+    await _repo.archive(noteId);
+    final idx = allNotes.indexWhere((e) => e.id == noteId);
+    if (idx != -1) {
+      final note = allNotes.removeAt(idx);
+      allNotes.refresh();
+      archivedNotes.insert(0, note.copyWith(status: 'archived'));
+      archivedNotes.refresh();
+    } else {
+      await loadAllFromServer();
+    }
+  }
+
+  Future<void> unarchiveNote(String noteId) async {
+    await _repo.unarchive(noteId);
+    final idx = archivedNotes.indexWhere((e) => e.id == noteId);
+    if (idx != -1) {
+      final note = archivedNotes.removeAt(idx);
+      archivedNotes.refresh();
+      allNotes.insert(0, note.copyWith(status: 'list'));
+      allNotes.refresh();
+    } else {
+      await loadAllFromServer();
+    }
+  }
+
+  Future<void> publishDraft(String noteId) async {
+    await _repo.publish(noteId);
+    final idx = draftNotes.indexWhere((e) => e.id == noteId);
+    if (idx != -1) {
+      final note = draftNotes.removeAt(idx);
+      draftNotes.refresh();
+      allNotes.insert(0, note.copyWith(status: 'list'));
+      allNotes.refresh();
+    } else {
+      await loadAllFromServer();
+    }
+  }
+
+  Future<void> publishScheduled(String noteId) async {
+    await _repo.publish(noteId);
+    final idx = scheduledNotes.indexWhere((e) => e.id == noteId);
+    if (idx != -1) {
+      final note = scheduledNotes.removeAt(idx);
+      scheduledNotes.refresh();
+      allNotes.insert(0, note.copyWith(status: 'list'));
+      allNotes.refresh();
+    } else {
+      await loadAllFromServer();
+    }
+  }
+
+  Future<void> deleteNote(
     String noteId, {
     bool isDraft = false,
     bool isScheduled = false,
-    bool isArchived = false, // 🆕 TAMBAHAN
-  }) {
+    bool isArchived = false,
+  }) async {
+    await _repo.deleteNote(noteId);
     if (isDraft) {
       draftNotes.removeWhere((e) => e.id == noteId);
       draftNotes.refresh();
@@ -115,41 +183,71 @@ class NotesService extends GetxService {
     }
   }
 
-  // -------------------------------------------------------------
-  // UPDATE NOTE
-  // -------------------------------------------------------------
-  void updateNote(
+  Future<void> updateNote(
     NoteModel updatedNote, {
     bool isDraft = false,
     bool isScheduled = false,
-    bool isArchived = false, // 🆕 TAMBAHAN
-  }) {
+    bool isArchived = false,
+  }) async {
+    final saved = await _repo.updateNote(updatedNote);
+    NoteModel apply(NoteModel _) => saved;
+
     if (isDraft) {
       final index = draftNotes.indexWhere((e) => e.id == updatedNote.id);
       if (index != -1) {
-        draftNotes[index] = updatedNote;
+        draftNotes[index] = apply(draftNotes[index]);
         draftNotes.refresh();
       }
     } else if (isScheduled) {
       final index = scheduledNotes.indexWhere((e) => e.id == updatedNote.id);
       if (index != -1) {
-        scheduledNotes[index] = updatedNote;
+        scheduledNotes[index] = apply(scheduledNotes[index]);
         scheduledNotes.refresh();
       }
     } else if (isArchived) {
       final index = archivedNotes.indexWhere((e) => e.id == updatedNote.id);
       if (index != -1) {
-        archivedNotes[index] = updatedNote;
+        archivedNotes[index] = apply(archivedNotes[index]);
         archivedNotes.refresh();
       }
     } else {
       final index = allNotes.indexWhere((e) => e.id == updatedNote.id);
       if (index != -1) {
-        allNotes[index] = updatedNote;
+        allNotes[index] = apply(allNotes[index]);
         allNotes.refresh();
       }
     }
   }
+
+  // -------------------------------------------------------------
+  // ARCHIVE NOTE (🆕 NEW METHOD)
+  // -------------------------------------------------------------
+  // Removed legacy local-only implementation (now handled via REST above)
+
+  // -------------------------------------------------------------
+  // UNARCHIVE NOTE (🆕 NEW METHOD)
+  // -------------------------------------------------------------
+  // Removed legacy local-only implementation (now handled via REST above)
+
+  // -------------------------------------------------------------
+  // PUBLISH DRAFT
+  // -------------------------------------------------------------
+  // Removed legacy local-only implementation (now handled via REST above)
+
+  // -------------------------------------------------------------
+  // PUBLISH SCHEDULED
+  // -------------------------------------------------------------
+  // Removed legacy local-only implementation (now handled via REST above)
+
+  // -------------------------------------------------------------
+  // DELETE NOTE
+  // -------------------------------------------------------------
+  // Removed legacy local-only implementation (now handled via REST above)
+
+  // -------------------------------------------------------------
+  // UPDATE NOTE
+  // -------------------------------------------------------------
+  // Removed legacy local-only implementation (now handled via REST above)
 
   // -------------------------------------------------------------
   // CHECK IF DATE IS FUTURE

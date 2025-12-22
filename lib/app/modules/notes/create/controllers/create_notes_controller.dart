@@ -149,7 +149,13 @@ class CreateNotesController extends GetxController {
       final note = _buildNote();
       final isScheduled = notesService.isScheduledDate(note.date);
 
-      notesService.addNote(note, isScheduled: isScheduled);
+      // Create via REST API (with file if present)
+      await notesService.createNoteOnServer(
+        note,
+        isScheduled: isScheduled,
+        isDraft: false,
+        filePath: selectedFile?.path,
+      );
 
       _showSuccessDialog(
         title: isScheduled ? '📅 Catatan Dijadwalkan!' : '✅ Catatan Diunggah!',
@@ -188,7 +194,12 @@ class CreateNotesController extends GetxController {
       await Future.delayed(const Duration(milliseconds: 500));
 
       final note = _buildNote();
-      notesService.addNote(note, isDraft: true);
+      await notesService.createNoteOnServer(
+        note,
+        isDraft: true,
+        isScheduled: false,
+        filePath: selectedFile?.path,
+      );
 
       _showSuccessDialog(
         title: '💾 Draft Tersimpan!',

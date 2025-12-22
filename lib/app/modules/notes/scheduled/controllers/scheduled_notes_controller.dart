@@ -23,6 +23,12 @@ class ScheduledNotesController extends GetxController {
     checkAndPublishDueNotes();
   }
 
+  @override
+  void onReady() {
+    super.onReady();
+    _loadFromServer();
+  }
+
   Future<void> publishScheduled(String noteId) async {
     try {
       isLoading.value = true;
@@ -132,8 +138,29 @@ class ScheduledNotesController extends GetxController {
   }
 
   Future<void> refreshScheduled() async {
-    scheduledList.value = notesService.scheduledNotes.toList();
-    checkAndPublishDueNotes();
+    try {
+      isLoading.value = true;
+      await notesService.refreshAll();
+      scheduledList.value = notesService.scheduledNotes.toList();
+      checkAndPublishDueNotes();
+    } catch (e) {
+      print('❌ Error refreshing scheduled from server: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> _loadFromServer() async {
+    try {
+      isLoading.value = true;
+      await notesService.refreshAll();
+      scheduledList.value = notesService.scheduledNotes.toList();
+      checkAndPublishDueNotes();
+    } catch (e) {
+      print('❌ Error loading scheduled notes from server: $e');
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   void viewScheduledDetail(String noteId) {

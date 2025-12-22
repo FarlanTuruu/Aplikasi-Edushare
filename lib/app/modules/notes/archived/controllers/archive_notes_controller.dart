@@ -22,6 +22,12 @@ class ArchiveNotesController extends GetxController {
     archivedList.value = notesService.archivedNotes.toList();
   }
 
+  @override
+  void onReady() {
+    super.onReady();
+    _loadFromServer();
+  }
+
   Future<void> unarchiveNote(String noteId) async {
     try {
       isLoading.value = true;
@@ -128,7 +134,27 @@ class ArchiveNotesController extends GetxController {
   }
 
   Future<void> refreshArchives() async {
-    archivedList.value = notesService.archivedNotes.toList();
+    try {
+      isLoading.value = true;
+      await notesService.refreshAll();
+      archivedList.value = notesService.archivedNotes.toList();
+    } catch (e) {
+      print('❌ Error refreshing archived from server: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> _loadFromServer() async {
+    try {
+      isLoading.value = true;
+      await notesService.refreshAll();
+      archivedList.value = notesService.archivedNotes.toList();
+    } catch (e) {
+      print('❌ Error loading archived notes from server: $e');
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   void viewArchiveDetail(String noteId) {

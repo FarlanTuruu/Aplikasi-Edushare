@@ -45,7 +45,7 @@ class ListNotesController extends GetxController {
   void onReady() {
     super.onReady();
     print('🟢 ListNotesController onReady');
-    refreshNotes();
+    _loadFromServer();
   }
 
   @override
@@ -267,10 +267,26 @@ class ListNotesController extends GetxController {
 
   Future<void> refreshNotes() async {
     try {
+      isLoading.value = true;
+      await notesService.refreshAll();
       filteredNotesList.value = notesService.allNotes.toList();
       print('🔄 Notes refreshed: ${filteredNotesList.length}');
     } catch (e) {
       print('❌ Error refreshing notes: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> _loadFromServer() async {
+    try {
+      isLoading.value = true;
+      await notesService.refreshAll();
+      _updateNotesList(notesService.allNotes);
+    } catch (e) {
+      print('❌ Error loading notes from server: $e');
+    } finally {
+      isLoading.value = false;
     }
   }
 
