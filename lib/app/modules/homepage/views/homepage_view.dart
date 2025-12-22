@@ -206,134 +206,140 @@ class HomepageView extends GetView<HomepageController> {
 
   // --- LIST 1: DISKUSI & MATERI ---
   Widget _buildDiskusiList() {
-    return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      itemCount: controller.diskusiList.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 20),
-      itemBuilder: (context, index) {
-        final item = controller.diskusiList[index];
+    return Obx(() {
+      final items = controller.diskusiList;
+      return ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        itemCount: items.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 20),
+        itemBuilder: (context, index) {
+          final item = items[index];
 
-        // GestureDetector Utama untuk klik Card -> Buka Detail
-        return GestureDetector(
-          onTap: () => controller.openDetailMateri(item),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              // Gradient Background Card
-              gradient: LinearGradient(
-                colors: [Colors.deepPurple.shade300, _primaryPurple],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          // GestureDetector Utama untuk klik Card -> Buka Detail
+          return GestureDetector(
+            onTap: () => controller.openDetailMateri(item),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                // Gradient Background Card
+                gradient: LinearGradient(
+                  colors: [Colors.deepPurple.shade300, _primaryPurple],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
               ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header Card (Avatar, Nama, Tombol Ikuti)
-                  Row(
-                    children: [
-                      const CircleAvatar(
-                        radius: 18,
-                        backgroundImage: NetworkImage(
-                          'https://i.pravatar.cc/150?img=5',
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item['name']!,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              'Upload Tanggal ${item['date']}',
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 10,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Text(
-                          'Ikuti',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header Card (Avatar, Nama, Tombol Ikuti)
+                    Row(
+                      children: [
+                        const CircleAvatar(
+                          radius: 18,
+                          backgroundImage: NetworkImage(
+                            'https://i.pravatar.cc/150?img=5',
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item['name'] ?? 'Materi',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'Upload Tanggal ${item['date'] ?? ''}',
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            'Ikuti',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
 
-                  // Judul Materi
-                  Text(
-                    item['title']!,
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
-                  ),
-                  const SizedBox(height: 12),
+                    // Judul Materi
+                    Text(
+                      item['title'] ?? '',
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                    ),
+                    const SizedBox(height: 12),
 
-                  // Gambar / Thumbnail Materi
-                  Container(
-                    height: 150,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      image: DecorationImage(
-                        image: NetworkImage(item['image']!),
-                        fit: BoxFit.cover,
+                    // Gambar / Thumbnail Materi
+                    Container(
+                      height: 150,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        image: DecorationImage(
+                          image: NetworkImage(
+                            item['image'] ??
+                                'https://picsum.photos/seed/note-fallback/400/200',
+                          ),
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 12),
 
-                  // Footer Actions (Download, Like, Chat)
-                  Row(
-                    children: [
-                      // 1. Tombol Download (Bookmark Icon)
-                      GestureDetector(
-                        onTap: () => controller.showDownloadDialog(),
-                        child: _iconAction(Icons.bookmark_border),
-                      ),
-                      const SizedBox(width: 8),
+                    // Footer Actions (Download, Like, Chat)
+                    Row(
+                      children: [
+                        // 1. Tombol Download (Bookmark Icon)
+                        GestureDetector(
+                          onTap: () => controller.showDownloadDialog(),
+                          child: _iconAction(Icons.bookmark_border),
+                        ),
+                        const SizedBox(width: 8),
 
-                      // 2. Tombol Like
-                      _iconAction(Icons.favorite_border),
-                      const SizedBox(width: 8),
+                        // 2. Tombol Like
+                        _iconAction(Icons.favorite_border),
+                        const SizedBox(width: 8),
 
-                      // 3. Tombol Chat
-                      GestureDetector(
-                        onTap: () => controller.showChatBottomSheet(),
-                        child: _iconAction(Icons.comment_outlined),
-                      ),
-                    ],
-                  ),
-                ],
+                        // 3. Tombol Chat
+                        GestureDetector(
+                          onTap: () => controller.showChatBottomSheet(),
+                          child: _iconAction(Icons.comment_outlined),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        );
-      },
-    );
+          );
+        },
+      );
+    });
   }
 
   Widget _iconAction(IconData icon) {
@@ -526,8 +532,7 @@ class HomepageView extends GetView<HomepageController> {
           // UPDATE BAGIAN INI (TOMBOL TAMBAH)
           // ============================================
           GestureDetector(
-            onTap: () =>
-                controller.showCreateActionDialog(), // Panggil Dialog Disini
+            onTap: () => controller.showCreateActionDialog(),
             child: Container(
               padding: const EdgeInsets.all(
                 4,

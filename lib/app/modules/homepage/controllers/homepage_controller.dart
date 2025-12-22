@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:get/get.dart';
-import '../views/detailmateri_view.dart'; // Kita akan buat file ini di bawah
+import '../views/detailmateri_view.dart'; // Halaman detail materi/note
 import '../../collaboration/list/controllers/list_collaboration_controller.dart';
+import '../../../services/notes_service.dart';
+import '../../../models/note_model.dart';
+import '../../../data/config.dart';
 
 class HomepageController extends GetxController {
   final selectedTab = 0.obs;
@@ -10,24 +14,11 @@ class HomepageController extends GetxController {
   void changeTab(int index) => selectedTab.value = index;
 
   // Dummy Data Diskusi
-
-  final diskusiList = [
-    {
-      'name': 'Alfi Aulia',
-      'date': '25 Des',
-      'title':
-          'Catatan Untuk Mata Kuliah Pengembangan Industri 4.0 Untuk Semester 5',
-      'image': 'https://picsum.photos/seed/pdf1/400/200',
-    },
-    {
-      'name': 'Rizky Saputra',
-      'date': '24 Des',
-      'title': 'Materi Dasar Flutter dan State Management GetX',
-      'image': 'https://picsum.photos/seed/pdf2/400/200',
-    },
-  ];
+  // Diganti: daftar diskusi/materi berasal dari NotesService (published/list)
+  final diskusiList = <Map<String, String>>[].obs;
   // Kolaborasi di Homepage akan mengambil dari ListCollaborationController
   final kolaborasiList = <Map<String, String>>[].obs;
+  Timer? _pollTimer;
 
   @override
   void onInit() {
@@ -41,9 +32,34 @@ class HomepageController extends GetxController {
     // Sinkronkan data kolaborasi ke homepage (map field seperlunya)
     _syncFromCollaborations(listController);
 
+    // Paksa refresh pertama kali agar data terbaru muncul
+    listController.loadCollaborations(force: true);
+
     // Dengarkan perubahan selanjutnya
     ever(listController.collaborations, (_) {
       _syncFromCollaborations(listController);
+    });
+
+    // Pastikan NotesService tersedia
+    if (!Get.isRegistered<NotesService>()) {
+      Get.put(NotesService(), permanent: true);
+    }
+    final notesService = Get.find<NotesService>();
+
+    // Load dari server lalu sinkronkan ke homepage
+    notesService.refreshAll().then((_) => _syncFromNotes(notesService));
+    ever<List<NoteModel>>(
+      notesService.allNotes,
+      (_) => _syncFromNotes(notesService),
+    );
+
+    // Polling ringan untuk auto-refresh (notes & collaboration)
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 20), (_) async {
+      try {
+        await notesService.refreshAll();
+        await listController.loadCollaborations(force: true);
+      } catch (_) {}
     });
   }
 
@@ -62,6 +78,48 @@ class HomepageController extends GetxController {
       };
     }).toList();
     kolaborasiList.assignAll(mapped);
+  }
+
+  void _syncFromNotes(NotesService service) {
+    // Gabungkan catatan publik (list) dengan yang terjadwal agar yang dibuat tampil
+    final combined = <NoteModel>[
+      ...service.allNotes,
+      ...service.scheduledNotes,
+    ];
+    // Urutkan terbaru dulu
+    combined.sort((a, b) => b.date.compareTo(a.date));
+
+    final items = combined.map<Map<String, String>>((note) {
+      final dateLabel = _formatDate(note.date);
+      // Gunakan file note jika berupa gambar; jika tidak, fallback placeholder
+      String imageUrl = 'https://picsum.photos/seed/note-${note.id}/400/200';
+      final fn = note.fileName;
+      if (fn != null && fn.isNotEmpty) {
+        final lower = fn.toLowerCase();
+        final isImage =
+            lower.endsWith('.jpg') ||
+            lower.endsWith('.jpeg') ||
+            lower.endsWith('.png') ||
+            lower.endsWith('.gif') ||
+            lower.endsWith('.webp');
+        if (isImage) {
+          imageUrl = _buildFileUrl(fn);
+        }
+      }
+      return {
+        'id': note.id,
+        'name': note.mataKuliah.isNotEmpty ? note.mataKuliah : 'Materi',
+        'date': dateLabel,
+        'title': note.title,
+        'image': imageUrl,
+        // Tambahan untuk detail
+        'description': note.description,
+        'mata_kuliah': note.mataKuliah,
+        'file_name': note.fileName ?? '',
+        'full_date': note.fullDate,
+      };
+    }).toList();
+    diskusiList.assignAll(items);
   }
 
   // --- FITUR 1: Buka Halaman Detail ---
@@ -332,5 +390,42 @@ class HomepageController extends GetxController {
     }
     // Defer to view layer for calling launcher; keep controller minimal
     // This method can be expanded if you prefer central handling
+  }
+
+  String _formatDate(DateTime dt) {
+    // dd MMM (contoh: 25 Des). Tanpa locale, bisa jadi Dec.
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
+    ];
+    final m = months[dt.month - 1];
+    final d = dt.day.toString().padLeft(2, '0');
+    return '$d $m';
+  }
+
+  String _buildFileUrl(String fileName) {
+    // Ambil base tanpa /api dan bangun url storage
+    final base = apiBaseUrl;
+    final host = base.endsWith('/api')
+        ? base.substring(0, base.length - 4)
+        : base;
+    return '$host/storage/$fileName';
+  }
+
+  @override
+  void onClose() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
+    super.onClose();
   }
 }

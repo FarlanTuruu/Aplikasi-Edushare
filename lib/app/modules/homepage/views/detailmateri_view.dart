@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:pdfx/pdfx.dart';
+import 'package:http/http.dart' as http;
+import '../../../services/auth_service.dart';
+import '../../../data/config.dart';
 
 class DetailMateriView extends StatelessWidget {
   final Map<String, dynamic> data;
@@ -8,6 +13,21 @@ class DetailMateriView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color primaryPurple = const Color(0xFF4A148C);
+    final String title = (data['title'] ?? 'Tanpa Judul').toString();
+    final String mataKuliah = (data['mata_kuliah'] ?? '').toString();
+    final String description = (data['description'] ?? '').toString();
+    final String fileName = (data['file_name'] ?? '').toString();
+    final String fullDate = (data['full_date'] ?? '').toString();
+    final String? fileUrl = fileName.isNotEmpty
+        ? _buildFileUrl(fileName)
+        : null;
+    final bool isImage =
+        fileName.toLowerCase().endsWith('.jpg') ||
+        fileName.toLowerCase().endsWith('.jpeg') ||
+        fileName.toLowerCase().endsWith('.png') ||
+        fileName.toLowerCase().endsWith('.gif') ||
+        fileName.toLowerCase().endsWith('.webp');
+    final bool isPdf = fileName.toLowerCase().endsWith('.pdf');
 
     return Scaffold(
       backgroundColor: primaryPurple,
@@ -75,9 +95,9 @@ class DetailMateriView extends StatelessWidget {
                       const SizedBox(height: 24),
 
                       // Judul Materi
-                      const Text(
-                        "Software Development Life Cycle (SDLC)",
-                        style: TextStyle(
+                      Text(
+                        title,
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
@@ -85,17 +105,27 @@ class DetailMateriView extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        data['title'] ??
-                            'Catatan Untuk Mata Kuliah Pengembangan Industri 4.0',
-                        style: TextStyle(fontSize: 12, color: Colors.black54),
+                        mataKuliah.isNotEmpty ? mataKuliah : 'Materi',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.black54,
+                        ),
                       ),
+                      const SizedBox(height: 4),
+                      if (fullDate.isNotEmpty)
+                        Text(
+                          fullDate,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.black45,
+                          ),
+                        ),
 
                       const SizedBox(height: 20),
 
-                      // PDF Viewer Mockup (Gambar Hitam seperti desain)
+                      // Konten Note
                       Container(
                         width: double.infinity,
-                        // height: 500, // Biarkan height menyesuaikan isi atau set fixed
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.grey),
                         ),
@@ -116,24 +146,23 @@ class DetailMateriView extends StatelessWidget {
                                     size: 20,
                                   ),
                                   const SizedBox(width: 10),
-                                  const Text(
-                                    "SDLC",
-                                    style: TextStyle(color: Colors.white),
+                                  Text(
+                                    mataKuliah.isNotEmpty
+                                        ? mataKuliah
+                                        : 'Materi',
+                                    style: const TextStyle(color: Colors.white),
                                   ),
                                   const Spacer(),
-                                  const Text(
-                                    "1 / 2  -  100%  + ",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                    ),
-                                  ),
                                   const SizedBox(width: 10),
-                                  const Icon(
-                                    Icons.download,
-                                    color: Colors.white,
-                                    size: 18,
-                                  ),
+                                  if (fileName.isNotEmpty)
+                                    GestureDetector(
+                                      onTap: () => _openFile(fileUrl),
+                                      child: const Icon(
+                                        Icons.open_in_new,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                                    ),
                                   const SizedBox(width: 10),
                                   const Icon(
                                     Icons.print,
@@ -143,36 +172,74 @@ class DetailMateriView extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            // Konten "Kertas" PDF
+                            // Isi catatan
                             Container(
                               color: Colors.white,
                               padding: const EdgeInsets.all(16),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    "Tahukah kamu apa itu metode SDLC? Metode SDLC (Software Development Life Cycle) adalah proses pembuatan dan pengubahan sistem serta model...",
-                                    style: TextStyle(fontSize: 10, height: 1.5),
+                                  Text(
+                                    description.isEmpty
+                                        ? 'Tidak ada deskripsi'
+                                        : description,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      height: 1.5,
+                                    ),
                                     textAlign: TextAlign.justify,
                                   ),
-                                  const SizedBox(height: 10),
-                                  const Text(
-                                    "Waterfall",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
+                                  const SizedBox(height: 12),
+                                  if (isImage && fileUrl != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 12,
+                                      ),
+                                      child: Image.network(
+                                        fileUrl,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (c, e, s) => const Text(
+                                          'Gagal memuat gambar',
+                                          style: TextStyle(color: Colors.red),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  // Diagram Mockup
-                                  Image.network(
-                                    'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Waterfall_model.svg/1200px-Waterfall_model.svg.png',
-                                    height: 200,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  const Text(
-                                    "Metode SDLC yang pertama adalah waterfall. Metode waterfall adalah metode kerja yang menekankan fase-fase yang berurutan dan sistematis.",
-                                    style: TextStyle(fontSize: 10, height: 1.5),
-                                  ),
+                                  if (isPdf && fileUrl != null)
+                                    SizedBox(
+                                      height: 400,
+                                      child: FutureBuilder<PdfDocument>(
+                                        future: _loadPdfDocument(fileUrl),
+                                        builder: (context, snap) {
+                                          if (snap.connectionState ==
+                                              ConnectionState.waiting) {
+                                            return const Center(
+                                              child:
+                                                  CircularProgressIndicator(),
+                                            );
+                                          }
+                                          if (snap.hasError || !snap.hasData) {
+                                            return const Center(
+                                              child: Text('Gagal memuat PDF'),
+                                            );
+                                          }
+                                          final controller = PdfControllerPinch(
+                                            document: Future.value(snap.data!),
+                                          );
+                                          return PdfViewPinch(
+                                            controller: controller,
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  if (fileName.isNotEmpty)
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: ElevatedButton.icon(
+                                        onPressed: () => _openFile(fileUrl),
+                                        icon: const Icon(Icons.open_in_new),
+                                        label: const Text('Buka File'),
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),
@@ -230,5 +297,63 @@ class DetailMateriView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _buildFileUrl(String fileName) {
+    final base = apiBaseUrl;
+    final host = base.endsWith('/api')
+        ? base.substring(0, base.length - 4)
+        : base;
+    return '$host/storage/$fileName';
+  }
+
+  Future<PdfDocument> _loadPdfDocument(String url) async {
+    // Include Authorization header if token is set, some storages require it
+    String? token;
+    if (Get.isRegistered<AuthService>()) {
+      token = Get.find<AuthService>().getApiToken();
+    }
+    final headers = <String, String>{
+      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+      'Accept': 'application/pdf',
+    };
+
+    final resp = await http.get(Uri.parse(url), headers: headers);
+    if (resp.statusCode != 200) {
+      throw Exception('HTTP ${resp.statusCode}');
+    }
+    final doc = await PdfDocument.openData(resp.bodyBytes);
+    return doc;
+  }
+
+  Future<void> _openFile(String? fullUrl) async {
+    if (fullUrl == null || fullUrl.isEmpty) {
+      Get.snackbar('Error', 'Link file tidak tersedia');
+      return;
+    }
+    try {
+      final uri = Uri.parse(fullUrl);
+      // Coba external app terlebih dulu
+      final extLaunched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (extLaunched) return;
+
+      // Fallback ke mode default platform
+      final defLaunched = await launchUrl(
+        uri,
+        mode: LaunchMode.platformDefault,
+      );
+      if (defLaunched) return;
+
+      // Fallback terakhir: in-app webview (jika tersedia)
+      final inAppLaunched = await launchUrl(uri, mode: LaunchMode.inAppWebView);
+      if (!inAppLaunched) {
+        Get.snackbar('Error', 'Tidak dapat membuka file');
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Gagal membuka file: $e');
+    }
   }
 }
