@@ -5,7 +5,7 @@ import '../../../../services/auth_service.dart';
 import '../../../../models/message_model.dart';
 
 class MessagesController extends GetxController {
-  final api = Get.put(MessagesService());
+  late final MessagesService api;
   final messages = <Map<String, dynamic>>[].obs;
   final textController = ''.obs;
   final textEditingController = TextEditingController();
@@ -22,6 +22,12 @@ class MessagesController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    // Ensure singleton MessagesService and subscribe to updates
+    if (!Get.isRegistered<MessagesService>()) {
+      Get.put(MessagesService(), permanent: true);
+    }
+    api = Get.find<MessagesService>();
+    ever(api.messages, (_) => _syncFromModels());
     _bootstrap();
   }
 
@@ -35,7 +41,7 @@ class MessagesController extends GetxController {
     final int? roomId = _toInt(args['roomId']);
     final int? userId = _toInt(args['userId']);
 
-    int? useRoomId = roomId;
+    int? useRoomId = roomId ?? api.currentRoomId.value;
     if (useRoomId == null && userId != null) {
       useRoomId = await api.ensureDmRoomWithUser(userId);
     }
