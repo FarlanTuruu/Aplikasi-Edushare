@@ -82,28 +82,40 @@ class NotesService extends GetxService {
   }
 
   Future<void> loadAllFromServer() async {
-    // Fetch each bucket from its dedicated endpoint. Some APIs return only
-    // list notes on /notes, so rely on specific routes for others.
-    final results = await Future.wait<List<NoteModel>>([
-      _repo.fetchNotes(),
-      _repo.fetchDrafts(),
-      _repo.fetchScheduled(),
-      _repo.fetchArchived(),
-    ]);
-
-    final all = results[0];
-    final drafts = results[1];
-    final scheduled = results[2];
-    final archived = results[3];
-
-    allNotes.assignAll(all);
-    draftNotes.assignAll(drafts);
-    scheduledNotes.assignAll(scheduled);
-    archivedNotes.assignAll(archived);
+    // Fetch each bucket with per-call error isolation so one failing
+    // endpoint doesn't blank the entire list on the homepage.
+    try {
+      final all = await _repo.fetchNotes();
+      allNotes.assignAll(all);
+    } catch (e) {
+      _showSnack('Gagal memuat notes: ${e.toString()}');
+    }
+    try {
+      final drafts = await _repo.fetchDrafts();
+      draftNotes.assignAll(drafts);
+    } catch (_) {}
+    try {
+      final scheduled = await _repo.fetchScheduled();
+      scheduledNotes.assignAll(scheduled);
+    } catch (_) {}
+    try {
+      final archived = await _repo.fetchArchived();
+      archivedNotes.assignAll(archived);
+    } catch (_) {}
   }
 
   Future<void> refreshAll() async {
     await loadAllFromServer();
+  }
+
+  // Load only public/published notes for homepage feed visibility
+  Future<void> loadPublicFeed() async {
+    try {
+      final publicNotes = await _repo.fetchNotesPublic();
+      allNotes.assignAll(publicNotes);
+    } catch (e) {
+      _showSnack('Gagal memuat feed: ${e.toString()}');
+    }
   }
 
   // -------------------------------------------------------------

@@ -7,28 +7,60 @@ class NoteRepository {
 
   // Adjust paths to match Laravel routes (e.g., /notes)
   Future<List<NoteModel>> fetchNotes() async {
+    // Authenticated, owner-specific list
     final data = await api.getList('notes');
     return data
-        .map((e) => NoteModel.fromApi(e as Map<String, dynamic>))
+        .map(
+          (e) => NoteModel.fromApi(
+            e is Map<String, dynamic> ? e : <String, dynamic>{},
+          ),
+        )
+        .toList();
+  }
+
+  // Explicit public/published feed for all users
+  Future<List<NoteModel>> fetchNotesPublic() async {
+    final data = await api.getList('public/notes');
+    return data
+        .map(
+          (e) => NoteModel.fromApi(
+            e is Map<String, dynamic> ? e : <String, dynamic>{},
+          ),
+        )
         .toList();
   }
 
   Future<List<NoteModel>> fetchDrafts() async {
-    final data = await api.getList('notes/drafts');
+    List<dynamic> data;
+    try {
+      data = await api.getList('notes/drafts');
+    } catch (_) {
+      data = const [];
+    }
     return data
         .map((e) => NoteModel.fromApi(e as Map<String, dynamic>))
         .toList();
   }
 
   Future<List<NoteModel>> fetchScheduled() async {
-    final data = await api.getList('notes/scheduled');
+    List<dynamic> data;
+    try {
+      data = await api.getList('notes/scheduled');
+    } catch (_) {
+      data = const [];
+    }
     return data
         .map((e) => NoteModel.fromApi(e as Map<String, dynamic>))
         .toList();
   }
 
   Future<List<NoteModel>> fetchArchived() async {
-    final data = await api.getList('notes/archived');
+    List<dynamic> data;
+    try {
+      data = await api.getList('notes/archived');
+    } catch (_) {
+      data = const [];
+    }
     return data
         .map((e) => NoteModel.fromApi(e as Map<String, dynamic>))
         .toList();
