@@ -288,7 +288,10 @@ class ListCollaborationView extends GetView<ListCollaborationController> {
               color: Colors.black54,
               size: 28,
             ),
-            onPressed: controller.navigateToHome,
+            onPressed: () {
+              // Navigasi ke halaman messages (chat)
+              Get.toNamed('/homepage');
+            },
           ),
           IconButton(
             icon: const Icon(
@@ -296,7 +299,10 @@ class ListCollaborationView extends GetView<ListCollaborationController> {
               color: Colors.black54,
               size: 26,
             ),
-            onPressed: controller.navigateToChat,
+            onPressed: () {
+              // Navigasi ke halaman messages (chat)
+              Get.toNamed('/chat/rooms');
+            },
           ),
           // Tombol Tambah Tengah (Floating Style)
           GestureDetector(

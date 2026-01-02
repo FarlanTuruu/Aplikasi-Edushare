@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import '../views/detailmateri_view.dart'; // Halaman detail materi/note
 import '../../collaboration/list/controllers/list_collaboration_controller.dart';
 import '../../../services/notes_service.dart';
+import '../../../services/follow_service.dart';
+import '../../../services/messages_service.dart';
 import '../../../models/note_model.dart';
 import '../../../data/config.dart';
 
@@ -32,8 +34,8 @@ class HomepageController extends GetxController {
     // Sinkronkan data kolaborasi ke homepage (map field seperlunya)
     _syncFromCollaborations(listController);
 
-    // Paksa refresh pertama kali agar data terbaru muncul
-    listController.loadCollaborations(force: true);
+    // Paksa refresh pertama kali dari public feed
+    listController.loadCollaborationsPublic(force: true);
 
     // Dengarkan perubahan selanjutnya
     ever(listController.collaborations, (_) {
@@ -46,8 +48,16 @@ class HomepageController extends GetxController {
     }
     final notesService = Get.find<NotesService>();
 
-    // Load dari server lalu sinkronkan ke homepage
-    notesService.refreshAll().then((_) => _syncFromNotes(notesService));
+    // Pastikan FollowService & MessagesService tersedia
+    if (!Get.isRegistered<FollowService>()) {
+      Get.putAsync<FollowService>(() async => (FollowService()).init());
+    }
+    if (!Get.isRegistered<MessagesService>()) {
+      Get.putAsync<MessagesService>(() async => (MessagesService()).init());
+    }
+
+    // Load public feed so all accounts see published notes
+    notesService.loadPublicFeed().then((_) => _syncFromNotes(notesService));
     ever<List<NoteModel>>(
       notesService.allNotes,
       (_) => _syncFromNotes(notesService),
@@ -57,8 +67,8 @@ class HomepageController extends GetxController {
     _pollTimer?.cancel();
     _pollTimer = Timer.periodic(const Duration(seconds: 20), (_) async {
       try {
-        await notesService.refreshAll();
-        await listController.loadCollaborations(force: true);
+        await notesService.loadPublicFeed();
+        await listController.loadCollaborationsPublic(force: true);
       } catch (_) {}
     });
   }
@@ -117,6 +127,8 @@ class HomepageController extends GetxController {
         'mata_kuliah': note.mataKuliah,
         'file_name': note.fileName ?? '',
         'full_date': note.fullDate,
+        // User target untuk follow
+        'author_id': (note.authorId?.toString() ?? ''),
       };
     }).toList();
     diskusiList.assignAll(items);
@@ -125,6 +137,28 @@ class HomepageController extends GetxController {
   // --- FITUR 1: Buka Halaman Detail ---
   void openDetailMateri(Map<String, dynamic> item) {
     Get.to(() => DetailMateriView(data: item));
+  }
+
+  // --- FITUR: Follow Author & create chat room ---
+  Future<void> followAuthorOf(Map<String, String> item) async {
+    final idStr = item['author_id'];
+    final userId = idStr != null && idStr.isNotEmpty
+        ? int.tryParse(idStr)
+        : null;
+    if (userId == null) {
+      Get.snackbar('Error', 'Tidak menemukan author untuk item ini');
+      return;
+    }
+    try {
+      final followService = Get.find<FollowService>();
+      final ok = await followService.follow(userId, createChatRoom: false);
+      if (ok) {
+        // Optional: navigate to chat rooms
+        // Get.toNamed('/chat/rooms');
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Gagal follow: ${e.toString()}');
+    }
   }
 
   // --- FITUR 2: Download Dialog ---

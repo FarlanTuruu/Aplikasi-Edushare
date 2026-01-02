@@ -9,6 +9,7 @@ class NoteModel {
   final String description;
   final String? fileName;
   final String? status; // e.g., list, draft, scheduled, archived
+  final int? authorId; // user_id of note owner
 
   NoteModel({
     required this.id,
@@ -18,6 +19,7 @@ class NoteModel {
     required this.description,
     this.fileName,
     this.status,
+    this.authorId,
   });
 
   // helper untuk menampilkan
@@ -33,6 +35,7 @@ class NoteModel {
     String? description,
     String? fileName,
     String? status,
+    int? authorId,
   }) {
     return NoteModel(
       id: id ?? this.id,
@@ -42,6 +45,7 @@ class NoteModel {
       description: description ?? this.description,
       fileName: fileName ?? this.fileName,
       status: status ?? this.status,
+      authorId: authorId ?? this.authorId,
     );
   }
 
@@ -56,6 +60,7 @@ class NoteModel {
       'description': description,
       'fileName': fileName,
       'status': status,
+      'author_id': authorId,
     };
   }
 
@@ -83,6 +88,12 @@ class NoteModel {
           ? (map['fileName'] ?? map['file_name']).toString()
           : null,
       status: map['status']?.toString(),
+      authorId: _toInt(
+        map['author_id'] ??
+            map['user_id'] ??
+            map['owner_id'] ??
+            (map['author'] is Map ? (map['author'] as Map)['id'] : null),
+      ),
     );
   }
 
@@ -126,6 +137,12 @@ class NoteModel {
       fileName: map['file_name']?.toString(),
       status: map['status']?.toString(),
       date: parsed,
+      authorId: _toInt(
+        map['user_id'] ??
+            map['author_id'] ??
+            map['owner_id'] ??
+            (map['author'] is Map ? (map['author'] as Map)['id'] : null),
+      ),
     );
   }
 
@@ -135,5 +152,12 @@ class NoteModel {
     } catch (_) {
       return null;
     }
+  }
+
+  static int? _toInt(dynamic v) {
+    if (v == null) return null;
+    if (v is int) return v;
+    if (v is String) return int.tryParse(v);
+    return null;
   }
 }

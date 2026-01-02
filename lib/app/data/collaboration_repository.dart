@@ -5,7 +5,14 @@ class CollaborationRepository {
   CollaborationRepository(this.api);
 
   Future<List<dynamic>> index() async {
+    // Authenticated, owner-specific list
     return await api.getList('collaborations');
+  }
+
+  /// Explicitly prefer public endpoints first, without hitting owner-only route
+  Future<List<dynamic>> indexPublic() async {
+    // Public global list (no auth)
+    return await api.getList('public/collaborations');
   }
 
   Future<Map<String, dynamic>> store(Map<String, dynamic> payload) async {

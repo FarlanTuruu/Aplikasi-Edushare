@@ -264,21 +264,24 @@ class HomepageView extends GetView<HomepageController> {
                             ],
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Text(
-                            'Ikuti',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
+                        GestureDetector(
+                          onTap: () => controller.followAuthorOf(item),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Text(
+                              'Ikuti',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
                             ),
                           ),
                         ),

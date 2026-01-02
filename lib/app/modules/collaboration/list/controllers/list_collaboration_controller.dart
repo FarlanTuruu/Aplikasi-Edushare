@@ -22,7 +22,8 @@ class ListCollaborationController extends GetxController {
     _api = Get.find<ApiClient>();
     // Jangan register Repo ke GetX untuk menghindari instance dengan dependency berbeda
     _repo = CollaborationRepository(_api);
-    loadCollaborations();
+    // Prefer public feed so visible to all users
+    loadCollaborationsPublic();
   }
 
   // ============= DATA METHODS =============
@@ -31,17 +32,8 @@ class ListCollaborationController extends GetxController {
   Future<void> loadCollaborations({bool force = false}) async {
     // Jika tidak force dan data sudah ada, hindari fetch ulang otomatis
     if (!force && collaborations.isNotEmpty) return;
-    // Jika belum login (tidak ada token), tampilkan info dan hentikan
-    if ((_api.getToken() ?? '').isEmpty) {
-      errorMessage.value = 'Silakan login terlebih dahulu';
-      Get.snackbar(
-        'Autentikasi',
-        errorMessage.value,
-        snackPosition: SnackPosition.BOTTOM,
-        margin: const EdgeInsets.all(20),
-      );
-      return;
-    }
+    // Be permissive: many public lists don't require token.
+    // We won't block when token is missing.
     isLoading.value = true;
     errorMessage.value = '';
     try {
@@ -100,6 +92,68 @@ class ListCollaborationController extends GetxController {
         isUnauth
             ? 'Silakan login terlebih dahulu'
             : 'Gagal memuat data: ${errorMessage.value}',
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(20),
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Load collaborations via public endpoints first
+  Future<void> loadCollaborationsPublic({bool force = false}) async {
+    if (!force && collaborations.isNotEmpty) return;
+    isLoading.value = true;
+    errorMessage.value = '';
+    try {
+      final list = await _repo.indexPublic();
+      final mapped = list.map<Map<String, dynamic>>((item) {
+        final map = item as Map<String, dynamic>;
+        final createdAt =
+            map['created_at_date']?.toString() ??
+            map['createdAt']?.toString() ??
+            map['created_at']?.toString() ??
+            '';
+        DateTime? dt;
+        try {
+          if (createdAt.isNotEmpty) dt = DateTime.parse(createdAt);
+        } catch (_) {}
+        final dayStr = dt != null
+            ? [
+                'Jan',
+                'Feb',
+                'Mar',
+                'Apr',
+                'May',
+                'Jun',
+                'Jul',
+                'Aug',
+                'Sep',
+                'Oct',
+                'Nov',
+                'Dec',
+              ][dt.month - 1]
+            : (map['day']?.toString() ?? '');
+        final dateStr = dt != null
+            ? dt.day.toString().padLeft(2, '0')
+            : (map['date']?.toString() ?? '');
+        return {
+          'id': map['id'] ?? map['uuid'] ?? map['ID'],
+          'title': map['title'] ?? map['judul'] ?? '',
+          'date': dateStr,
+          'day': dayStr,
+          'createdAt': createdAt,
+          'mataKuliah': map['mata_kuliah'] ?? map['mataKuliah'],
+          'deskripsi': map['description'] ?? map['deskripsi'],
+          'link': map['link'] ?? map['link_docs'],
+        };
+      }).toList();
+      collaborations.assignAll(mapped);
+    } catch (e) {
+      errorMessage.value = e.toString();
+      Get.snackbar(
+        'Error',
+        'Gagal memuat kolaborasi: ${errorMessage.value}',
         snackPosition: SnackPosition.BOTTOM,
         margin: const EdgeInsets.all(20),
       );
