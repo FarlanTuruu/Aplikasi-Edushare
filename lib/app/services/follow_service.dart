@@ -40,7 +40,7 @@ class FollowService extends GetxService {
 
         if (roomId != null) {
           messagesService.currentRoomId.value = roomId;
-          _showSnack('Chat room ready');
+          // No extra snackbar for room creation; keep UI quiet
         }
       }
       return true;

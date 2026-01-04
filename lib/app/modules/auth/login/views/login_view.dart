@@ -221,29 +221,6 @@ class LoginView extends GetView<LoginController> {
               ),
               const SizedBox(height: 24),
 
-              // Or continue with
-              Align(
-                alignment: Alignment.center,
-                child: Text(
-                  'or continue with',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Social Login Buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _socialButton('assets/icons/google.png'),
-                  const SizedBox(width: 16),
-                  _socialButton('assets/icons/linkedin.png'),
-                  const SizedBox(width: 16),
-                  _socialButton('assets/icons/twitter.png'),
-                ],
-              ),
-              const SizedBox(height: 24),
-
               // Login Button
               SizedBox(
                 width: double.infinity,
@@ -314,18 +291,6 @@ class LoginView extends GetView<LoginController> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _socialButton(String imagePath) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Image.asset(imagePath),
     );
   }
 }

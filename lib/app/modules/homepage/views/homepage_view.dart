@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../controllers/homepage_controller.dart';
+import '../../settings/profile/controllers/profile_settings_controller.dart';
+import 'package:appedushare/app/routes/app_pages.dart';
 
 class HomepageView extends GetView<HomepageController> {
   const HomepageView({super.key});
@@ -77,6 +79,24 @@ class HomepageView extends GetView<HomepageController> {
 
   // ================= WIDGET BUILDERS =================
 
+  // Ensure ProfileSettingsController exists before using it in Obx.
+  ProfileSettingsController get _profileCtrl {
+    if (!Get.isRegistered<ProfileSettingsController>()) {
+      Get.put(ProfileSettingsController(), permanent: true);
+    }
+    return Get.find<ProfileSettingsController>();
+  }
+
+  // Helper to build avatar image provider from resolved profile URL
+  ImageProvider<Object>? _avatarProvider(ProfileSettingsController p) {
+    final url = p.profileImageUrl.value;
+    if (url.isEmpty) return null;
+    if (url.startsWith('http')) {
+      return NetworkImage(url);
+    }
+    return null; // Avoid local FileImage on homepage; backend provides absolute URL
+  }
+
   // --- Header Section ---
   Widget _buildHeader() {
     return SafeArea(
@@ -101,26 +121,49 @@ class HomepageView extends GetView<HomepageController> {
                   children: [
                     // Avatar Profil
                     GestureDetector(
-                      onTap: controller.goToProfile,
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 1.5),
-                          image: const DecorationImage(
-                            image: NetworkImage(
-                              'https://i.pravatar.cc/150?img=5',
-                            ),
-                            fit: BoxFit.cover,
+                      onTap: () => Get.toNamed(Routes.PROFILE),
+                      child: Obx(() {
+                        final p = _profileCtrl;
+                        final name = p.userName.value;
+                        final initial = name.isNotEmpty
+                            ? name[0].toUpperCase()
+                            : '?';
+                        final provider = _avatarProvider(p);
+                        return Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 1.5),
+                            color: provider == null
+                                ? Colors.white.withOpacity(0.2)
+                                : Colors.transparent,
                           ),
-                        ),
-                      ),
+                          child: provider != null
+                              ? ClipOval(
+                                  child: Image(
+                                    image: provider,
+                                    width: 40,
+                                    height: 40,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : Center(
+                                  child: Text(
+                                    initial,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                        );
+                      }),
                     ),
                     const SizedBox(width: 12),
                     // Icon Settings
                     GestureDetector(
-                      onTap: controller.goToSettings,
+                      onTap: () => Get.toNamed(Routes.PROFILE),
                       child: const Icon(
                         Icons.settings,
                         color: Colors.white,

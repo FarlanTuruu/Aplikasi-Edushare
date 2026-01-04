@@ -1,3 +1,4 @@
+import 'package:appedushare/app/modules/settings/profile/controllers/profile_settings_controller.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:get/get.dart';
@@ -15,16 +16,25 @@ class HomepageController extends GetxController {
 
   void changeTab(int index) => selectedTab.value = index;
 
-  // Dummy Data Diskusi
   // Diganti: daftar diskusi/materi berasal dari NotesService (published/list)
   final diskusiList = <Map<String, String>>[].obs;
   // Kolaborasi di Homepage akan mengambil dari ListCollaborationController
   final kolaborasiList = <Map<String, String>>[].obs;
   Timer? _pollTimer;
 
+  late final ProfileSettingsController profileCtrl;
+
   @override
   void onInit() {
     super.onInit();
+
+    if (!Get.isRegistered<ProfileSettingsController>()) {
+      Get.put(ProfileSettingsController(), permanent: true);
+    }
+    profileCtrl = Get.find<ProfileSettingsController>();
+    // Panggil loadUserData agar saat masuk homepage, data/gambar terbaru diambil
+    profileCtrl.loadUserData();
+
     // Pastikan controller list kolaborasi tersedia
     if (!Get.isRegistered<ListCollaborationController>()) {
       Get.put(ListCollaborationController(), permanent: true);
@@ -413,8 +423,13 @@ class HomepageController extends GetxController {
   }
 
   // Dummy Navigasi
-  void goToProfile() {}
-  void goToSettings() {}
+  void goToProfile() {
+    Get.toNamed('/settings/profile');
+  }
+
+  void goToSettings() {
+    Get.toNamed('/settings/profile');
+  }
 
   // Open docs link in browser
   Future<void> openDocsLink(String? url) async {
