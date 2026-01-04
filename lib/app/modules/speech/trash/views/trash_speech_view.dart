@@ -1,3 +1,5 @@
+// File: /lib/app/modules/speech/trash/views/trash_speech_view.dart
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -8,12 +10,17 @@ import '../../list/views/list_speech_view.dart';
 class TrashSpeechView extends GetView<TrashSpeechController> {
   const TrashSpeechView({super.key});
 
+  // Definisi Warna Utama - Konsisten dengan homepage & notes
+  static const Color _primaryPurple = Color(0xFF4A148C);
+  static const Color _secondaryPurple = Color(0xFF7B1FA2);
+
   @override
   Widget build(BuildContext context) {
-    const purple = Color(0xFF4A1F7A);
+    final size = MediaQuery.of(context).size;
+    final isTablet = size.width > 600;
 
     return Scaffold(
-      backgroundColor: purple,
+      backgroundColor: _primaryPurple, // Konsisten dengan homepage & notes
       body: SafeArea(
         child: Column(
           children: [
@@ -43,15 +50,17 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
               child: Container(
                 width: double.infinity,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFF8F4FB),
+                  color: Colors.white,
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(40),
-                    topRight: Radius.circular(40),
+                    topLeft: Radius.circular(45), // Konsisten dengan notes
+                    topRight: Radius.circular(45),
                   ),
                 ),
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -68,11 +77,7 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
                             },
                           ),
                           const SizedBox(width: 10),
-                          _pillButton(
-                            "Trash",
-                            isActive: true,
-                            onTap: () {},
-                          ),
+                          _pillButton("Trash", isActive: true, onTap: () {}),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -142,11 +147,7 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
     );
   }
 
-  Widget _buildBottomNavItem(
-    IconData icon,
-    bool isCenter,
-    VoidCallback onTap,
-  ) {
+  Widget _buildBottomNavItem(IconData icon, bool isCenter, VoidCallback onTap) {
     const purple = Color(0xFF4A1F7A);
 
     if (isCenter) {
@@ -177,20 +178,23 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
     required VoidCallback onTap,
   }) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: action,
       child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          color: active ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(30), // Konsisten dengan notes
+          border: Border.all(
+            color: Colors.black, // Konsisten dengan notes
+            width: 1,
+          ),
         ),
         child: Text(
-          label,
+          text,
+          textAlign: TextAlign.center,
           style: TextStyle(
             color: Colors.black,
-            fontWeight:
-                isActive ? FontWeight.bold : FontWeight.w500,
+            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
           ),
         ),
       ),
@@ -200,17 +204,12 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
   // TRASH CARD
   Widget _trashCard(BuildContext context, Recording rec, Color purple) {
     return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
+          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
         ],
       ),
       child: Row(
@@ -218,10 +217,8 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
           Container(
             width: 40,
             height: 40,
-            decoration:
-                BoxDecoration(color: purple, shape: BoxShape.circle),
-            child:
-                const Icon(Icons.play_arrow, color: Colors.white),
+            decoration: BoxDecoration(color: purple, shape: BoxShape.circle),
+            child: const Icon(Icons.play_arrow, color: Colors.white),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -231,13 +228,14 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
                 Text(
                   rec.title,
                   style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 16),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   rec.time,
-                  style: const TextStyle(
-                      fontSize: 12, color: Colors.grey),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
@@ -247,10 +245,9 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
             onPressed: () => controller.restoreRecording(rec),
           ),
           IconButton(
-            icon:
-                const Icon(Icons.delete_forever, color: Colors.red),
+            icon: const Icon(Icons.delete_forever, color: Colors.red),
             onPressed: () {
-              _showDeleteDialog(context, rec, purple);
+              _showDeleteDialog(context, rec);
             },
           ),
         ],
@@ -259,32 +256,26 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
   }
 
   // DELETE CONFIRMATION
-  void _showDeleteDialog(
-    BuildContext context,
-    Recording rec,
-    Color purple,
-  ) {
+  void _showDeleteDialog(BuildContext context, Recording rec, Color purple) {
     showDialog(
       context: context,
       builder: (_) => Dialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             gradient: const LinearGradient(
-              colors: [Color(0xFF9D84C8), Color(0xFF4A1F7A)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+              colors: [Color(0xFFE1BEE7), Color(0xFF4A148C)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
-          padding:
-              const EdgeInsets.symmetric(vertical: 30, horizontal: 24),
+          padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                "Are you sure to\nDELETE this voice?",
+                "Are you sure to\nDELETE this voice\npermanently?",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,
@@ -301,9 +292,12 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
                       backgroundColor: Colors.white,
                       foregroundColor: purple,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 28, vertical: 10),
+                        horizontal: 28,
+                        vertical: 10,
+                      ),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20)),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                       elevation: 0,
                     ),
                     onPressed: () => Get.back(),
@@ -317,14 +311,17 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
                       backgroundColor: purple,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 28, vertical: 10),
+                        horizontal: 28,
+                        vertical: 10,
+                      ),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20)),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                       elevation: 0,
                     ),
                     onPressed: () {
                       Get.back();
-                      controller.deletePermanently(rec);
+                      Get.toNamed('/collab/create');
                     },
                     child: const Text(
                       "Yes",
@@ -334,6 +331,30 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
                 ],
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCreateOptionButton({
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: SizedBox(
+        height: 100,
+        child: ElevatedButton(
+          onPressed: onTap,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+            shape: const CircleBorder(),
+            elevation: 4,
+          ),
+          child: Text(
+            title,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
         ),
       ),

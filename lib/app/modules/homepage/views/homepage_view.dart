@@ -8,21 +8,21 @@ import 'package:appedushare/app/routes/app_pages.dart';
 class HomepageView extends GetView<HomepageController> {
   const HomepageView({super.key});
 
-  // Definisi Warna Utama sesuai desain
-  final Color _primaryPurple = const Color(0xFF4A148C);
-  final Color _secondaryPurple = const Color(0xFF7B1FA2);
-
   @override
   Widget build(BuildContext context) {
+    // Konsistensi Warna dengan list_speech
+    const Color primaryPurple = Color(0xFF4A148C);
+    const Color secondaryPurple = Color(0xFF7B1FA2);
+
     return Scaffold(
-      backgroundColor: _primaryPurple, // Background status bar & header
+      backgroundColor: primaryPurple,
       body: Stack(
         children: [
           // ================= MAIN CONTENT STRUKTUR =================
           Column(
             children: [
               // 1. Header Area (Judul, Profil, Search Bar)
-              _buildHeader(),
+              _buildHeader(primaryPurple),
 
               // 2. Body Area (Background Putih dengan Lengkungan)
               Expanded(
@@ -31,14 +31,14 @@ class HomepageView extends GetView<HomepageController> {
                   decoration: const BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(
-                        45,
-                      ), // Lengkungan khas di kiri atas
+                      topLeft: Radius.circular(45),
+                      topRight: Radius.circular(45),
                     ),
                   ),
                   child: ClipRRect(
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(45),
+                      topRight: Radius.circular(45),
                     ),
                     child: Column(
                       children: [
@@ -53,7 +53,7 @@ class HomepageView extends GetView<HomepageController> {
                         Expanded(
                           child: Obx(() {
                             if (controller.selectedTab.value == 0) {
-                              return _buildDiskusiList();
+                              return _buildDiskusiList(primaryPurple);
                             } else {
                               return _buildKolaborasiList();
                             }
@@ -71,7 +71,12 @@ class HomepageView extends GetView<HomepageController> {
           ),
 
           // ================= BOTTOM NAVIGATION BAR =================
-          Positioned(bottom: 0, left: 0, right: 0, child: _buildBottomNavBar()),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: _buildBottomNavBar(primaryPurple),
+          ),
         ],
       ),
     );
@@ -98,7 +103,7 @@ class HomepageView extends GetView<HomepageController> {
   }
 
   // --- Header Section ---
-  Widget _buildHeader() {
+  Widget _buildHeader(Color purple) {
     return SafeArea(
       bottom: false,
       child: Padding(
@@ -227,12 +232,7 @@ class HomepageView extends GetView<HomepageController> {
         decoration: BoxDecoration(
           color: isActive ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(30),
-          border: Border.all(
-            color: Colors.black, // Border hitam sesuai desain
-            width: 1,
-          ),
-          // Jika aktif mungkin bisa dikasih shadow dikit atau style beda
-          // Tapi di desain terlihat plain border
+          border: Border.all(color: Colors.black, width: 1),
         ),
         child: Text(
           text,
@@ -248,7 +248,7 @@ class HomepageView extends GetView<HomepageController> {
   }
 
   // --- LIST 1: DISKUSI & MATERI ---
-  Widget _buildDiskusiList() {
+  Widget _buildDiskusiList(Color purple) {
     return Obx(() {
       final items = controller.diskusiList;
       return ListView.separated(
@@ -258,15 +258,13 @@ class HomepageView extends GetView<HomepageController> {
         itemBuilder: (context, index) {
           final item = items[index];
 
-          // GestureDetector Utama untuk klik Card -> Buka Detail
           return GestureDetector(
             onTap: () => controller.openDetailMateri(item),
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
-                // Gradient Background Card
-                gradient: LinearGradient(
-                  colors: [Colors.deepPurple.shade300, _primaryPurple],
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFE1BEE7), Color(0xFF4A148C)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -293,14 +291,14 @@ class HomepageView extends GetView<HomepageController> {
                               Text(
                                 item['name'] ?? 'Materi',
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: Colors.black87,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               Text(
                                 'Upload Tanggal ${item['date'] ?? ''}',
                                 style: const TextStyle(
-                                  color: Colors.white70,
+                                  color: Colors.black54,
                                   fontSize: 10,
                                 ),
                               ),
@@ -335,7 +333,10 @@ class HomepageView extends GetView<HomepageController> {
                     // Judul Materi
                     Text(
                       item['title'] ?? '',
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 13,
+                      ),
                     ),
                     const SizedBox(height: 12),
 
@@ -360,18 +361,13 @@ class HomepageView extends GetView<HomepageController> {
                     // Footer Actions (Download, Like, Chat)
                     Row(
                       children: [
-                        // 1. Tombol Download (Bookmark Icon)
                         GestureDetector(
                           onTap: () => controller.showDownloadDialog(),
                           child: _iconAction(Icons.bookmark_border),
                         ),
                         const SizedBox(width: 8),
-
-                        // 2. Tombol Like
                         _iconAction(Icons.favorite_border),
                         const SizedBox(width: 8),
-
-                        // 3. Tombol Chat
                         GestureDetector(
                           onTap: () => controller.showChatBottomSheet(),
                           child: _iconAction(Icons.comment_outlined),
@@ -419,7 +415,7 @@ class HomepageView extends GetView<HomepageController> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               gradient: const LinearGradient(
-                colors: [Color(0xFFE1BEE7), Color(0xFF7B1FA2)],
+                colors: [Color(0xFFE1BEE7), Color(0xFF4A148C)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -535,7 +531,7 @@ class HomepageView extends GetView<HomepageController> {
   }
 
   // --- Bottom Navigation Bar ---
-  Widget _buildBottomNavBar() {
+  Widget _buildBottomNavBar(Color purple) {
     return Container(
       height: 80,
       decoration: BoxDecoration(
@@ -555,10 +551,7 @@ class HomepageView extends GetView<HomepageController> {
           Container(
             width: 48,
             height: 48,
-            decoration: BoxDecoration(
-              color: _primaryPurple,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: purple, shape: BoxShape.circle),
             child: const Icon(Icons.home, color: Colors.white, size: 28),
           ),
 
@@ -569,20 +562,15 @@ class HomepageView extends GetView<HomepageController> {
               size: 28,
             ),
             onPressed: () {
-              // Navigasi ke halaman messages (chat)
               Get.toNamed('/chat/rooms');
             },
           ),
 
-          // ============================================
-          // UPDATE BAGIAN INI (TOMBOL TAMBAH)
-          // ============================================
+          // Tombol Tambah
           GestureDetector(
             onTap: () => controller.showCreateActionDialog(),
             child: Container(
-              padding: const EdgeInsets.all(
-                4,
-              ), // Padding agar border tidak mepet icon
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.black54, width: 1.5),
                 borderRadius: BorderRadius.circular(8),
@@ -591,7 +579,6 @@ class HomepageView extends GetView<HomepageController> {
             ),
           ),
 
-          // ============================================
           IconButton(
             icon: const Icon(
               Icons.mic_outlined,
@@ -599,7 +586,6 @@ class HomepageView extends GetView<HomepageController> {
               size: 28,
             ),
             onPressed: () {
-              // Navigasi ke halaman speech
               Get.toNamed('/speech/upload');
             },
           ),

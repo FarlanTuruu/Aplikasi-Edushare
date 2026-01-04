@@ -7,13 +7,17 @@ import '../controllers/edit_notes_controller.dart';
 class EditNotesView extends GetView<EditNotesController> {
   const EditNotesView({super.key});
 
+  // Definisi Warna Utama - Konsisten dengan create_notes & homepage
+  static const Color _primaryPurple = Color(0xFF4A148C);
+  static const Color _secondaryPurple = Color(0xFF7B1FA2);
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF6B2C91),
+      backgroundColor: _primaryPurple, // Konsisten dengan create_notes
       body: SafeArea(
         child: Column(
           children: [
@@ -21,52 +25,61 @@ class EditNotesView extends GetView<EditNotesController> {
             Expanded(
               child: Container(
                 width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.white,
-                      const Color(0xFFE8D5F0).withOpacity(0.3),
-                    ],
-                  ),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(40),
-                    topRight: Radius.circular(40),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(
+                      45,
+                    ), // Konsisten dengan create_notes
+                    topRight: Radius.circular(45),
                   ),
                 ),
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.only(
-                    left: isTablet ? 30 : 20,
-                    right: isTablet ? 30 : 20,
-                    bottom: 30,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(45),
+                    topRight: Radius.circular(45),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 24),
-                      _buildNavigationMenu(isTablet),
-                      const SizedBox(height: 20),
-                      _buildProfileCard(isTablet),
-                      const SizedBox(height: 24),
-                      _buildForm(isTablet),
-                    ],
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.only(
+                      left: isTablet ? 30 : 20,
+                      right: isTablet ? 30 : 20,
+                      bottom: 30,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 24),
+                        _buildNavigationMenu(isTablet),
+                        const SizedBox(height: 20),
+                        _buildProfileCard(isTablet),
+                        const SizedBox(height: 24),
+                        _buildForm(isTablet),
+                        // Spacer agar form tidak tertutup bottom navbar
+                        const SizedBox(height: 80),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-            _buildBottomNavigation(),
           ],
         ),
       ),
+      // Bottom Navigation Bar - Konsisten dengan create_notes
+      bottomNavigationBar: _buildBottomNavigation(),
     );
   }
 
+  // ============================================================
+  // TOP NAVBAR - Konsisten dengan create_notes
+  // ============================================================
   Widget _buildHeader(BuildContext context, bool isTablet) {
     return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: isTablet ? 40 : 20,
-        vertical: isTablet ? 20 : 16,
+      padding: EdgeInsets.fromLTRB(
+        isTablet ? 40 : 24,
+        isTablet ? 20 : 16,
+        isTablet ? 40 : 24,
+        isTablet ? 20 : 24,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -77,13 +90,15 @@ class EditNotesView extends GetView<EditNotesController> {
                 onPressed: () => Get.back(),
                 icon: const Icon(Icons.arrow_back, color: Colors.white),
                 iconSize: isTablet ? 28 : 24,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Text(
                 'Edit Note',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: isTablet ? 28 : 24,
+                  fontSize: isTablet ? 26 : 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -91,16 +106,28 @@ class EditNotesView extends GetView<EditNotesController> {
           ),
           Row(
             children: [
-              CircleAvatar(
-                radius: isTablet ? 24 : 20,
-                backgroundColor: Colors.white,
-                backgroundImage: const NetworkImage(
-                  'https://i.pravatar.cc/150?img=5',
+              GestureDetector(
+                onTap: () {
+                  Get.toNamed('/settings/profile');
+                },
+                child: Container(
+                  width: isTablet ? 48 : 40,
+                  height: isTablet ? 48 : 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 1.5),
+                    image: const DecorationImage(
+                      image: NetworkImage('https://i.pravatar.cc/150?img=5'),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 ),
               ),
               SizedBox(width: isTablet ? 16 : 12),
-              InkWell(
-                onTap: () => Get.toNamed('/settings/profile'),
+              GestureDetector(
+                onTap: () {
+                  // Navigate to settings
+                },
                 child: Icon(
                   Icons.settings,
                   color: Colors.white,
@@ -114,30 +141,44 @@ class EditNotesView extends GetView<EditNotesController> {
     );
   }
 
+  // ============================================================
+  // NAVIGATION MENU - Konsisten dengan create_notes
+  // ============================================================
   Widget _buildNavigationMenu(bool isTablet) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        _menuButton('List', false, () => Get.toNamed('/notes/list'), isTablet),
-        _menuButton(
-          'Draft',
-          false,
-          () => Get.toNamed('/notes/draft'),
-          isTablet,
-        ),
-        _menuButton(
-          'Archived',
-          false,
-          () => Get.toNamed('/notes/archived'),
-          isTablet,
-        ),
-        _menuButton(
-          'Scheduled',
-          false,
-          () => Get.toNamed('/notes/scheduled'),
-          isTablet,
-        ),
-      ],
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          _menuButton(
+            'List',
+            false,
+            () => Get.toNamed('/notes/list'),
+            isTablet,
+          ),
+          const SizedBox(width: 12),
+          _menuButton(
+            'Draft',
+            false,
+            () => Get.toNamed('/notes/draft'),
+            isTablet,
+          ),
+          const SizedBox(width: 12),
+          _menuButton(
+            'Archived',
+            false,
+            () => Get.toNamed('/notes/archived'),
+            isTablet,
+          ),
+          const SizedBox(width: 12),
+          _menuButton(
+            'Scheduled',
+            false,
+            () => Get.toNamed('/notes/scheduled'),
+            isTablet,
+          ),
+        ],
+      ),
     );
   }
 
@@ -152,34 +193,46 @@ class EditNotesView extends GetView<EditNotesController> {
       child: Container(
         padding: EdgeInsets.symmetric(
           horizontal: isTablet ? 24 : 18,
-          vertical: isTablet ? 10 : 8,
+          vertical: isTablet ? 12 : 10,
         ),
         decoration: BoxDecoration(
-          color: active ? const Color(0xFF6B2C91) : Colors.white,
-          borderRadius: BorderRadius.circular(25),
+          color: active ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(
+            30,
+          ), // Konsisten dengan create_notes
           border: Border.all(
-            color: active ? const Color(0xFF6B2C91) : Colors.black,
-            width: 1.5,
+            color: Colors.black, // Konsisten dengan create_notes
+            width: 1,
           ),
         ),
         child: Text(
           text,
           style: TextStyle(
-            fontSize: isTablet ? 16 : 14,
-            fontWeight: FontWeight.w500,
-            color: active ? Colors.white : Colors.black,
+            fontSize: isTablet ? 14 : 12,
+            fontWeight: active ? FontWeight.bold : FontWeight.normal,
+            color: Colors.black,
           ),
         ),
       ),
     );
   }
 
+  // ============================================================
+  // PROFILE CARD - Konsisten dengan create_notes
+  // ============================================================
   Widget _buildProfileCard(bool isTablet) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(isTablet ? 20 : 16),
       decoration: BoxDecoration(
-        color: const Color(0xFFE8D5F0).withOpacity(0.6),
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFFE1BEE7), // Light Purple
+            Color(0xFF4A148C), // Primary Purple
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -189,7 +242,6 @@ class EditNotesView extends GetView<EditNotesController> {
             children: [
               CircleAvatar(
                 radius: isTablet ? 30 : 25,
-                backgroundColor: Colors.white,
                 backgroundImage: const NetworkImage(
                   'https://i.pravatar.cc/150?img=5',
                 ),
@@ -203,7 +255,7 @@ class EditNotesView extends GetView<EditNotesController> {
                     style: TextStyle(
                       fontSize: isTablet ? 18 : 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: Colors.black87, // Konsisten dengan create_notes
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -211,7 +263,7 @@ class EditNotesView extends GetView<EditNotesController> {
                     'Online',
                     style: TextStyle(
                       fontSize: isTablet ? 14 : 12,
-                      color: Colors.black54,
+                      color: Colors.black54, // Konsisten dengan create_notes
                     ),
                   ),
                 ],
@@ -224,7 +276,7 @@ class EditNotesView extends GetView<EditNotesController> {
             style: TextStyle(
               fontSize: isTablet ? 20 : 18,
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: Colors.black87, // Konsisten dengan create_notes
             ),
           ),
         ],
@@ -232,6 +284,9 @@ class EditNotesView extends GetView<EditNotesController> {
     );
   }
 
+  // ============================================================
+  // FORM - Konsisten dengan create_notes
+  // ============================================================
   Widget _buildForm(bool isTablet) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -268,7 +323,14 @@ class EditNotesView extends GetView<EditNotesController> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.black, width: 1.5),
+              border: Border.all(color: Colors.black, width: 1), // Konsisten
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
             ),
             child: TextField(
               controller: c,
@@ -308,7 +370,14 @@ class EditNotesView extends GetView<EditNotesController> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.black, width: 1.5),
+              border: Border.all(color: Colors.black, width: 1), // Konsisten
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
             ),
             child: TextField(
               controller: c,
@@ -353,7 +422,14 @@ class EditNotesView extends GetView<EditNotesController> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.black, width: 1.5),
+            border: Border.all(color: Colors.black, width: 1), // Konsisten
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 4,
+                offset: Offset(0, 2),
+              ),
+            ],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -380,7 +456,7 @@ class EditNotesView extends GetView<EditNotesController> {
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF6B2C91),
+                    color: _primaryPurple, // Konsisten dengan create_notes
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
@@ -424,12 +500,13 @@ class EditNotesView extends GetView<EditNotesController> {
                 ? null
                 : controller.updateNote,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6B2C91),
+              backgroundColor: _primaryPurple, // Konsisten dengan create_notes
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(25),
               ),
+              elevation: 2,
             ),
             child: controller.isLoading.value
                 ? const SizedBox(
@@ -451,57 +528,153 @@ class EditNotesView extends GetView<EditNotesController> {
   }
 
   // ============================================================
-  // BOTTOM NAVBAR
+  // BOTTOM NAVBAR - Konsisten dengan create_notes & Homepage
   // ============================================================
   Widget _buildBottomNavigation() {
     return Container(
-      height: 70,
+      height: 80, // Konsisten dengan create_notes
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 5,
             blurRadius: 10,
-            offset: const Offset(0, -2),
           ),
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _bottomItem(
-            Icons.home_outlined,
-            false,
-            () => Get.toNamed('/homepage'),
+          // Home Button
+          IconButton(
+            icon: const Icon(
+              Icons.home_outlined,
+              color: Colors.black54,
+              size: 28,
+            ),
+            onPressed: () => Get.toNamed('/homepage'),
           ),
-          _bottomItem(
-            Icons.chat_bubble_outline,
-            false,
-            () => Get.toNamed('/chat/rooms'),
+
+          // Chat Button
+          IconButton(
+            icon: const Icon(
+              Icons.chat_bubble_outline,
+              color: Colors.black54,
+              size: 28,
+            ),
+            onPressed: () => Get.toNamed('/chat/rooms'),
           ),
-          _bottomItem(Icons.add_circle, true, () {}),
-          _bottomItem(
-            Icons.mic_outlined,
-            false,
-            () => Get.toNamed('/speech/list'),
+
+          // Add Button
+          GestureDetector(
+            onTap: () {
+              _showCreateActionDialog();
+            },
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.add, color: Colors.black54, size: 24),
+            ),
+          ),
+
+          // Mic Button
+          IconButton(
+            icon: const Icon(
+              Icons.mic_outlined,
+              color: Colors.black54,
+              size: 28,
+            ),
+            onPressed: () => Get.toNamed('/speech/upload'),
           ),
         ],
       ),
     );
   }
 
-  Widget _bottomItem(IconData i, bool active, VoidCallback a) {
-    return InkWell(
-      onTap: a,
-      child: Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          color: active ? const Color(0xFF6B2C91) : Colors.transparent,
-          shape: BoxShape.circle,
+  // ============================================================
+  // CREATE ACTION DIALOG - Sama dengan create_notes
+  // ============================================================
+  void _showCreateActionDialog() {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        child: Container(
+          height: 320,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            gradient: const LinearGradient(
+              colors: [Color(0xFFE1BEE7), Color(0xFF4A148C)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'Create Materi Or\nCatatan Colaboration',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                  height: 1.3,
+                ),
+              ),
+              const SizedBox(height: 40),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildCreateOptionButton(
+                    title: 'Materi',
+                    onTap: () {
+                      Get.back();
+                      Get.toNamed('/notes/create');
+                    },
+                  ),
+                  const SizedBox(width: 16),
+                  _buildCreateOptionButton(
+                    title: 'Catatan',
+                    onTap: () {
+                      Get.back();
+                      Get.toNamed('/collab/create');
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        child: Center(
-          child: Icon(i, color: active ? Colors.white : Colors.black, size: 30),
+      ),
+    );
+  }
+
+  Widget _buildCreateOptionButton({
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: SizedBox(
+        height: 100,
+        child: ElevatedButton(
+          onPressed: onTap,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+            shape: const CircleBorder(),
+            elevation: 4,
+          ),
+          child: Text(
+            title,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          ),
         ),
       ),
     );

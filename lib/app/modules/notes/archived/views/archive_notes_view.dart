@@ -1,3 +1,5 @@
+// File 1: /lib/app/modules/notes/archived/views/archive_notes_view.dart
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/archive_notes_controller.dart';
@@ -6,13 +8,17 @@ import '../../../../models/note_model.dart';
 class ArchiveNotesView extends GetView<ArchiveNotesController> {
   const ArchiveNotesView({Key? key}) : super(key: key);
 
+  // 🎨 KONSISTENSI WARNA
+  static const Color _primaryPurple = Color(0xFF4A148C);
+  static const Color _secondaryPurple = Color(0xFF7B1FA2);
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF6B2C91),
+      backgroundColor: _primaryPurple, // 🔧 Updated
       body: SafeArea(
         child: Column(
           children: [
@@ -23,56 +29,64 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(40),
-                    topRight: Radius.circular(40),
+                    topLeft: Radius.circular(45), // 🔧 Updated
+                    topRight: Radius.circular(45),
                   ),
                 ),
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.all(isTablet ? 24 : 20),
-                      child: _buildSearchBar(isTablet),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isTablet ? 24 : 20,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(45),
+                    topRight: Radius.circular(45),
+                  ),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.all(isTablet ? 24 : 20),
+                        child: _buildSearchBar(isTablet),
                       ),
-                      child: _buildNavigationMenu(isTablet),
-                    ),
-                    SizedBox(height: isTablet ? 20 : 16),
-                    Expanded(
-                      child: Obx(() {
-                        if (controller.isLoading.value) {
-                          return const Center(
-                            child: CircularProgressIndicator(
-                              color: Color(0xFF6B2C91),
-                            ),
-                          );
-                        }
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isTablet ? 24 : 20,
+                        ),
+                        child: _buildNavigationMenu(isTablet),
+                      ),
+                      SizedBox(height: isTablet ? 20 : 16),
+                      Expanded(
+                        child: Obx(() {
+                          if (controller.isLoading.value) {
+                            return Center(
+                              child: CircularProgressIndicator(
+                                color: _primaryPurple, // 🔧 Updated
+                              ),
+                            );
+                          }
 
-                        if (controller.archivedList.isEmpty) {
-                          return _buildEmptyState(isTablet);
-                        }
+                          if (controller.archivedList.isEmpty) {
+                            return _buildEmptyState(isTablet);
+                          }
 
-                        return _buildArchiveList(isTablet);
-                      }),
-                    ),
-                  ],
+                          return _buildArchiveList(isTablet);
+                        }),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-            _buildBottomNavigation(),
           ],
         ),
       ),
+      bottomNavigationBar: _buildBottomNavigation(), // 🔧 Updated structure
     );
   }
 
   Widget _buildHeader(BuildContext context, bool isTablet) {
     return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: isTablet ? 40 : 20,
-        vertical: isTablet ? 20 : 16,
+      padding: EdgeInsets.fromLTRB(
+        isTablet ? 40 : 24,
+        isTablet ? 20 : 16,
+        isTablet ? 40 : 24,
+        isTablet ? 20 : 24,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -81,20 +95,34 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
             'Note Archived',
             style: TextStyle(
               color: Colors.white,
-              fontSize: isTablet ? 28 : 24,
+              fontSize: isTablet ? 26 : 22, // 🔧 Updated
               fontWeight: FontWeight.bold,
             ),
           ),
           Row(
             children: [
-              CircleAvatar(
-                radius: isTablet ? 24 : 20,
-                backgroundColor: Colors.grey[300],
-                child: const Icon(Icons.person, color: Colors.white),
+              GestureDetector(
+                onTap: () {
+                  Get.toNamed('/settings/profile');
+                },
+                child: Container(
+                  width: isTablet ? 48 : 40,
+                  height: isTablet ? 48 : 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 1.5),
+                    image: const DecorationImage(
+                      image: NetworkImage('https://i.pravatar.cc/150?img=5'),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
               ),
               SizedBox(width: isTablet ? 16 : 12),
-              InkWell(
-                onTap: () => Get.toNamed('/settings/profile'),
+              GestureDetector(
+                onTap: () {
+                  // Navigate to settings
+                },
                 child: Icon(
                   Icons.settings,
                   color: Colors.white,
@@ -113,12 +141,9 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(25),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
+        border: Border.all(color: Colors.black, width: 1), // 🔧 Added
+        boxShadow: const [
+          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
         ],
       ),
       child: TextField(
@@ -144,65 +169,69 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
     );
   }
 
+  // 🔧 NAVIGATION MENU - Konsisten
   Widget _buildNavigationMenu(bool isTablet) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          _buildNavButton(
+          _menuButton(
             'List',
             false,
-            isTablet,
             () => Get.toNamed('/notes/list'),
+            isTablet,
           ),
-          SizedBox(width: isTablet ? 16 : 12),
-          _buildNavButton(
+          const SizedBox(width: 12),
+          _menuButton(
             'Draft',
             false,
-            isTablet,
             () => Get.toNamed('/notes/draft'),
+            isTablet,
           ),
-          SizedBox(width: isTablet ? 16 : 12),
-          _buildNavButton('Archived', true, isTablet, () {}),
-          SizedBox(width: isTablet ? 16 : 12),
-          _buildNavButton(
+          const SizedBox(width: 12),
+          _menuButton(
+            'Archived',
+            true, // 🔧 Active state
+            () {},
+            isTablet,
+          ),
+          const SizedBox(width: 12),
+          _menuButton(
             'Scheduled',
             false,
-            isTablet,
             () => Get.toNamed('/notes/scheduled'),
+            isTablet,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildNavButton(
+  Widget _menuButton(
     String text,
-    bool isActive,
+    bool active,
+    VoidCallback action,
     bool isTablet,
-    VoidCallback onTap,
   ) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: action,
       child: Container(
         padding: EdgeInsets.symmetric(
-          horizontal: isTablet ? 24 : 20,
+          horizontal: isTablet ? 24 : 18,
           vertical: isTablet ? 12 : 10,
         ),
         decoration: BoxDecoration(
-          color: isActive ? const Color(0xFF6B2C91) : Colors.white,
-          border: Border.all(
-            color: isActive ? const Color(0xFF6B2C91) : Colors.black,
-            width: 1.5,
-          ),
-          borderRadius: BorderRadius.circular(25),
+          color: active ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: Colors.black, width: 1),
         ),
         child: Text(
           text,
           style: TextStyle(
-            color: isActive ? Colors.white : Colors.black,
-            fontSize: isTablet ? 16 : 14,
-            fontWeight: FontWeight.w500,
+            fontSize: isTablet ? 14 : 12,
+            fontWeight: active ? FontWeight.bold : FontWeight.normal,
+            color: Colors.black,
           ),
         ),
       ),
@@ -212,7 +241,7 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
   Widget _buildArchiveList(bool isTablet) {
     return RefreshIndicator(
       onRefresh: controller.refreshArchives,
-      color: const Color(0xFF6B2C91),
+      color: _primaryPurple, // 🔧 Updated
       child: ListView.builder(
         padding: EdgeInsets.symmetric(
           horizontal: isTablet ? 24 : 20,
@@ -229,22 +258,21 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
 
   Widget _buildArchiveCard(NoteModel archive, bool isTablet) {
     return GestureDetector(
-      // 👇 Tap card untuk buka detail
       onTap: () => controller.viewArchiveDetail(archive.id),
       child: Container(
         margin: EdgeInsets.only(bottom: isTablet ? 20 : 16),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFFD6D6D6), Color(0xFF757575)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            colors: [Color(0xFFE1BEE7), Color(0xFF4A148C)], // 🔧 Updated
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Colors.black12,
+              blurRadius: 4,
+              offset: Offset(0, 2),
             ),
           ],
         ),
@@ -252,7 +280,6 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
           padding: EdgeInsets.all(isTablet ? 20 : 16),
           child: Row(
             children: [
-              // Date Box
               Container(
                 padding: EdgeInsets.all(isTablet ? 12 : 10),
                 decoration: BoxDecoration(
@@ -280,10 +307,7 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
                   ],
                 ),
               ),
-
               SizedBox(width: isTablet ? 16 : 12),
-
-              // Archive Title & Info
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -293,7 +317,7 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
                         Icon(
                           Icons.archive,
                           size: isTablet ? 18 : 16,
-                          color: Colors.white,
+                          color: Colors.black87, // 🔧 Updated
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -302,7 +326,7 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
                             style: TextStyle(
                               fontSize: isTablet ? 18 : 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: Colors.black87, // 🔧 Updated
                             ),
                           ),
                         ),
@@ -313,19 +337,16 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
                       archive.mataKuliah,
                       style: TextStyle(
                         fontSize: isTablet ? 14 : 12,
-                        color: Colors.white70,
+                        color: Colors.black54, // 🔧 Updated
                       ),
                     ),
                   ],
                 ),
               ),
-
               SizedBox(width: isTablet ? 16 : 12),
-
-              // 🔑 Wrap tombol-tombol dengan GestureDetector untuk block parent tap
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap: () {}, // Empty onTap untuk block parent tap
+                onTap: () {},
                 child: Row(
                   children: [
                     _buildActionButton(
@@ -355,7 +376,6 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
     );
   }
 
-  // Method _buildActionButton tetap sama (sudah benar)
   Widget _buildActionButton(String text, bool isTablet, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
@@ -414,11 +434,15 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
             icon: const Icon(Icons.arrow_back),
             label: const Text('Kembali ke List'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6B2C91),
+              backgroundColor: _primaryPurple, // 🔧 Updated
+              foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(
                 horizontal: isTablet ? 32 : 24,
                 vertical: isTablet ? 16 : 12,
               ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(25),
+              ),
             ),
           ),
         ],
@@ -426,80 +450,142 @@ class ArchiveNotesView extends GetView<ArchiveNotesController> {
     );
   }
 
+  // 🔧 BOTTOM NAVBAR - Konsisten
   Widget _buildBottomNavigation() {
     return Container(
-      height: 70,
+      height: 80,
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 5,
             blurRadius: 10,
-            offset: const Offset(0, -2),
           ),
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildBottomNavItem(
-            Icons.home_outlined,
-            false,
-            () => Get.toNamed('/homepage'),
+          IconButton(
+            icon: const Icon(
+              Icons.home_outlined,
+              color: Colors.black54,
+              size: 28,
+            ),
+            onPressed: () => Get.toNamed('/homepage'),
           ),
-          _buildBottomNavItem(
-            Icons.chat_bubble_outline,
-            false,
-            () => Get.toNamed('/chat/rooms'),
+          IconButton(
+            icon: const Icon(
+              Icons.chat_bubble_outline,
+              color: Colors.black54,
+              size: 28,
+            ),
+            onPressed: () => Get.toNamed('/chat/rooms'),
           ),
-          _buildBottomNavItem(
-            Icons.add_circle,
-            true,
-            () => Get.toNamed('/notes/create'),
+          GestureDetector(
+            onTap: () {
+              _showCreateActionDialog();
+            },
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: _primaryPurple,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.add, color: Colors.white, size: 24),
+            ),
           ),
-          _buildBottomNavItem(
-            Icons.mic_outlined,
-            false,
-            () => Get.toNamed('/speech/list'),
+          IconButton(
+            icon: const Icon(
+              Icons.mic_outlined,
+              color: Colors.black54,
+              size: 28,
+            ),
+            onPressed: () => Get.toNamed('/speech/upload'),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildBottomNavItem(IconData icon, bool isActive, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          color: isActive ? const Color(0xFF6B2C91) : Colors.transparent,
-          shape: BoxShape.circle,
-        ),
-        child: Stack(
-          children: [
-            Center(
-              child: Icon(
-                icon,
-                color: isActive ? Colors.white : Colors.black,
-                size: 30,
-              ),
+  void _showCreateActionDialog() {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        child: Container(
+          height: 320,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            gradient: const LinearGradient(
+              colors: [Color(0xFFE1BEE7), Color(0xFF4A148C)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            if (icon == Icons.chat_bubble_outline)
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'Create Materi Or\nCatatan Colaboration',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                  height: 1.3,
                 ),
               ),
-          ],
+              const SizedBox(height: 40),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildCreateOptionButton(
+                    title: 'Materi',
+                    onTap: () {
+                      Get.back();
+                      Get.toNamed('/notes/create');
+                    },
+                  ),
+                  const SizedBox(width: 16),
+                  _buildCreateOptionButton(
+                    title: 'Catatan',
+                    onTap: () {
+                      Get.back();
+                      Get.toNamed('/collab/create');
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCreateOptionButton({
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: SizedBox(
+        height: 100,
+        child: ElevatedButton(
+          onPressed: onTap,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+            shape: const CircleBorder(),
+            elevation: 4,
+          ),
+          child: Text(
+            title,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          ),
         ),
       ),
     );

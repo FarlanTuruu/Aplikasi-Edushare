@@ -12,7 +12,7 @@ class MessagesView extends GetView<MessagesController> {
     final avatar = contact['avatar'] ?? 'assets/avatar.png';
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color.fromARGB(255, 104, 96, 96),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,

@@ -1,4 +1,4 @@
-// File: /lib/app/modules/notes/detail/views/detail_notes_view.dart
+// File 1: /lib/app/modules/notes/detail/views/detail_notes_view.dart
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -7,12 +7,16 @@ import '../controllers/detail_notes_controller.dart';
 class DetailNotesView extends GetView<DetailNotesController> {
   const DetailNotesView({super.key});
 
+  // 🎨 KONSISTENSI WARNA
+  static const Color _primaryPurple = Color(0xFF4A148C);
+  static const Color _secondaryPurple = Color(0xFF7B1FA2);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: const Color(0xFF6B2C91),
+        backgroundColor: _primaryPurple, // 🔧 Updated
         foregroundColor: Colors.white,
         elevation: 0,
         title: const Text(
@@ -20,13 +24,11 @@ class DetailNotesView extends GetView<DetailNotesController> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
-          // Share button
           IconButton(
             icon: const Icon(Icons.share),
             onPressed: controller.shareNote,
             tooltip: 'Bagikan',
           ),
-          // More options
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             onSelected: (value) {
@@ -56,7 +58,6 @@ class DetailNotesView extends GetView<DetailNotesController> {
                     ],
                   ),
                 ),
-                // 🔧 Dynamic menu item based on source
                 PopupMenuItem(
                   value: 'archive',
                   child: Row(
@@ -102,7 +103,11 @@ class DetailNotesView extends GetView<DetailNotesController> {
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(
+            child: CircularProgressIndicator(
+              color: _primaryPurple, // 🔧 Updated
+            ),
+          );
         }
 
         final note = controller.note.value;
@@ -116,7 +121,10 @@ class DetailNotesView extends GetView<DetailNotesController> {
                 width: double.infinity,
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFF6B2C91), Color(0xFF8E44AD)],
+                    colors: [
+                      Color(0xFFE1BEE7),
+                      Color(0xFF4A148C),
+                    ], // 🔧 Updated
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -132,13 +140,19 @@ class DetailNotesView extends GetView<DetailNotesController> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: Colors.white.withValues(
+                          alpha: 0.9,
+                        ), // 🔧 Updated
                         borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.black,
+                          width: 1,
+                        ), // 🔧 Added
                       ),
                       child: Text(
                         note.mataKuliah,
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: Colors.black87, // 🔧 Updated
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
@@ -150,7 +164,7 @@ class DetailNotesView extends GetView<DetailNotesController> {
                     Text(
                       note.title,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: Colors.black87, // 🔧 Updated
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         height: 1.3,
@@ -163,14 +177,14 @@ class DetailNotesView extends GetView<DetailNotesController> {
                       children: [
                         const Icon(
                           Icons.calendar_today,
-                          color: Colors.white70,
+                          color: Colors.black54, // 🔧 Updated
                           size: 16,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           note.fullDate,
                           style: const TextStyle(
-                            color: Colors.white70,
+                            color: Colors.black54, // 🔧 Updated
                             fontSize: 14,
                           ),
                         ),
@@ -192,11 +206,15 @@ class DetailNotesView extends GetView<DetailNotesController> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
+                        border: Border.all(
+                          color: Colors.black,
+                          width: 1,
+                        ), // 🔧 Added
+                        boxShadow: const [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 2),
+                            color: Colors.black12,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
                           ),
                         ],
                       ),
@@ -204,20 +222,20 @@ class DetailNotesView extends GetView<DetailNotesController> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Row(
+                          Row(
                             children: [
                               Icon(
                                 Icons.description,
-                                color: Color(0xFF6B2C91),
+                                color: _primaryPurple, // 🔧 Updated
                                 size: 20,
                               ),
-                              SizedBox(width: 8),
+                              const SizedBox(width: 8),
                               Text(
                                 'Deskripsi',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF6B2C91),
+                                  color: _primaryPurple, // 🔧 Updated
                                 ),
                               ),
                             ],
@@ -243,11 +261,15 @@ class DetailNotesView extends GetView<DetailNotesController> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
+                          border: Border.all(
+                            color: Colors.black,
+                            width: 1,
+                          ), // 🔧 Added
+                          boxShadow: const [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
+                              color: Colors.black12,
+                              blurRadius: 4,
+                              offset: Offset(0, 2),
                             ),
                           ],
                         ),
@@ -259,14 +281,14 @@ class DetailNotesView extends GetView<DetailNotesController> {
                           leading: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: const Color(
-                                0xFF6B2C91,
-                              ).withValues(alpha: 0.1),
+                              color: _primaryPurple.withValues(
+                                alpha: 0.1,
+                              ), // 🔧 Updated
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.attach_file,
-                              color: Color(0xFF6B2C91),
+                              color: _primaryPurple, // 🔧 Updated
                             ),
                           ),
                           title: Text(
@@ -282,7 +304,7 @@ class DetailNotesView extends GetView<DetailNotesController> {
                           ),
                           trailing: IconButton(
                             icon: const Icon(Icons.download),
-                            color: const Color(0xFF6B2C91),
+                            color: _primaryPurple, // 🔧 Updated
                             onPressed: controller.downloadFile,
                           ),
                         ),
@@ -290,7 +312,7 @@ class DetailNotesView extends GetView<DetailNotesController> {
                       const SizedBox(height: 16),
                     ],
 
-                    // 🔧 Dynamic Action Buttons based on source
+                    // Dynamic Action Buttons
                     Obx(() {
                       final isFromArchive = controller.isFromArchive.value;
                       final isFromScheduled = controller.isFromScheduled.value;
@@ -303,15 +325,17 @@ class DetailNotesView extends GetView<DetailNotesController> {
                               icon: const Icon(Icons.edit, size: 20),
                               label: const Text('Edit'),
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: const Color(0xFF6B2C91),
-                                side: const BorderSide(
-                                  color: Color(0xFF6B2C91),
+                                foregroundColor: _primaryPurple, // 🔧 Updated
+                                side: BorderSide(
+                                  color: _primaryPurple, // 🔧 Updated
                                 ),
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 14,
                                 ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(
+                                    25,
+                                  ), // 🔧 Updated
                                 ),
                               ),
                             ),
@@ -346,7 +370,9 @@ class DetailNotesView extends GetView<DetailNotesController> {
                                   vertical: 14,
                                 ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(
+                                    25,
+                                  ), // 🔧 Updated
                                 ),
                               ),
                             ),
@@ -369,7 +395,9 @@ class DetailNotesView extends GetView<DetailNotesController> {
                           side: const BorderSide(color: Colors.red),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(
+                              25,
+                            ), // 🔧 Updated
                           ),
                         ),
                       ),
