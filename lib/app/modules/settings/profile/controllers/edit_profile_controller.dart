@@ -1,9 +1,12 @@
 // lib/app/modules/settings/profile/controllers/edit_profile_controller.dart
 
+import 'package:appedushare/app/data/api_client.dart';
+import 'package:appedushare/app/data/profile_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import './profile_settings_controller.dart';
+import 'package:flutter/painting.dart';
 
 class EditProfileController extends GetxController {
   // Text Controllers
@@ -16,9 +19,10 @@ class EditProfileController extends GetxController {
   final isLoading = false.obs;
   final ImagePicker _picker = ImagePicker();
 
-  // Reference ke ProfileSettingsController
-  final ProfileSettingsController profileController =
-      Get.find<ProfileSettingsController>();
+  // Reference ke ProfileSettingsController (ensure registered at runtime)
+  late final ProfileSettingsController profileController;
+
+  late final ProfileRepository _repo;
 
   @override
   void onInit() {
@@ -26,6 +30,18 @@ class EditProfileController extends GetxController {
     nameController = TextEditingController();
     emailController = TextEditingController();
     phoneController = TextEditingController();
+    // Ensure ProfileSettingsController is available
+    if (!Get.isRegistered<ProfileSettingsController>()) {
+      Get.put(ProfileSettingsController(), permanent: true);
+    }
+    profileController = Get.find<ProfileSettingsController>();
+    // Ensure repository is available
+    final api = Get.isRegistered<ApiClient>()
+        ? Get.find<ApiClient>()
+        : Get.put(ApiClient(), permanent: true);
+    _repo = Get.isRegistered<ProfileRepository>()
+        ? Get.find<ProfileRepository>()
+        : Get.put(ProfileRepository(api), permanent: true);
     loadUserData();
   }
 
@@ -259,19 +275,133 @@ class EditProfileController extends GetxController {
   // SAVE PROFILE
   // ============================================================
   Future<void> saveProfile() async {
-    if (!_validateInput()) return;
-
     try {
       isLoading.value = true;
-      await Future.delayed(const Duration(seconds: 1));
+      final name = nameController.text.trim();
+      final email = emailController.text.trim();
+      final phone = phoneController.text.trim();
+      final imagePath = profileImageUrl.value;
 
-      // Update ProfileSettingsController dengan data baru
-      profileController.updateProfile(
-        name: nameController.text.trim(),
-        email: emailController.text.trim(),
-        phone: phoneController.text.trim(),
-        imageUrl: profileImageUrl.value,
-      );
+      // Compare with original values to determine changes
+      final originalName = profileController.userName.value;
+      final originalEmail = profileController.userEmail.value;
+      final originalPhone = profileController.userPhone.value;
+      final originalImage = profileController.profileImageUrl.value;
+
+      final changedName = name != originalName;
+      final changedEmail = email != originalEmail;
+      final changedPhone = phone != originalPhone;
+      final imageChanged = imagePath != originalImage;
+
+      if (!changedName && !changedEmail && !changedPhone && !imageChanged) {
+        isLoading.value = false;
+        Get.snackbar(
+          'Info',
+          'Tidak ada perubahan untuk disimpan',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.blue,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 2),
+        );
+        return;
+      }
+
+      // Validate only the fields that changed
+      if (changedName && name.isEmpty) {
+        isLoading.value = false;
+        Get.snackbar(
+          'Error',
+          'Nama tidak boleh kosong',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 2),
+        );
+        return;
+      }
+      if (changedEmail) {
+        if (email.isEmpty) {
+          isLoading.value = false;
+          Get.snackbar(
+            'Error',
+            'Email tidak boleh kosong',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 2),
+          );
+          return;
+        }
+        if (!GetUtils.isEmail(email)) {
+          isLoading.value = false;
+          Get.snackbar(
+            'Error',
+            'Format email tidak valid',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 2),
+          );
+          return;
+        }
+      }
+      if (changedPhone && phone.isNotEmpty) {
+        if (!GetUtils.isPhoneNumber(phone)) {
+          isLoading.value = false;
+          Get.snackbar(
+            'Error',
+            'Format nomor telepon tidak valid',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 2),
+          );
+          return;
+        }
+      }
+
+      final fields = <String, String>{};
+      if (changedName) fields['name'] = name;
+      if (changedEmail) fields['email'] = email;
+      if (changedPhone) fields['phone'] = phone;
+
+      // 1. Proses Upload / Update ke API
+      final isLocalFile =
+          !(imagePath.startsWith('http://') ||
+              imagePath.startsWith('https://'));
+
+      if (imageChanged && isLocalFile) {
+        // Send multipart only if image changed and it's a local file
+        await _repo.updateProfileWithImage(
+          filePath: imagePath,
+          fields: fields.isEmpty ? null : fields,
+          endpoint: 'profile/update',
+          fileFieldName: 'image',
+          usePut: false,
+        );
+      } else {
+        // JSON update: include only changed fields
+        final jsonPayload = Map<String, String>.from(fields);
+        if (imageChanged && !isLocalFile) {
+          jsonPayload['image'] = imagePath;
+        }
+        if (jsonPayload.isNotEmpty) {
+          await _repo.updateProfile(jsonPayload);
+        }
+      }
+
+      // 2. FORCE CLEAR CACHE IMAGE FLUTTER (PENTING!)
+      // Ini menghapus semua cache gambar di memori aplikasi saat ini
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
+
+      // 3. BERI JEDA WAKTU (DELAY) SEDIKIT
+      // Server butuh waktu untuk menimpa file lama. 500ms - 1 detik biasanya cukup.
+      await Future.delayed(const Duration(milliseconds: 1000));
+
+      // 4. Reload data di Controller Profile Settings
+      // Ini akan mengambil URL baru dengan timestamp baru
+      await profileController.loadUserData();
 
       isLoading.value = false;
 
@@ -314,9 +444,12 @@ class EditProfileController extends GetxController {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      Get.until(
-                        (route) => Get.currentRoute == '/settings/profile',
-                      );
+                      // Tutup dialog
+                      if (Get.isDialogOpen ?? false) Get.back();
+
+                      // Kembali ke halaman Profile Settings
+                      // Menggunakan Get.back() biasa lebih aman daripada loop route
+                      Get.back();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF5B2C91),

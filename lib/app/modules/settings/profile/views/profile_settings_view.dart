@@ -1,6 +1,8 @@
 // lib/app/modules/settings/profile/views/profile_settings_view.dart
 
 import 'package:flutter/material.dart';
+import 'dart:io' show File;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:get/get.dart';
 import '../controllers/profile_settings_controller.dart';
 
@@ -33,7 +35,7 @@ class ProfileSettingsView extends GetView<ProfileSettingsController> {
                       Obx(
                         () => CircleAvatar(
                           radius: 20,
-                          backgroundImage: NetworkImage(
+                          backgroundImage: _imageProvider(
                             controller.profileImageUrl.value,
                           ),
                         ),
@@ -70,8 +72,9 @@ class ProfileSettingsView extends GetView<ProfileSettingsController> {
                     // Profile Picture
                     Obx(
                       () => CircleAvatar(
+                        key: ValueKey(controller.imageVersion.value),
                         radius: 60,
-                        backgroundImage: NetworkImage(
+                        backgroundImage: _imageProvider(
                           controller.profileImageUrl.value,
                         ),
                       ),
@@ -146,6 +149,20 @@ class ProfileSettingsView extends GetView<ProfileSettingsController> {
       ),
       bottomNavigationBar: _buildBottomNavBar(),
     );
+  }
+
+  ImageProvider _imageProvider(String path) {
+    final p = path.trim();
+    if (p.isEmpty) {
+      return const NetworkImage('https://i.pravatar.cc/150?img=47');
+    }
+    if (p.startsWith('http://') || p.startsWith('https://')) {
+      return NetworkImage(p);
+    }
+    if (kIsWeb) {
+      return const NetworkImage('https://i.pravatar.cc/150?img=47');
+    }
+    return FileImage(File(p));
   }
 
   Widget _buildMenuItem(

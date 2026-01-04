@@ -1,6 +1,8 @@
 // lib/app/modules/settings/profile/views/edit_profile_view.dart
 
 import 'package:flutter/material.dart';
+import 'dart:io' show File;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:get/get.dart';
 import '../controllers/edit_profile_controller.dart';
 
@@ -108,7 +110,7 @@ class EditProfileView extends GetView<EditProfileController> {
               Obx(
                 () => CircleAvatar(
                   radius: 20,
-                  backgroundImage: NetworkImage(
+                  backgroundImage: _imageProvider(
                     controller.profileImageUrl.value,
                   ),
                 ),
@@ -138,7 +140,7 @@ class EditProfileView extends GetView<EditProfileController> {
         children: [
           CircleAvatar(
             radius: 60,
-            backgroundImage: NetworkImage(controller.profileImageUrl.value),
+            backgroundImage: _imageProvider(controller.profileImageUrl.value),
           ),
           Positioned(
             bottom: 0,
@@ -163,6 +165,22 @@ class EditProfileView extends GetView<EditProfileController> {
         ],
       ),
     );
+  }
+
+  ImageProvider _imageProvider(String path) {
+    final p = path.trim();
+    if (p.isEmpty) {
+      return const NetworkImage('https://i.pravatar.cc/150?img=47');
+    }
+    if (p.startsWith('http://') || p.startsWith('https://')) {
+      return NetworkImage(p);
+    }
+    // Local file path from picker
+    if (kIsWeb) {
+      // Web cannot read local files via FileImage; fallback placeholder
+      return const NetworkImage('https://i.pravatar.cc/150?img=47');
+    }
+    return FileImage(File(p));
   }
 
   // ============================================================
