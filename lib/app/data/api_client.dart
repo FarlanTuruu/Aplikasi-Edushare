@@ -154,6 +154,34 @@ class ApiClient {
     }
   }
 
+  /// PUT request dengan file upload (multipart)
+  Future<Map<String, dynamic>> putWithFile(
+    String endpoint,
+    String fileFieldName,
+    String filePath,
+    Map<String, String>? fields,
+  ) async {
+    try {
+      final url = Uri.parse('$_baseUrl/$endpoint');
+      final headers = _getHeaders();
+      headers.remove('Content-Type'); // Multipart will set this
+
+      final request = http.MultipartRequest('PUT', url)
+        ..headers.addAll(headers)
+        ..files.add(await http.MultipartFile.fromPath(fileFieldName, filePath));
+
+      if (fields != null) {
+        request.fields.addAll(fields);
+      }
+
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+      return _handleStringResponse(response.statusCode, responseBody);
+    } catch (e) {
+      throw Exception('PUT with file error: $e');
+    }
+  }
+
   /// Get headers dengan token jika ada
   Map<String, String> _getHeaders() {
     final headers = Map<String, String>.from(_defaultHeaders);
