@@ -93,12 +93,6 @@ class StartSpeechView extends GetView<StartSpeechController> {
                               _showUploadDialog(context, isVideo: false);
                             },
                           ),
-                          _modeButton(
-                            "Video",
-                            onTap: () {
-                              _showUploadDialog(context, isVideo: true);
-                            },
-                          ),
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -262,17 +256,15 @@ void _showUploadDialog(BuildContext context, {bool isVideo = false}) {
           Future<void> pickFile() async {
             // 🔹 Langsung buka file picker (tanpa permission_handler)
             final result = await FilePicker.platform.pickFiles(
-              type: isVideo ? FileType.video : FileType.custom,
-              allowedExtensions: isVideo
-                  ? ['mp4', 'mkv', 'mov']
-                  : [
-                      'mp3',
-                      'wav',
-                      'm4a',
-                      'aac',
-                      'ogg',  // voice note WA
-                      'opus', // voice note WA
-                    ],
+              type: FileType.custom,
+              allowedExtensions: [
+                'mp3',
+                'wav',
+                'm4a',
+                'aac',
+                'ogg',
+                'opus',
+              ],
             );
 
             if (result != null && result.files.isNotEmpty) {
@@ -342,10 +334,8 @@ void _showUploadDialog(BuildContext context, {bool isVideo = false}) {
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            isVideo
-                                ? "Format video: MP4, MKV, MOV"
-                                : "Format audio: MP3, WAV, M4A, AAC, OGG, OPUS",
+                          const Text(
+                            "Format audio: MP3, WAV, M4A, AAC, OGG, OPUS",
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontSize: 12,
@@ -435,11 +425,10 @@ void _showUploadDialog(BuildContext context, {bool isVideo = false}) {
                         Get.back();
 
                         // kirim file ke halaman upload
-                        Get.to(
+                      Get.to(
                           () => const UploadSpeechView(),
                           arguments: {
                             'file': selectedFile,
-                            'isVideo': isVideo,
                           },
                         );
                       },

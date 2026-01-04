@@ -1,9 +1,9 @@
-import 'package:appedushare/app/modules/speech/trash/controllers/trash_speech_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../controllers/list_speech_controller.dart';
+import '../../trash/controllers/trash_speech_controller.dart';
 import '../../trash/views/trash_speech_view.dart';
-import '../../trash/bindings/trash_speech_binding.dart';
 
 class ListSpeechView extends GetView<ListSpeechController> {
   const ListSpeechView({super.key});
@@ -17,7 +17,7 @@ class ListSpeechView extends GetView<ListSpeechController> {
       body: SafeArea(
         child: Column(
           children: [
-            // 🔹 HEADER
+            // HEADER
             Padding(
               padding: const EdgeInsets.all(20),
               child: Row(
@@ -38,7 +38,7 @@ class ListSpeechView extends GetView<ListSpeechController> {
               ),
             ),
 
-            // 🔹 BODY PUTIH
+            // BODY
             Expanded(
               child: Container(
                 width: double.infinity,
@@ -55,9 +55,10 @@ class ListSpeechView extends GetView<ListSpeechController> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 🔹 SEARCH BOX
+                      // SEARCH
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(14),
@@ -81,13 +82,13 @@ class ListSpeechView extends GetView<ListSpeechController> {
                       ),
                       const SizedBox(height: 16),
 
-                      // 🔹 Tombol List / Trash
+                      // LIST / TRASH BUTTON
                       Row(
                         children: [
                           _pillButton(
                             "List",
                             isActive: true,
-                            onTap: () {}, // tetap di halaman ini
+                            onTap: () {},
                           ),
                           const SizedBox(width: 10),
                           _pillButton(
@@ -102,9 +103,9 @@ class ListSpeechView extends GetView<ListSpeechController> {
                       ),
                       const SizedBox(height: 16),
 
-                      // 🔹 DROPDOWN FILTER
+                      // FILTER DROPDOWN
                       Obx(() => GestureDetector(
-                            onTap: () => controller.toggleDropdown(),
+                            onTap: controller.toggleDropdown,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -118,7 +119,8 @@ class ListSpeechView extends GetView<ListSpeechController> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Text(controller.selectedFilter.value),
+                                      Text(
+                                          controller.selectedFilter.value),
                                       const SizedBox(width: 4),
                                       const Icon(Icons.arrow_drop_down),
                                     ],
@@ -126,27 +128,32 @@ class ListSpeechView extends GetView<ListSpeechController> {
                                 ),
                                 if (controller.isDropdownOpen.value)
                                   Container(
-                                    margin: const EdgeInsets.only(top: 6),
+                                    margin:
+                                        const EdgeInsets.only(top: 6),
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
                                       color: Colors.grey.shade200,
-                                      borderRadius: BorderRadius.circular(10),
+                                      borderRadius:
+                                          BorderRadius.circular(10),
                                     ),
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
-                                      children:
-                                          controller.filterOptions.map((opt) {
+                                      children: controller.filterOptions
+                                          .map((opt) {
                                         return GestureDetector(
-                                          onTap: () {
-                                            controller.selectFilter(opt);
-                                          },
+                                          onTap: () =>
+                                              controller.selectFilter(opt),
                                           child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 6, horizontal: 12),
-                                            child: Text(opt,
-                                                style: const TextStyle(
-                                                    fontSize: 14)),
+                                            padding:
+                                                const EdgeInsets.symmetric(
+                                                    vertical: 6,
+                                                    horizontal: 12),
+                                            child: Text(
+                                              opt,
+                                              style: const TextStyle(
+                                                  fontSize: 14),
+                                            ),
                                           ),
                                         );
                                       }).toList(),
@@ -157,14 +164,19 @@ class ListSpeechView extends GetView<ListSpeechController> {
                           )),
                       const SizedBox(height: 16),
 
-                      // 🔹 LIST RECORDING
+                      // LIST RECORDINGS
                       Expanded(
                         child: Obx(() {
-                          final items = controller.filteredRecordings;
+                          final items =
+                              controller.filteredRecordings;
                           if (items.isEmpty) {
                             return const Center(
-                                child: Text("No recordings found.",
-                                    style: TextStyle(color: Colors.grey)));
+                              child: Text(
+                                "No recordings found.",
+                                style:
+                                    TextStyle(color: Colors.grey),
+                              ),
+                            );
                           }
                           return ListView.separated(
                             itemCount: items.length,
@@ -191,35 +203,32 @@ class ListSpeechView extends GetView<ListSpeechController> {
         ),
       ),
 
-      // 🔹 Bottom Nav
+      // BOTTOM NAVIGATION
       bottomNavigationBar: Container(
-        height: 75,
-        padding: const EdgeInsets.symmetric(horizontal: 30),
+        height: 70,
         decoration: const BoxDecoration(color: Colors.white),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            const Icon(Icons.home, size: 32),
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const Icon(Icons.chat_outlined, size: 32),
-                Positioned(
-                  right: -1,
-                  top: -2,
-                  child: Container(
-                    width: 10,
-                    height: 10,
-                    
-                  ),
-                ),
-              ],
+            _buildBottomNavItem(
+              Icons.home_outlined,
+              false,
+              () => Get.toNamed('/homepage'),
             ),
-            const Icon(Icons.add_circle_outline, size: 38),
-            CircleAvatar(
-              radius: 22,
-              backgroundColor: purple,
-              child: const Icon(Icons.mic, color: Colors.white, size: 26),
+            _buildBottomNavItem(
+              Icons.chat_bubble_outline,
+              false,
+              () => Get.toNamed('/chat/rooms'),
+            ),
+            _buildBottomNavItem(
+              Icons.add_circle,
+              false,
+              () => Get.toNamed('/notes/create'),
+            ),
+            _buildBottomNavItem(
+              Icons.mic_outlined,
+              true,
+              () => Get.toNamed('/speech/start'),
             ),
           ],
         ),
@@ -227,13 +236,38 @@ class ListSpeechView extends GetView<ListSpeechController> {
     );
   }
 
-  // 🔹 Tombol List / Trash
+  Widget _buildBottomNavItem(
+      IconData icon, bool isCenter, VoidCallback onTap) {
+    const purple = Color(0xFF4A1F7A);
+
+    if (isCenter) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 56,
+          height: 56,
+          decoration: const BoxDecoration(
+            color: purple,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: Colors.white, size: 30),
+        ),
+      );
+    }
+
+    return IconButton(
+      icon: Icon(icon, size: 28, color: Colors.black),
+      onPressed: onTap,
+    );
+  }
+
   Widget _pillButton(String label,
       {required bool isActive, VoidCallback? onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
@@ -249,7 +283,6 @@ class ListSpeechView extends GetView<ListSpeechController> {
     );
   }
 
-  // 🔹 Kartu Recording dengan pop-up delete
   Widget _recordingCard({
     required BuildContext context,
     required Recording recording,
@@ -257,7 +290,8 @@ class ListSpeechView extends GetView<ListSpeechController> {
     required ListSpeechController controller,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding:
+          const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
@@ -278,27 +312,32 @@ class ListSpeechView extends GetView<ListSpeechController> {
               color: purple,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.play_arrow, color: Colors.white),
+            child:
+                const Icon(Icons.play_arrow, color: Colors.white),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(recording.title,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(
+                  recording.title,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 16),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   recording.time,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  style: const TextStyle(
+                      fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
           ),
           IconButton(
             onPressed: () {
-              _showDeleteDialog(context, controller, recording, purple);
+              _showDeleteDialog(
+                  context, controller, recording, purple);
             },
             icon: const Icon(Icons.delete_outline),
           ),
@@ -307,13 +346,17 @@ class ListSpeechView extends GetView<ListSpeechController> {
     );
   }
 
-  /// 🔸 Pop-up konfirmasi delete
-  void _showDeleteDialog(BuildContext context, ListSpeechController controller,
-      Recording rec, Color purple) {
+  void _showDeleteDialog(
+    BuildContext context,
+    ListSpeechController controller,
+    Recording rec,
+    Color purple,
+  ) {
     showDialog(
       context: context,
       builder: (_) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
@@ -323,7 +366,8 @@ class ListSpeechView extends GetView<ListSpeechController> {
               end: Alignment.bottomCenter,
             ),
           ),
-          padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 24),
+          padding:
+              const EdgeInsets.symmetric(vertical: 30, horizontal: 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -331,21 +375,30 @@ class ListSpeechView extends GetView<ListSpeechController> {
                 "Are you sure to\nDELETE this voice?",
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500),
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _roundedButton("No", Colors.white, purple, () {
-                    Get.back();
-                  }),
-                  _roundedButton("Yes", purple, Colors.white, () {
-                    Get.back();
-                    controller.moveToTrash(rec);
-                  }),
+                  _roundedButton(
+                    "No",
+                    Colors.white,
+                    purple,
+                    () => Get.back(),
+                  ),
+                  _roundedButton(
+                    "Yes",
+                    purple,
+                    Colors.white,
+                    () {
+                      Get.back();
+                      controller.moveToTrash(rec);
+                    },
+                  ),
                 ],
               ),
             ],
@@ -355,21 +408,28 @@ class ListSpeechView extends GetView<ListSpeechController> {
     );
   }
 
-  /// 🔸 Tombol bulat Yes / No
   Widget _roundedButton(
-      String label, Color bgColor, Color textColor, VoidCallback onPressed) {
+    String label,
+    Color bgColor,
+    Color textColor,
+    VoidCallback onPressed,
+  ) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: bgColor,
         foregroundColor: textColor,
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         elevation: 0,
       ),
       onPressed: onPressed,
-      child: Text(label,
-          style:
-              TextStyle(color: textColor, fontWeight: FontWeight.bold)),
+      child: Text(
+        label,
+        style: TextStyle(
+            color: textColor, fontWeight: FontWeight.bold),
+      ),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../controllers/trash_speech_controller.dart';
 import '../../list/controllers/list_speech_controller.dart';
 import '../../list/views/list_speech_view.dart';
@@ -16,7 +17,7 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
       body: SafeArea(
         child: Column(
           children: [
-            // 🔹 HEADER
+            // HEADER
             Padding(
               padding: const EdgeInsets.all(20),
               child: Row(
@@ -37,7 +38,7 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
               ),
             ),
 
-            // 🔹 BODY PUTIH MELENGKUNG
+            // BODY
             Expanded(
               child: Container(
                 width: double.infinity,
@@ -54,14 +55,13 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 🔹 Tombol List / Trash
+                      // LIST / TRASH BUTTON
                       Row(
                         children: [
                           _pillButton(
                             "List",
                             isActive: false,
                             onTap: () {
-                              // navigasi ke ListSpeechView
                               Get.delete<ListSpeechController>(force: true);
                               Get.lazyPut(() => ListSpeechController());
                               Get.off(() => const ListSpeechView());
@@ -77,7 +77,7 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
                       ),
                       const SizedBox(height: 16),
 
-                      // 🔹 LIST RECORDING DI TRASH
+                      // TRASH LIST
                       Expanded(
                         child: Obx(() {
                           final items = controller.trashRecordings;
@@ -109,21 +109,32 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
         ),
       ),
 
-      // 🔹 BOTTOM NAV BAR
+      // BOTTOM NAVIGATION (SAMA DENGAN LIST)
       bottomNavigationBar: Container(
-        height: 75,
-        padding: const EdgeInsets.symmetric(horizontal: 30),
+        height: 70,
         decoration: const BoxDecoration(color: Colors.white),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            const Icon(Icons.home, size: 32),
-            const Icon(Icons.chat_outlined, size: 32),
-            const Icon(Icons.add_circle_outline, size: 38),
-            CircleAvatar(
-              radius: 22,
-              backgroundColor: purple,
-              child: const Icon(Icons.mic, color: Colors.white, size: 26),
+            _buildBottomNavItem(
+              Icons.home_outlined,
+              false,
+              () => Get.toNamed('/homepage'),
+            ),
+            _buildBottomNavItem(
+              Icons.chat_bubble_outline,
+              false,
+              () => Get.toNamed('/chat/rooms'),
+            ),
+            _buildBottomNavItem(
+              Icons.add_circle,
+              false,
+              () => Get.toNamed('/notes/create'),
+            ),
+            _buildBottomNavItem(
+              Icons.mic_outlined,
+              true,
+              () => Get.toNamed('/speech/start'),
             ),
           ],
         ),
@@ -131,13 +142,45 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
     );
   }
 
-  // 🔸 Tombol List / Trash
-  Widget _pillButton(String label,
-      {required bool isActive, required VoidCallback onTap}) {
+  Widget _buildBottomNavItem(
+    IconData icon,
+    bool isCenter,
+    VoidCallback onTap,
+  ) {
+    const purple = Color(0xFF4A1F7A);
+
+    if (isCenter) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 56,
+          height: 56,
+          decoration: const BoxDecoration(
+            color: purple,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: Colors.white, size: 30),
+        ),
+      );
+    }
+
+    return IconButton(
+      icon: Icon(icon, size: 28, color: Colors.black),
+      onPressed: onTap,
+    );
+  }
+
+  // LIST / TRASH BUTTON
+  Widget _pillButton(
+    String label, {
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
@@ -145,18 +188,20 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
         child: Text(
           label,
           style: TextStyle(
-            color: isActive ? Colors.black : Colors.black,
-            fontWeight: FontWeight.w500,
+            color: Colors.black,
+            fontWeight:
+                isActive ? FontWeight.bold : FontWeight.w500,
           ),
         ),
       ),
     );
   }
 
-  // 🔸 Kartu Recording di Trash
+  // TRASH CARD
   Widget _trashCard(BuildContext context, Recording rec, Color purple) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding:
+          const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
@@ -175,30 +220,35 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
             height: 40,
             decoration:
                 BoxDecoration(color: purple, shape: BoxShape.circle),
-            child: const Icon(Icons.play_arrow, color: Colors.white),
+            child:
+                const Icon(Icons.play_arrow, color: Colors.white),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(rec.title,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(
+                  rec.title,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 16),
+                ),
                 const SizedBox(height: 4),
-                Text(rec.time,
-                    style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                Text(
+                  rec.time,
+                  style: const TextStyle(
+                      fontSize: 12, color: Colors.grey),
+                ),
               ],
             ),
           ),
           IconButton(
             icon: const Icon(Icons.restore, color: Colors.green),
-            onPressed: () {
-              controller.restoreRecording(rec);
-            },
+            onPressed: () => controller.restoreRecording(rec),
           ),
           IconButton(
-            icon: const Icon(Icons.delete_forever, color: Colors.red),
+            icon:
+                const Icon(Icons.delete_forever, color: Colors.red),
             onPressed: () {
               _showDeleteDialog(context, rec, purple);
             },
@@ -208,8 +258,12 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
     );
   }
 
-  // 🔸 Pop-up konfirmasi delete permanen
-  void _showDeleteDialog(BuildContext context, Recording rec, Color purple) {
+  // DELETE CONFIRMATION
+  void _showDeleteDialog(
+    BuildContext context,
+    Recording rec,
+    Color purple,
+  ) {
     showDialog(
       context: context,
       builder: (_) => Dialog(
@@ -224,7 +278,8 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
               end: Alignment.bottomCenter,
             ),
           ),
-          padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 24),
+          padding:
+              const EdgeInsets.symmetric(vertical: 30, horizontal: 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -232,9 +287,10 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
                 "Are you sure to\nDELETE this voice?",
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500),
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               const SizedBox(height: 24),
               Row(
@@ -251,8 +307,10 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
                       elevation: 0,
                     ),
                     onPressed: () => Get.back(),
-                    child: const Text("No",
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      "No",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
@@ -268,8 +326,10 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
                       Get.back();
                       controller.deletePermanently(rec);
                     },
-                    child: const Text("Yes",
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      "Yes",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ],
               ),

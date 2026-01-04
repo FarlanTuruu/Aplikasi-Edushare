@@ -20,11 +20,11 @@ class UploadSpeechView extends GetView<UploadSpeechController> {
   // 🔹 Ambil argumen dari Get.to(..., arguments: {...})
   final args = Get.arguments as Map<String, dynamic>? ?? {};
   final PlatformFile? file = args['file'] as PlatformFile?;
-  final bool isVideo = args['isVideo'] == true;
+ 
 
   // 🔹 Sangat penting: kirim file ke controller
   if (file != null) {
-    controller.initWithFile(file, isVideo);
+    controller.initWithFile(file, false);
   }
 
     return Scaffold(
@@ -93,10 +93,6 @@ class UploadSpeechView extends GetView<UploadSpeechController> {
                         children: [
                           _modeButton("Start", false),
                           _modeButton("Audio", false),
-                          _modeButton(
-                            isVideo ? "Video (dipilih)" : "Video",
-                            false,
-                          ),
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -113,13 +109,12 @@ class UploadSpeechView extends GetView<UploadSpeechController> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(
-                              isVideo
-                                  ? Icons.videocam_outlined
-                                  : Icons.audiotrack,
-                              color: purple,
-                              size: 28,
-                            ),
+                          const Icon(
+                            Icons.audiotrack,
+                            color: purple,
+                            size: 28,
+                          ),
+
                             const SizedBox(width: 12),
                             Expanded(
                               child: file == null
@@ -150,15 +145,14 @@ class UploadSpeechView extends GetView<UploadSpeechController> {
                                           ),
                                         ),
                                         const SizedBox(height: 4),
-                                        Text(
-                                          isVideo
-                                              ? "File video untuk diambil audionya dan ditranskripsi."
-                                              : "File audio (termasuk voice note WhatsApp: OGG/OPUS) untuk ditranskripsi.",
-                                          style: const TextStyle(
+                                        const Text(
+                                          "File audio (termasuk voice note WhatsApp: OGG/OPUS) untuk ditranskripsi.",
+                                          style: TextStyle(
                                             fontSize: 12,
                                             color: Colors.grey,
                                           ),
                                         ),
+
                                       ],
                                     ),
                             ),
@@ -240,8 +234,9 @@ class UploadSpeechView extends GetView<UploadSpeechController> {
                         child: Obx(
                           () => Text(
                             controller.recognizedText.value.isEmpty
-                                ? "Hasil transkrip dari file audio/video akan "
-                                    "muncul di sini setelah proses selesai."
+                              ? "Hasil transkrip dari file audio akan "
+                                  "muncul di sini setelah proses selesai."
+
                                 : controller.recognizedText.value,
                             style: const TextStyle(fontSize: 16),
                           ),
