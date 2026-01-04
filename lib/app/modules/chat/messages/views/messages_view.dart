@@ -20,6 +20,17 @@ class MessagesView extends GetView<MessagesController> {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
           onPressed: () => Get.back(),
         ),
+        actions: [
+          Obx(
+            () => controller.isFollowing.isFalse
+                ? IconButton(
+                    tooltip: 'Follow user',
+                    icon: const Icon(Icons.person_add, color: Colors.black),
+                    onPressed: () => controller.followPeer(),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ],
         title: Row(
           children: [
             CircleAvatar(backgroundImage: AssetImage(avatar)),
@@ -36,6 +47,10 @@ class MessagesView extends GetView<MessagesController> {
           Expanded(
             child: Obx(() {
               final msgs = controller.messages;
+              final loading = controller.isLoading.value;
+              if (loading && msgs.isEmpty) {
+                return const Center(child: CircularProgressIndicator());
+              }
               return ListView.builder(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -97,16 +112,19 @@ class MessagesView extends GetView<MessagesController> {
   // 🔹 Widget balon pesan
   Widget _buildMessageBubble(Map<String, dynamic> msg) {
     final bool fromMe = msg['fromMe'] ?? false;
+    final bool unsent = msg['unsent'] ?? false;
     final Color myBlue = const Color(0xFF1E40AF);
 
-    return Align(
+    final bubble = Align(
       alignment: fromMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         constraints: const BoxConstraints(maxWidth: 280),
         decoration: BoxDecoration(
-          color: fromMe ? myBlue : Colors.grey.shade300,
+          color: fromMe
+              ? (unsent ? myBlue.withOpacity(0.6) : myBlue)
+              : Colors.grey.shade300,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -123,5 +141,22 @@ class MessagesView extends GetView<MessagesController> {
         ),
       ),
     );
+
+    if (unsent && fromMe) {
+      return Column(
+        crossAxisAlignment: fromMe
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
+        children: [
+          bubble,
+          const SizedBox(height: 2),
+          const Text(
+            'Follow to send',
+            style: TextStyle(fontSize: 11, color: Colors.grey),
+          ),
+        ],
+      );
+    }
+    return bubble;
   }
 }

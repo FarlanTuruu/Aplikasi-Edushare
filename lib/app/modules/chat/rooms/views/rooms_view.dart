@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/rooms_controller.dart';
-import '../../messages/controllers/messages_controller.dart';
-import '../../messages/views/messages_view.dart';
+import 'package:appedushare/app/routes/app_pages.dart';
 
 class RoomsView extends GetView<RoomsController> {
   const RoomsView({super.key});
@@ -107,27 +106,39 @@ class RoomsView extends GetView<RoomsController> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Icon(Icons.home_outlined, size: 32),
+            InkWell(
+              onTap: () => Get.toNamed('/homepage'),
+              child: const Icon(Icons.home_outlined, size: 32),
+            ),
             Stack(
               clipBehavior: Clip.none,
               children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: purple,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.chat_outlined,
-                    color: Colors.white,
-                    size: 30,
+                GestureDetector(
+                  onTap: () => Get.toNamed(Routes.CHAT_ROOMS),
+                  child: Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: purple,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.chat_outlined,
+                      color: Colors.white,
+                      size: 30,
+                    ),
                   ),
                 ),
               ],
             ),
-            const Icon(Icons.add_circle_outline, size: 38),
-            const Icon(Icons.mic_none, size: 32),
+            InkWell(
+              onTap: () => Get.toNamed(Routes.NOTE_CREATE),
+              child: const Icon(Icons.add_circle_outline, size: 38),
+            ),
+            InkWell(
+              onTap: () => Get.toNamed(Routes.SPEECH_LIST),
+              child: const Icon(Icons.mic_none, size: 32),
+            ),
           ],
         ),
       ),
@@ -150,13 +161,23 @@ class RoomsView extends GetView<RoomsController> {
         style: const TextStyle(color: Colors.grey),
       ),
       onTap: () {
-        Get.put(MessagesController());
-        Get.to(
-          () => const MessagesView(),
+        // Navigate via named route so MessagesBinding provides controller
+        Get.toNamed(
+          Routes.CHAT_MESSAGES,
           arguments: {
+            // Prefer explicit conversation id if available
+            'conversationId':
+                room['conversation_id'] ?? room['conversationId'] ?? room['id'],
             'roomId': room['id'],
+            // Try to provide the peer user id for DM ensure fallback
+            'userId':
+                room['other_user_id'] ?? room['user_id'] ?? room['peer_id'],
             'contactName': room['name'],
             'avatar': room['avatar'],
+            // Provide full room map for additional inference in controller
+            'room': room,
+            // Pass following status if available so header icon can hide
+            'is_following': room['is_following'] ?? room['isFollowing'],
           },
         );
       },
