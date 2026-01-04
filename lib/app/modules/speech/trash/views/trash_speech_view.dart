@@ -1,4 +1,4 @@
-// File: /lib/app/modules/speech/trash/views/trash_speech_view.dart
+// Ganti seluruh class TrashSpeechView di trash_speech_view.dart dengan kode berikut:
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -10,17 +10,12 @@ import '../../list/views/list_speech_view.dart';
 class TrashSpeechView extends GetView<TrashSpeechController> {
   const TrashSpeechView({super.key});
 
-  // Definisi Warna Utama - Konsisten dengan homepage & notes
-  static const Color _primaryPurple = Color(0xFF4A148C);
-  static const Color _secondaryPurple = Color(0xFF7B1FA2);
-
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final isTablet = size.width > 600;
+    const purple = Color(0xFF4A1F7A);
 
     return Scaffold(
-      backgroundColor: _primaryPurple, // Konsisten dengan homepage & notes
+      backgroundColor: purple,
       body: SafeArea(
         child: Column(
           children: [
@@ -50,10 +45,10 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
               child: Container(
                 width: double.infinity,
                 decoration: const BoxDecoration(
-                  color: Colors.white,
+                  color: Color(0xFFF8F4FB),
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(45), // Konsisten dengan notes
-                    topRight: Radius.circular(45),
+                    topLeft: Radius.circular(40),
+                    topRight: Radius.circular(40),
                   ),
                 ),
                 child: Padding(
@@ -114,60 +109,169 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
         ),
       ),
 
-      // BOTTOM NAVIGATION (SAMA DENGAN LIST)
-      bottomNavigationBar: Container(
-        height: 70,
-        decoration: const BoxDecoration(color: Colors.white),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildBottomNavItem(
-              Icons.home_outlined,
-              false,
-              () => Get.toNamed('/homepage'),
-            ),
-            _buildBottomNavItem(
+      // BOTTOM NAVIGATION (KONSISTEN DENGAN HOMEPAGE)
+      bottomNavigationBar: _buildBottomNavigation(),
+    );
+  }
+
+  // 🔸 Bottom Navigation (KONSISTEN DENGAN HOMEPAGE)
+  Widget _buildBottomNavigation() {
+    const purple = Color(0xFF4A1F7A);
+
+    return Container(
+      height: 80,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 5,
+            blurRadius: 10,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          // Tombol Home
+          IconButton(
+            icon: const Icon(Icons.home, color: Colors.black54, size: 28),
+            onPressed: () {
+              Get.toNamed('/homepage');
+            },
+          ),
+
+          // Tombol Chat
+          IconButton(
+            icon: const Icon(
               Icons.chat_bubble_outline,
-              false,
-              () => Get.toNamed('/chat/rooms'),
+              color: Colors.black54,
+              size: 28,
             ),
-            _buildBottomNavItem(
-              Icons.add_circle,
-              false,
-              () => Get.toNamed('/notes/create'),
+            onPressed: () {
+              Get.toNamed('/chat/rooms');
+            },
+          ),
+
+          // Tombol Tambah (Add) - Show dialog
+          GestureDetector(
+            onTap: _showCreateActionDialog,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.black54, width: 1.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.add, color: Colors.black54, size: 24),
             ),
-            _buildBottomNavItem(
-              Icons.mic_outlined,
-              true,
-              () => Get.toNamed('/speech/start'),
+          ),
+
+          // Tombol Mic Aktif (halaman speech) - tetap bisa diklik
+          GestureDetector(
+            onTap: () {
+              Get.toNamed('/speech/start');
+            },
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: const BoxDecoration(
+                color: purple,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.mic_outlined,
+                color: Colors.white,
+                size: 28,
+              ),
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 🔸 Dialog Create Action (SAMA SEPERTI DI HOMEPAGE)
+  void _showCreateActionDialog() {
+    const purple = Color(0xFF4A1F7A);
+
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Buat Konten Baru',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+
+              // Tombol Buat Catatan Kolaborasi
+              _dialogActionButton(
+                icon: Icons.note_add_outlined,
+                label: 'Upload Materi',
+                onTap: () {
+                  Get.back();
+                  Get.toNamed('/notes/create');
+                },
+              ),
+              const SizedBox(height: 12),
+
+              // Tombol Upload Materi
+              _dialogActionButton(
+                icon: Icons.upload_file_outlined,
+                label: 'Upload Catatan',
+                onTap: () {
+                  Get.back();
+                  Get.toNamed('/collab/create');
+                },
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildBottomNavItem(IconData icon, bool isCenter, VoidCallback onTap) {
+  // 🔸 Dialog Action Button Helper
+  Widget _dialogActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
     const purple = Color(0xFF4A1F7A);
 
-    if (isCenter) {
-      return GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 56,
-          height: 56,
-          decoration: const BoxDecoration(
-            color: purple,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: Colors.white, size: 30),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
         ),
-      );
-    }
-
-    return IconButton(
-      icon: Icon(icon, size: 28, color: Colors.black),
-      onPressed: onTap,
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: purple.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: purple, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -178,20 +282,15 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
     required VoidCallback onTap,
   }) {
     return GestureDetector(
-      onTap: action,
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(30), // Konsisten dengan notes
-          border: Border.all(
-            color: Colors.black, // Konsisten dengan notes
-            width: 1,
-          ),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
-          text,
-          textAlign: TextAlign.center,
+          label,
           style: TextStyle(
             color: Colors.black,
             fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
@@ -247,7 +346,7 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
           IconButton(
             icon: const Icon(Icons.delete_forever, color: Colors.red),
             onPressed: () {
-              _showDeleteDialog(context, rec);
+              _showDeleteDialog(context, rec, purple);
             },
           ),
         ],
@@ -265,9 +364,9 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             gradient: const LinearGradient(
-              colors: [Color(0xFFE1BEE7), Color(0xFF4A148C)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              colors: [Color(0xFF9D84C8), Color(0xFF4A1F7A)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
           ),
           padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 24),
@@ -275,7 +374,7 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                "Are you sure to\nDELETE this voice\npermanently?",
+                "Are you sure to\nDELETE this voice?",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,
@@ -321,7 +420,7 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
                     ),
                     onPressed: () {
                       Get.back();
-                      Get.toNamed('/collab/create');
+                      controller.deletePermanently(rec);
                     },
                     child: const Text(
                       "Yes",
@@ -331,30 +430,6 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
                 ],
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCreateOptionButton({
-    required String title,
-    required VoidCallback onTap,
-  }) {
-    return Expanded(
-      child: SizedBox(
-        height: 100,
-        child: ElevatedButton(
-          onPressed: onTap,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
-            shape: const CircleBorder(),
-            elevation: 4,
-          ),
-          child: Text(
-            title,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
         ),
       ),

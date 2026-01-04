@@ -586,7 +586,7 @@ class HomepageView extends GetView<HomepageController> {
               size: 28,
             ),
             onPressed: () {
-              Get.toNamed('/speech/upload');
+              Get.toNamed('/speech/start');
             },
           ),
         ],

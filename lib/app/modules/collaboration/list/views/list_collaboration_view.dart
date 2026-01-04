@@ -5,150 +5,164 @@ import '../controllers/list_collaboration_controller.dart';
 class ListCollaborationView extends GetView<ListCollaborationController> {
   const ListCollaborationView({super.key});
 
-  // Warna Ungu Utama diambil dari sampel desain
-  final Color _primaryPurple = const Color(0xFF512188);
-  final Color _secondaryPurple = const Color(0xFF7B1FA2);
+  // Definisi Warna Utama - KONSISTEN dengan create_collaboration_view
+  static const Color _primaryPurple = Color(0xFF4A148C);
+  static const Color _secondaryPurple = Color(0xFF7B1FA2);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // Set background scaffold menjadi ungu agar area status bar juga ungu
-      backgroundColor: _primaryPurple,
-      body: Stack(
-        children: [
-          // ================= MAIN CONTENT STRUCTURE =================
-          // Menggunakan Column agar area putih otomatis mengisi ruang tersisa di bawah header
-          Column(
-            children: [
-              // 1. HEADER AREA (Di atas background ungu)
-              _buildHeaderArea(),
+    final size = MediaQuery.of(context).size;
+    final isTablet = size.width > 600;
 
-              // 2. WHITE BODY AREA (Area melengkung yang mengisi sisa layar)
-              Expanded(
-                child: Container(
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    // Lengkungan di pojok kiri atas
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(45),
-                    ),
+    return Scaffold(
+      backgroundColor: _primaryPurple, // Konsisten dengan create
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(context, isTablet),
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(45), // Konsisten dengan create
+                    topRight: Radius.circular(45),
                   ),
-                  // ClipRRect penting agar konten list yang di-scroll tidak "bocor" keluar dari lengkungan
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(45),
-                    ),
-                    child: Obx(() {
-                      if (controller.isLoading.value) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      if (controller.collaborations.isEmpty) {
-                        return _buildEmptyState();
-                      }
-                      return ListView.builder(
-                        // Padding penting! Bottom padding besar agar item terakhir tidak tertutup Nav Bar
-                        padding: const EdgeInsets.only(
-                          top: 30,
-                          left: 20,
-                          right: 20,
-                          bottom: 100,
-                        ),
-                        itemCount: controller.collaborations.length,
-                        itemBuilder: (context, index) {
-                          return _buildCollaborationCard(
-                            controller.collaborations[index],
-                            index,
-                          );
-                        },
+                ),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(45),
+                    topRight: Radius.circular(45),
+                  ),
+                  child: Obx(() {
+                    if (controller.isLoading.value) {
+                      return const Center(
+                        child: CircularProgressIndicator(color: _primaryPurple),
                       );
-                    }),
+                    }
+                    if (controller.collaborations.isEmpty) {
+                      return _buildEmptyState();
+                    }
+                    return ListView.builder(
+                      padding: EdgeInsets.only(
+                        top: 30,
+                        left: isTablet ? 30 : 20,
+                        right: isTablet ? 30 : 20,
+                        bottom: 100, // Ruang untuk navbar
+                      ),
+                      itemCount: controller.collaborations.length,
+                      itemBuilder: (context, index) {
+                        return _buildCollaborationCard(
+                          controller.collaborations[index],
+                          index,
+                          isTablet,
+                        );
+                      },
+                    );
+                  }),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      // Bottom Navigation Bar - KONSISTEN dengan create
+      bottomNavigationBar: _buildBottomNavigation(),
+    );
+  }
+
+  // ============================================================
+  // HEADER - Konsisten dengan create
+  // ============================================================
+  Widget _buildHeader(BuildContext context, bool isTablet) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        isTablet ? 40 : 24,
+        isTablet ? 20 : 16,
+        isTablet ? 40 : 24,
+        isTablet ? 20 : 24,
+      ),
+      child: Row(
+        children: [
+          // Back Button
+          IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new,
+              color: Colors.white,
+              size: 20,
+            ),
+            onPressed: () => Get.back(),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+          const SizedBox(width: 12),
+
+          // Title
+          Expanded(
+            child: Text(
+              'Catatan Upload',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: isTablet ? 26 : 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+
+          // Profile & Settings
+          Row(
+            children: [
+              GestureDetector(
+                onTap: controller.goToProfile,
+                child: Container(
+                  width: isTablet ? 48 : 40,
+                  height: isTablet ? 48 : 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 1.5),
+                    image: const DecorationImage(
+                      image: NetworkImage('https://i.pravatar.cc/150?img=5'),
+                      fit: BoxFit.cover,
+                    ),
                   ),
+                ),
+              ),
+              SizedBox(width: isTablet ? 16 : 12),
+              GestureDetector(
+                onTap: controller.goToSettings,
+                child: Icon(
+                  Icons.settings,
+                  color: Colors.white,
+                  size: isTablet ? 32 : 28,
                 ),
               ),
             ],
           ),
-
-          // ================= BOTTOM NAVIGATION BAR =================
-          // Diletakkan dalam Stack paling bawah (render terakhir) agar mengambang di atas konten
-          Positioned(bottom: 0, left: 0, right: 0, child: _buildBottomNavBar()),
         ],
       ),
     );
   }
 
-  // WIDGET: Header Area (Back button, Title, Profile, Settings)
-  Widget _buildHeaderArea() {
-    return SafeArea(
-      bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-        child: Row(
-          children: [
-            IconButton(
-              icon: const Icon(
-                Icons.arrow_back_ios_new,
-                color: Colors.white,
-                size: 20,
-              ),
-              onPressed: () => Get.back(),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-            ),
-            const SizedBox(width: 16),
-            const Expanded(
-              child: Text(
-                'Catatan Upload',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            // Profil Image (Circle Avatar)
-            GestureDetector(
-              onTap: controller.goToProfile,
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 1.5),
-                  image: const DecorationImage(
-                    // Ganti URL ini dengan gambar profil asli Anda
-                    image: NetworkImage('https://i.pravatar.cc/150?img=5'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Settings Icon
-            IconButton(
-              icon: const Icon(Icons.settings, color: Colors.white, size: 28),
-              onPressed: controller.goToSettings,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // WIDGET: Kartu Item List
-  Widget _buildCollaborationCard(Map<String, dynamic> data, int index) {
+  // ============================================================
+  // COLLABORATION CARD
+  // ============================================================
+  Widget _buildCollaborationCard(
+    Map<String, dynamic> data,
+    int index,
+    bool isTablet,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      height: 90,
+      height: isTablet ? 100 : 90,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        // Gradient Background: Kiri terang, Kanan gelap (sesuai desain)
         gradient: LinearGradient(
           colors: [
-            Colors.purple.shade100.withOpacity(0.7), // Kiri agak transparan
-            _secondaryPurple, // Kanan ungu pekat
+            const Color(
+              0xFFE1BEE7,
+            ), // Light Purple - konsisten dengan profile card
+            _primaryPurple, // Primary Purple
           ],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
@@ -162,12 +176,15 @@ class ListCollaborationView extends GetView<ListCollaborationController> {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        padding: EdgeInsets.symmetric(
+          horizontal: isTablet ? 20.0 : 16.0,
+          vertical: 12.0,
+        ),
         child: Row(
           children: [
-            // Kotak Tanggal Putih
+            // Date Box
             Container(
-              width: 50,
+              width: isTablet ? 60 : 50,
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -178,16 +195,16 @@ class ListCollaborationView extends GetView<ListCollaborationController> {
                 children: [
                   Text(
                     data['date'],
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w800,
-                      fontSize: 16,
+                      fontSize: isTablet ? 18 : 16,
                       color: Colors.black87,
                     ),
                   ),
                   Text(
                     data['day'],
-                    style: const TextStyle(
-                      fontSize: 12,
+                    style: TextStyle(
+                      fontSize: isTablet ? 13 : 12,
                       color: Colors.grey,
                       fontWeight: FontWeight.w500,
                     ),
@@ -197,14 +214,13 @@ class ListCollaborationView extends GetView<ListCollaborationController> {
             ),
             const SizedBox(width: 16),
 
-            // Judul Item
+            // Title
             Expanded(
               child: Text(
                 data['title'],
-                style: const TextStyle(
-                  fontSize: 16,
+                style: TextStyle(
+                  fontSize: isTablet ? 17 : 16,
                   fontWeight: FontWeight.bold,
-                  // Warna teks hitam agar kontras di bagian kiri gradient yang terang
                   color: Colors.black87,
                 ),
                 maxLines: 2,
@@ -212,7 +228,7 @@ class ListCollaborationView extends GetView<ListCollaborationController> {
               ),
             ),
 
-            // Tombol Edit & Delete (Bentuk Pill/Kapsul Putih)
+            // Action Buttons
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -220,11 +236,13 @@ class ListCollaborationView extends GetView<ListCollaborationController> {
                 _buildActionButton(
                   'Edit',
                   () => controller.editCollaboration(index),
+                  isTablet,
                 ),
                 const SizedBox(height: 8),
                 _buildActionButton(
                   'Delete',
                   () => controller.deleteCollaboration(index),
+                  isTablet,
                 ),
               ],
             ),
@@ -234,13 +252,11 @@ class ListCollaborationView extends GetView<ListCollaborationController> {
     );
   }
 
-  // Helper untuk tombol kecil (Edit/Delete)
-  Widget _buildActionButton(String text, VoidCallback onTap) {
+  Widget _buildActionButton(String text, VoidCallback onTap, bool isTablet) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        // Lebar tetap agar seragam
-        width: 60,
+        width: isTablet ? 70 : 60,
         padding: const EdgeInsets.symmetric(vertical: 4),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -252,8 +268,8 @@ class ListCollaborationView extends GetView<ListCollaborationController> {
         alignment: Alignment.center,
         child: Text(
           text,
-          style: const TextStyle(
-            fontSize: 11,
+          style: TextStyle(
+            fontSize: isTablet ? 12 : 11,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
@@ -262,82 +278,155 @@ class ListCollaborationView extends GetView<ListCollaborationController> {
     );
   }
 
-  // WIDGET: Bottom Navigation Bar Custom
-  Widget _buildBottomNavBar() {
+  // ============================================================
+  // BOTTOM NAVIGATION - KONSISTEN dengan create
+  // ============================================================
+  Widget _buildBottomNavigation() {
     return Container(
-      height: 80, // Tinggi navbar
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      height: 80,
       decoration: BoxDecoration(
         color: Colors.white,
-        // Shadow di atas navbar
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.15),
-            spreadRadius: 1,
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 5,
             blurRadius: 10,
-            offset: const Offset(0, -2),
           ),
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
+          // Home Button
           IconButton(
-            icon: const Icon(
-              Icons.home_outlined,
-              color: Colors.black54,
-              size: 28,
-            ),
-            onPressed: () {
-              // Navigasi ke halaman messages (chat)
-              Get.toNamed('/homepage');
-            },
+            icon: const Icon(Icons.home, color: Colors.black54, size: 28),
+            onPressed: () => Get.toNamed('/homepage'),
           ),
+
+          // Chat Button
           IconButton(
             icon: const Icon(
               Icons.chat_bubble_outline,
               color: Colors.black54,
-              size: 26,
+              size: 28,
             ),
-            onPressed: () {
-              // Navigasi ke halaman messages (chat)
-              Get.toNamed('/chat/rooms');
-            },
+            onPressed: () => Get.toNamed('/chat/rooms'),
           ),
-          // Tombol Tambah Tengah (Floating Style)
+
+          // Add Button (Active di halaman list juga bisa menampilkan dialog)
           GestureDetector(
-            onTap: controller.openAddMenu,
+            onTap: _showCreateActionDialog,
             child: Container(
-              width: 56,
-              height: 56,
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: _primaryPurple, // Warna ungu tombol tengah
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: _primaryPurple.withOpacity(0.4),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                color: _primaryPurple,
+                borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.add, color: Colors.white, size: 32),
+              child: const Icon(Icons.add, color: Colors.white, size: 24),
             ),
           ),
+
+          // Mic Button
           IconButton(
             icon: const Icon(
-              Icons.mic_none_outlined,
+              Icons.mic_outlined,
               color: Colors.black54,
               size: 28,
             ),
-            onPressed: controller.navigateToVoice,
+            onPressed: () => Get.toNamed('/speech/start'),
           ),
         ],
       ),
     );
   }
 
-  // WIDGET: State Kosong
+  // ============================================================
+  // CREATE ACTION DIALOG (KONSISTEN DENGAN CREATE)
+  // ============================================================
+  void _showCreateActionDialog() {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Buat Konten Baru',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+
+              // Tombol Upload Materi
+              _dialogActionButton(
+                icon: Icons.note_add_outlined,
+                label: 'Upload Materi',
+                onTap: () {
+                  Get.back();
+                  Get.toNamed('/notes/create');
+                },
+              ),
+              const SizedBox(height: 12),
+
+              // Tombol Upload Catatan
+              _dialogActionButton(
+                icon: Icons.upload_file_outlined,
+                label: 'Upload Catatan',
+                onTap: () {
+                  Get.back();
+                  Get.toNamed('/collab/create');
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // DIALOG ACTION BUTTON HELPER
+  // ============================================================
+  Widget _dialogActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _primaryPurple.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: _primaryPurple, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // EMPTY STATE
+  // ============================================================
   Widget _buildEmptyState() {
     return Center(
       child: Column(

@@ -1,3 +1,5 @@
+// Ganti seluruh class RoomsView di rooms_view.dart dengan kode berikut:
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/rooms_controller.dart';
@@ -98,46 +100,160 @@ class RoomsView extends GetView<RoomsController> {
         ),
       ),
 
-      // 🔹 Bottom Navigation Bar
-      bottomNavigationBar: Container(
-        height: 75,
-        padding: const EdgeInsets.symmetric(horizontal: 30),
-        decoration: const BoxDecoration(color: Colors.white),
+      // 🔹 Bottom Navigation Bar (KONSISTEN DENGAN HOMEPAGE)
+      bottomNavigationBar: _buildBottomNavigation(),
+    );
+  }
+
+  // 🔸 Bottom Navigation (KONSISTEN DENGAN HOMEPAGE)
+  Widget _buildBottomNavigation() {
+    const purple = Color(0xFF4A1F7A);
+
+    return Container(
+      height: 80,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 5,
+            blurRadius: 10,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          // Tombol Home
+          IconButton(
+            icon: const Icon(Icons.home, color: Colors.black54, size: 28),
+            onPressed: () {
+              Get.toNamed('/homepage');
+            },
+          ),
+
+          // Tombol Chat Aktif (halaman chat)
+          Container(
+            width: 48,
+            height: 48,
+            decoration: const BoxDecoration(
+              color: purple,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.chat_bubble_outline,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+
+          // Tombol Tambah (Add) - Show dialog
+          GestureDetector(
+            onTap: _showCreateActionDialog,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.black54, width: 1.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.add, color: Colors.black54, size: 24),
+            ),
+          ),
+
+          // Tombol Mic
+          IconButton(
+            icon: const Icon(
+              Icons.mic_outlined,
+              color: Colors.black54,
+              size: 28,
+            ),
+            onPressed: () {
+              Get.toNamed('/speech/start');
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 🔸 Dialog Create Action (SAMA SEPERTI DI HOMEPAGE)
+  void _showCreateActionDialog() {
+    const purple = Color(0xFF4A1F7A);
+
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Buat Konten Baru',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+
+              // Tombol Buat Catatan Kolaborasi
+              _dialogActionButton(
+                icon: Icons.note_add_outlined,
+                label: 'Upload Materi',
+                onTap: () {
+                  Get.back();
+                  Get.toNamed('/notes/create');
+                },
+              ),
+              const SizedBox(height: 12),
+
+              // Tombol Upload Materi
+              _dialogActionButton(
+                icon: Icons.upload_file_outlined,
+                label: 'Upload Catatan',
+                onTap: () {
+                  Get.back();
+                  Get.toNamed('/collab/create');
+                },
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 🔸 Dialog Action Button Helper
+  Widget _dialogActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    const purple = Color(0xFF4A1F7A);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
+        ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            InkWell(
-              onTap: () => Get.toNamed('/homepage'),
-              child: const Icon(Icons.home_outlined, size: 32),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: purple.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: purple, size: 24),
             ),
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                GestureDetector(
-                  onTap: () => Get.toNamed(Routes.CHAT_ROOMS),
-                  child: Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: purple,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.chat_outlined,
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            InkWell(
-              onTap: () => Get.toNamed(Routes.NOTE_CREATE),
-              child: const Icon(Icons.add_circle_outline, size: 38),
-            ),
-            InkWell(
-              onTap: () => Get.toNamed(Routes.SPEECH_LIST),
-              child: const Icon(Icons.mic_none, size: 32),
+            const SizedBox(width: 16),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
             ),
           ],
         ),

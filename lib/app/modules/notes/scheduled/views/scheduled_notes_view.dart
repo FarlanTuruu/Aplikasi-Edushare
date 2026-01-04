@@ -12,6 +12,11 @@ class ScheduledNotesView extends GetView<ScheduledNotesController> {
   static const Color _primaryPurple = Color(0xFF4A148C);
   static const Color _secondaryPurple = Color(0xFF7B1FA2);
 
+  bool _isInNotesModule() {
+    final currentRoute = Get.currentRoute;
+    return currentRoute.contains('/notes/');
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -495,7 +500,9 @@ class ScheduledNotesView extends GetView<ScheduledNotesController> {
     );
   }
 
-  // 🔧 BOTTOM NAVBAR - Konsisten
+  // ============================================================
+  // BOTTOM NAVIGATION - HIGHLIGHT PERSISTEN
+  // ============================================================
   Widget _buildBottomNavigation() {
     return Container(
       height: 80,
@@ -513,11 +520,7 @@ class ScheduledNotesView extends GetView<ScheduledNotesController> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           IconButton(
-            icon: const Icon(
-              Icons.home_outlined,
-              color: Colors.black54,
-              size: 28,
-            ),
+            icon: const Icon(Icons.home, color: Colors.black54, size: 28),
             onPressed: () => Get.toNamed('/homepage'),
           ),
           IconButton(
@@ -528,17 +531,24 @@ class ScheduledNotesView extends GetView<ScheduledNotesController> {
             ),
             onPressed: () => Get.toNamed('/chat/rooms'),
           ),
+          // Add Button dengan HIGHLIGHT PERSISTEN di modul notes
           GestureDetector(
-            onTap: () {
-              _showCreateActionDialog();
-            },
+            onTap: _showCreateActionDialog,
             child: Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: _primaryPurple,
+                color: _isInNotesModule() ? _primaryPurple : Colors.transparent,
+                border: Border.all(
+                  color: _isInNotesModule() ? _primaryPurple : Colors.black54,
+                  width: 1.5,
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.add, color: Colors.white, size: 24),
+              child: Icon(
+                Icons.add,
+                color: _isInNotesModule() ? Colors.white : Colors.black54,
+                size: 24,
+              ),
             ),
           ),
           IconButton(
@@ -547,7 +557,7 @@ class ScheduledNotesView extends GetView<ScheduledNotesController> {
               color: Colors.black54,
               size: 28,
             ),
-            onPressed: () => Get.toNamed('/speech/upload'),
+            onPressed: () => Get.toNamed('/speech/start'),
           ),
         ],
       ),
@@ -557,53 +567,33 @@ class ScheduledNotesView extends GetView<ScheduledNotesController> {
   void _showCreateActionDialog() {
     Get.dialog(
       Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        child: Container(
-          height: 320,
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            gradient: const LinearGradient(
-              colors: [Color(0xFFE1BEE7), Color(0xFF4A148C)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                'Create Materi Or\nCatatan Colaboration',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                  height: 1.3,
-                ),
+                'Buat Konten Baru',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 40),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildCreateOptionButton(
-                    title: 'Materi',
-                    onTap: () {
-                      Get.back();
-                      Get.toNamed('/notes/create');
-                    },
-                  ),
-                  const SizedBox(width: 16),
-                  _buildCreateOptionButton(
-                    title: 'Catatan',
-                    onTap: () {
-                      Get.back();
-                      Get.toNamed('/collab/create');
-                    },
-                  ),
-                ],
+              const SizedBox(height: 20),
+              _dialogActionButton(
+                icon: Icons.note_add_outlined,
+                label: 'Upload Materi',
+                onTap: () {
+                  Get.back();
+                  Get.toNamed('/notes/create');
+                },
+              ),
+              const SizedBox(height: 12),
+              _dialogActionButton(
+                icon: Icons.upload_file_outlined,
+                label: 'Upload Catatan',
+                onTap: () {
+                  Get.back();
+                  Get.toNamed('/collab/create');
+                },
               ),
             ],
           ),
@@ -612,25 +602,37 @@ class ScheduledNotesView extends GetView<ScheduledNotesController> {
     );
   }
 
-  Widget _buildCreateOptionButton({
-    required String title,
+  Widget _dialogActionButton({
+    required IconData icon,
+    required String label,
     required VoidCallback onTap,
   }) {
-    return Expanded(
-      child: SizedBox(
-        height: 100,
-        child: ElevatedButton(
-          onPressed: onTap,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
-            shape: const CircleBorder(),
-            elevation: 4,
-          ),
-          child: Text(
-            title,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-          ),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _primaryPurple.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: _primaryPurple, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+            ),
+          ],
         ),
       ),
     );

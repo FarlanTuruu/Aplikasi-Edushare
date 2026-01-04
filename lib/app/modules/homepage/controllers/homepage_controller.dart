@@ -296,74 +296,81 @@ class HomepageController extends GetxController {
   }
 
   void showCreateActionDialog() {
+    const purple = Color(0xFF4A148C);
+
     Get.dialog(
       Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        child: Container(
-          height: 320, // Sesuaikan tinggi card
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            // Gradient Ungu sesuai desain
-            gradient: const LinearGradient(
-              colors: [
-                Color(0xFFE1BEE7), // Ungu Muda (Kiri Atas)
-                Color(0xFF4A148C), // Ungu Gelap (Kanan Bawah)
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              // Judul Popup
               const Text(
-                'Create Materi Or\nCatatan Colaboration',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                  height: 1.3,
-                ),
+                'Buat Konten Baru',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 20),
 
-              // Row untuk 2 Tombol Bulat
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  // Tombol Materi
-                  _buildCreateOptionButton(
-                    title: 'Materi',
-                    onTap: () {
-                      Get.back(); // Tutup dialog dulu
-                      // Ganti dengan Route Materi Anda
-                      Get.toNamed('/notes/create');
-                      print("Pindah ke Create Materi");
-                    },
-                  ),
-
-                  // Spacer di tengah jika perlu
-                  const SizedBox(width: 16),
-
-                  // Tombol Catatan
-                  _buildCreateOptionButton(
-                    title: 'Catatan',
-                    onTap: () {
-                      Get.back(); // Tutup dialog dulu
-                      // Ganti dengan Route Catatan Anda (misal Create Collaboration yang kemarin)
-                      Get.toNamed('/collab/create');
-                      print("Pindah ke Create Catatan");
-                    },
-                  ),
-                ],
+              _dialogActionButton(
+                icon: Icons.note_add_outlined,
+                label: 'Upload Materi',
+                onTap: () {
+                  Get.back();
+                  Get.toNamed('/notes/create');
+                },
               ),
+              const SizedBox(height: 12),
+
+              _dialogActionButton(
+                icon: Icons.upload_file_outlined,
+                label: 'Upload Catatan',
+                onTap: () {
+                  Get.back();
+                  Get.toNamed('/collab/create');
+                },
+              ),
+              const SizedBox(height: 12),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _dialogActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    const purple = Color(0xFF4A148C);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: purple.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: purple, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+            ),
+          ],
         ),
       ),
     );

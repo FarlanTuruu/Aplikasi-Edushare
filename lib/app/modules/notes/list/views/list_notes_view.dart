@@ -10,13 +10,19 @@ class ListNotesView extends GetView<ListNotesController> {
   static const Color _primaryPurple = Color(0xFF4A148C);
   static const Color _secondaryPurple = Color(0xFF7B1FA2);
 
+  // Helper untuk cek apakah di modul notes
+  bool _isInNotesModule() {
+    final currentRoute = Get.currentRoute;
+    return currentRoute.contains('/notes/');
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
 
     return Scaffold(
-      backgroundColor: _primaryPurple, // Konsisten dengan homepage
+      backgroundColor: _primaryPurple,
       body: SafeArea(
         child: Column(
           children: [
@@ -27,7 +33,7 @@ class ListNotesView extends GetView<ListNotesController> {
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(45), // Konsisten dengan homepage
+                    topLeft: Radius.circular(45),
                     topRight: Radius.circular(45),
                   ),
                 ),
@@ -38,14 +44,12 @@ class ListNotesView extends GetView<ListNotesController> {
                   ),
                   child: Column(
                     children: [
-                      // Search Bar
                       GetBuilder<ListNotesController>(
                         builder: (ctrl) => Padding(
                           padding: EdgeInsets.all(isTablet ? 24 : 20),
                           child: _buildSearchBar(isTablet),
                         ),
                       ),
-                      // Navigation Menu
                       Padding(
                         padding: EdgeInsets.symmetric(
                           horizontal: isTablet ? 24 : 20,
@@ -53,7 +57,6 @@ class ListNotesView extends GetView<ListNotesController> {
                         child: _buildNavigationMenu(isTablet),
                       ),
                       SizedBox(height: isTablet ? 20 : 16),
-                      // Filter Button
                       Padding(
                         padding: EdgeInsets.symmetric(
                           horizontal: isTablet ? 24 : 20,
@@ -64,7 +67,6 @@ class ListNotesView extends GetView<ListNotesController> {
                         ),
                       ),
                       SizedBox(height: isTablet ? 20 : 16),
-                      // Notes List
                       Expanded(
                         child: Obx(() {
                           if (controller.isLoading.value) {
@@ -90,14 +92,10 @@ class ListNotesView extends GetView<ListNotesController> {
           ],
         ),
       ),
-      // Bottom Navigation Bar - Konsisten dengan homepage
       bottomNavigationBar: _buildBottomNavigation(),
     );
   }
 
-  // ============================================================
-  // HEADER
-  // ============================================================
   Widget _buildHeader(BuildContext context, bool isTablet) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
@@ -136,9 +134,7 @@ class ListNotesView extends GetView<ListNotesController> {
               ),
               SizedBox(width: isTablet ? 16 : 12),
               GestureDetector(
-                onTap: () {
-                  // Navigate to settings
-                },
+                onTap: () {},
                 child: Icon(
                   Icons.settings,
                   color: Colors.white,
@@ -152,9 +148,6 @@ class ListNotesView extends GetView<ListNotesController> {
     );
   }
 
-  // ============================================================
-  // SEARCH BAR
-  // ============================================================
   Widget _buildSearchBar(bool isTablet) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -196,9 +189,6 @@ class ListNotesView extends GetView<ListNotesController> {
     );
   }
 
-  // ============================================================
-  // NAVIGATION MENU
-  // ============================================================
   Widget _buildNavigationMenu(bool isTablet) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -246,10 +236,7 @@ class ListNotesView extends GetView<ListNotesController> {
         ),
         decoration: BoxDecoration(
           color: isActive ? Colors.white : Colors.transparent,
-          border: Border.all(
-            color: Colors.black, // Konsisten dengan homepage
-            width: 1,
-          ),
+          border: Border.all(color: Colors.black, width: 1),
           borderRadius: BorderRadius.circular(30),
         ),
         child: Text(
@@ -264,9 +251,6 @@ class ListNotesView extends GetView<ListNotesController> {
     );
   }
 
-  // ============================================================
-  // FILTER BUTTON
-  // ============================================================
   Widget _buildFilterButton(bool isTablet) {
     return GestureDetector(
       onTap: () => controller.showFilterDialog(),
@@ -299,9 +283,6 @@ class ListNotesView extends GetView<ListNotesController> {
     );
   }
 
-  // ============================================================
-  // NOTES LIST
-  // ============================================================
   Widget _buildNotesList(bool isTablet) {
     return RefreshIndicator(
       onRefresh: controller.refreshNotes,
@@ -311,7 +292,7 @@ class ListNotesView extends GetView<ListNotesController> {
           left: isTablet ? 24 : 20,
           right: isTablet ? 24 : 20,
           top: isTablet ? 16 : 12,
-          bottom: 80, // Space untuk bottom navbar
+          bottom: 80,
         ),
         itemCount: controller.filteredNotesList.length,
         itemBuilder: (context, index) {
@@ -322,9 +303,6 @@ class ListNotesView extends GetView<ListNotesController> {
     );
   }
 
-  // ============================================================
-  // NOTE CARD
-  // ============================================================
   Widget _buildNoteCard(NoteModel note, bool isTablet) {
     return GestureDetector(
       onTap: () => controller.viewNoteDetail(note.id),
@@ -332,10 +310,7 @@ class ListNotesView extends GetView<ListNotesController> {
         margin: EdgeInsets.only(bottom: isTablet ? 20 : 16),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [
-              Color(0xFFE1BEE7), // Light Purple
-              Color(0xFF4A148C), // Primary Purple
-            ],
+            colors: [Color(0xFFE1BEE7), Color(0xFF4A148C)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -352,7 +327,6 @@ class ListNotesView extends GetView<ListNotesController> {
           padding: EdgeInsets.all(isTablet ? 20 : 16),
           child: Row(
             children: [
-              // Date Box
               Container(
                 padding: EdgeInsets.all(isTablet ? 12 : 10),
                 decoration: BoxDecoration(
@@ -381,21 +355,17 @@ class ListNotesView extends GetView<ListNotesController> {
                 ),
               ),
               SizedBox(width: isTablet ? 16 : 12),
-
-              // Title
               Expanded(
                 child: Text(
                   note.title,
                   style: TextStyle(
                     fontSize: isTablet ? 18 : 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87, // Konsisten dengan homepage card
+                    color: Colors.black87,
                   ),
                 ),
               ),
               SizedBox(width: isTablet ? 16 : 12),
-
-              // Action Buttons
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () {},
@@ -453,9 +423,6 @@ class ListNotesView extends GetView<ListNotesController> {
     );
   }
 
-  // ============================================================
-  // EMPTY STATE
-  // ============================================================
   Widget _buildEmptyState(bool isTablet) {
     return Center(
       child: Column(
@@ -507,7 +474,9 @@ class ListNotesView extends GetView<ListNotesController> {
     );
   }
 
-  // 🔧 BOTTOM NAVBAR - Konsisten dengan create_notes_view
+  // ============================================================
+  // BOTTOM NAVIGATION - HIGHLIGHT PERSISTEN
+  // ============================================================
   Widget _buildBottomNavigation() {
     return Container(
       height: 80,
@@ -525,11 +494,7 @@ class ListNotesView extends GetView<ListNotesController> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           IconButton(
-            icon: const Icon(
-              Icons.home_outlined,
-              color: Colors.black54,
-              size: 28,
-            ),
+            icon: const Icon(Icons.home, color: Colors.black54, size: 28),
             onPressed: () => Get.toNamed('/homepage'),
           ),
           IconButton(
@@ -540,17 +505,24 @@ class ListNotesView extends GetView<ListNotesController> {
             ),
             onPressed: () => Get.toNamed('/chat/rooms'),
           ),
+          // Add Button dengan HIGHLIGHT PERSISTEN di modul notes
           GestureDetector(
-            onTap: () {
-              _showCreateActionDialog();
-            },
+            onTap: _showCreateActionDialog,
             child: Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: _primaryPurple,
+                color: _isInNotesModule() ? _primaryPurple : Colors.transparent,
+                border: Border.all(
+                  color: _isInNotesModule() ? _primaryPurple : Colors.black54,
+                  width: 1.5,
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.add, color: Colors.white, size: 24),
+              child: Icon(
+                Icons.add,
+                color: _isInNotesModule() ? Colors.white : Colors.black54,
+                size: 24,
+              ),
             ),
           ),
           IconButton(
@@ -559,64 +531,43 @@ class ListNotesView extends GetView<ListNotesController> {
               color: Colors.black54,
               size: 28,
             ),
-            onPressed: () => Get.toNamed('/speech/upload'),
+            onPressed: () => Get.toNamed('/speech/start'),
           ),
         ],
       ),
     );
   }
 
-  // 🔧 CREATE ACTION DIALOG - Sama dengan create_notes_view
   void _showCreateActionDialog() {
     Get.dialog(
       Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        child: Container(
-          height: 320,
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            gradient: const LinearGradient(
-              colors: [Color(0xFFE1BEE7), Color(0xFF4A148C)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                'Create Materi Or\nCatatan Colaboration',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                  height: 1.3,
-                ),
+                'Buat Konten Baru',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 40),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildCreateOptionButton(
-                    title: 'Materi',
-                    onTap: () {
-                      Get.back();
-                      Get.toNamed('/notes/create');
-                    },
-                  ),
-                  const SizedBox(width: 16),
-                  _buildCreateOptionButton(
-                    title: 'Catatan',
-                    onTap: () {
-                      Get.back();
-                      Get.toNamed('/collab/create');
-                    },
-                  ),
-                ],
+              const SizedBox(height: 20),
+              _dialogActionButton(
+                icon: Icons.note_add_outlined,
+                label: 'Upload Materi',
+                onTap: () {
+                  Get.back();
+                  Get.toNamed('/notes/create');
+                },
+              ),
+              const SizedBox(height: 12),
+              _dialogActionButton(
+                icon: Icons.upload_file_outlined,
+                label: 'Upload Catatan',
+                onTap: () {
+                  Get.back();
+                  Get.toNamed('/collab/create');
+                },
               ),
             ],
           ),
@@ -625,25 +576,37 @@ class ListNotesView extends GetView<ListNotesController> {
     );
   }
 
-  Widget _buildCreateOptionButton({
-    required String title,
+  Widget _dialogActionButton({
+    required IconData icon,
+    required String label,
     required VoidCallback onTap,
   }) {
-    return Expanded(
-      child: SizedBox(
-        height: 100,
-        child: ElevatedButton(
-          onPressed: onTap,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
-            shape: const CircleBorder(),
-            elevation: 4,
-          ),
-          child: Text(
-            title,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-          ),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _primaryPurple.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: _primaryPurple, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+            ),
+          ],
         ),
       ),
     );
