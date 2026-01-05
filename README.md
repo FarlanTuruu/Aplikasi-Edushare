@@ -48,4 +48,8 @@ Link desain prototipe:
 - **GetCLI Project Structure**
 
 ## Total Download
-- ![Downloads](https://img.shields.io/github/downloads/L4NTuruu/Aplikasi-Edushare/total)
+ - ![Downloads](https://img.shields.io/github/downloads/L4NTuruu/Aplikasi-Edushare/total)
+ - ![Latest Downloads](https://img.shields.io/github/downloads/L4NTuruu/Aplikasi-Edushare/latest/total)
+ - ![Latest Release](https://img.shields.io/github/v/release/L4NTuruu/Aplikasi-Edushare)
+ - ![Release Date](https://img.shields.io/github/release-date/L4NTuruu/Aplikasi-Edushare)
+ - ![APK Downloads](https://img.shields.io/github/downloads/L4NTuruu/Aplikasi-Edushare/latest/app-release.apk)
