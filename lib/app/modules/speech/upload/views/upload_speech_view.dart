@@ -82,14 +82,6 @@ class UploadSpeechView extends GetView<UploadSpeechController> {
                             },
                           ),
                           const SizedBox(width: 10),
-                          _whiteButton(
-                            'Trash',
-                            onTap: () {
-                              Get.delete<TrashSpeechController>(force: true);
-                              Get.lazyPut(() => TrashSpeechController());
-                              Get.to(() => const TrashSpeechView());
-                            },
-                          ),
                         ],
                       ),
                       const SizedBox(height: 20),

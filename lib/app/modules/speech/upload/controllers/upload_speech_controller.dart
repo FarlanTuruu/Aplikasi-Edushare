@@ -8,23 +8,25 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:appedushare/app/data/api_client.dart';
 
 class UploadSpeechController extends GetxController {
   /// 🔑 TARUH API KEY GOOGLE SPEECH-TO-TEXT KAMU DI SINI
   /// contoh: const String googleSpeechApiKey = 'AIzaSy...';
   static const String googleSpeechApiKey =
       'AIzaSyBvs_VVwJjoNgjZCW-8s9Zzth1zht2RAlQ';
+  static const String backendBaseUrl = 'https://your-backend-host';
 
-  final isListening = false.obs;        // untuk state play/pause & waveform
-  final formattedTime = '00:00'.obs;    // teks timer mm:ss
-  final recognizedText = ''.obs;        // hasil transkrip
+  final isListening = false.obs; // untuk state play/pause & waveform
+  final formattedTime = '00:00'.obs; // teks timer mm:ss
+  final recognizedText = ''.obs; // hasil transkrip
 
   final AudioPlayer _player = AudioPlayer();
   PlatformFile? _file;
   bool _isVideo = false;
-  bool _initialized = false;            // supaya tidak re-init setiap build
+  bool _initialized = false; // supaya tidak re-init setiap build
 
-  Duration? _audioDuration;            // sekarang tidak dipakai untuk blokir durasi
+  Duration? _audioDuration; // sekarang tidak dipakai untuk blokir durasi
 
   StreamSubscription<Duration>? _positionSub;
   StreamSubscription<PlayerState>? _stateSub;
@@ -116,6 +118,7 @@ class UploadSpeechController extends GetxController {
     try {
       final text = await transcribeFile(path);
       recognizedText.value = text;
+      await saveRecognizedText();
     } catch (e) {
       recognizedText.value = 'Gagal melakukan transkripsi (unexpected): $e';
     }
@@ -125,99 +128,102 @@ class UploadSpeechController extends GetxController {
   /// Kalau terlalu panjang, Google akan balas:
   ///   "Sync input too long..." (400) → akan muncul di recognizedText
   Future<String> transcribeFile(String path) async {
-  final file = File(path);
+    final file = File(path);
 
-  if (!await file.exists()) {
-    return 'File tidak ditemukan di path: $path';
-  }
-
-  // 1️⃣ Baca file audio → base64
-  final bytes = await file.readAsBytes();
-  final content = base64Encode(bytes);
-
-  // 2️⃣ Tentukan encoding + (opsional) sample rate
-  final encoding = _detectEncodingFromPath(path);
-  final int? sampleRate = _detectSampleRateForEncoding(encoding);
-
-  // 3️⃣ Config STT
-  final Map<String, dynamic> config = {
-    "encoding": encoding,
-    "languageCode": "id-ID",
-    "enableAutomaticPunctuation": true,
-  };
-
-  // khusus OGG_OPUS (WhatsApp .opus / .ogg) WAJIB kasih sampleRateHertz
-  if (sampleRate != null) {
-    config["sampleRateHertz"] = sampleRate;
-  }
-
-  // 4️⃣ Body request
-  final body = jsonEncode({
-    "config": config,
-    "audio": {
-      "content": content,
+    if (!await file.exists()) {
+      return 'File tidak ditemukan di path: $path';
     }
-  });
 
-  print('[STT] Kirim request ke Google...');
-  final response = await http.post(
-    Uri.parse(
-      'https://speech.googleapis.com/v1/speech:recognize?key=$googleSpeechApiKey',
-    ),
-    headers: {"Content-Type": "application/json"},
-    body: body,
-  );
-  print('[STT] statusCode: ${response.statusCode}');
-  print('[STT] body: ${response.body}');
+    // 1️⃣ Baca file audio → base64
+    final bytes = await file.readAsBytes();
+    final content = base64Encode(bytes);
 
-  if (response.statusCode != 200) {
-    // error Google dikembalikan apa adanya ke UI
-    return 'Google STT error (${response.statusCode}): ${response.body}';
+    // 2️⃣ Tentukan encoding + (opsional) sample rate
+    final encoding = _detectEncodingFromPath(path);
+    final int? sampleRate = _detectSampleRateForEncoding(encoding);
+
+    // 3️⃣ Config STT
+    final Map<String, dynamic> config = {
+      "encoding": encoding,
+      "languageCode": "id-ID",
+      "enableAutomaticPunctuation": true,
+    };
+
+    // khusus OGG_OPUS (WhatsApp .opus / .ogg) WAJIB kasih sampleRateHertz
+    if (sampleRate != null) {
+      config["sampleRateHertz"] = sampleRate;
+    }
+
+    // 4️⃣ Body request
+    final body = jsonEncode({
+      "config": config,
+      "audio": {"content": content},
+    });
+
+    print('[STT] Kirim request ke Google...');
+    final response = await http.post(
+      Uri.parse(
+        'https://speech.googleapis.com/v1/speech:recognize?key=$googleSpeechApiKey',
+      ),
+      headers: {"Content-Type": "application/json"},
+      body: body,
+    );
+    print('[STT] statusCode: ${response.statusCode}');
+    print('[STT] body: ${response.body}');
+
+    if (response.statusCode != 200) {
+      // error Google dikembalikan apa adanya ke UI
+      return 'Google STT error (${response.statusCode}): ${response.body}';
+    }
+
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+    if (data["results"] == null) {
+      return "Tidak ada hasil transkrip dari Google (results null).";
+    }
+
+    final results = data["results"] as List;
+
+    final allTexts = results
+        .map(
+          (r) =>
+              ((r["alternatives"] as List?)?.first?["transcript"] ?? "")
+                  as String,
+        )
+        .where((t) => t.trim().isNotEmpty)
+        .join(" ");
+
+    if (allTexts.trim().isEmpty) {
+      return "Google tidak menemukan ucapan yang bisa dikenali (transcript kosong).";
+    }
+
+    return allTexts;
   }
 
-  final data = jsonDecode(response.body) as Map<String, dynamic>;
+  // encoding sesuai ekstensi
+  String _detectEncodingFromPath(String path) {
+    final lower = path.toLowerCase();
 
-  if (data["results"] == null) {
-    return "Tidak ada hasil transkrip dari Google (results null).";
+    if (lower.endsWith('.wav')) return 'LINEAR16';
+    if (lower.endsWith('.flac')) return 'FLAC';
+    if (lower.endsWith('.ogg') || lower.endsWith('.opus')) return 'OGG_OPUS';
+    if (lower.endsWith('.mp3')) return 'MP3';
+
+    return 'MP3';
   }
 
-  final results = data["results"] as List;
-
-  final allTexts = results
-      .map((r) =>
-          ((r["alternatives"] as List?)?.first?["transcript"] ?? "") as String)
-      .where((t) => t.trim().isNotEmpty)
-      .join(" ");
-
-  if (allTexts.trim().isEmpty) {
-    return "Google tidak menemukan ucapan yang bisa dikenali (transcript kosong).";
+  // sampleRate untuk encoding tertentu (khusus OGG_OPUS WAJIB)
+  int? _detectSampleRateForEncoding(String encoding) {
+    switch (encoding) {
+      case 'OGG_OPUS':
+        // WhatsApp voice note biasanya 16 kHz; boleh juga 24000/48000
+        return 16000;
+      default:
+        // MP3, WAV, FLAC bisa biarkan Google deteksi sendiri
+        return null;
+    }
   }
 
-  return allTexts;
-}
-// encoding sesuai ekstensi
-String _detectEncodingFromPath(String path) {
-  final lower = path.toLowerCase();
-
-  if (lower.endsWith('.wav')) return 'LINEAR16';
-  if (lower.endsWith('.flac')) return 'FLAC';
-  if (lower.endsWith('.ogg') || lower.endsWith('.opus')) return 'OGG_OPUS';
-  if (lower.endsWith('.mp3')) return 'MP3';
-
-  return 'MP3';
-}
-
-// sampleRate untuk encoding tertentu (khusus OGG_OPUS WAJIB)
-int? _detectSampleRateForEncoding(String encoding) {
-  switch (encoding) {
-    case 'OGG_OPUS':
-      // WhatsApp voice note biasanya 16 kHz; boleh juga 24000/48000
-      return 16000;
-    default:
-      // MP3, WAV, FLAC bisa biarkan Google deteksi sendiri
-      return null;
-  }
-}
   // format yang boleh dikirim langsung ke Google STT v1
   bool _isSupportedFormat(String path) {
     final lower = path.toLowerCase();
@@ -232,6 +238,29 @@ int? _detectSampleRateForEncoding(String encoding) {
     final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
     final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$m:$s';
+  }
+
+  Future<void> saveRecognizedText() async {
+    final text = recognizedText.value.trim();
+    if (text.isEmpty) return;
+
+    try {
+      await _api.postJson('speech', {
+        'text': text,
+        'source': 'audio',
+        'language': 'id-ID',
+        'duration': (_audioDuration?.inSeconds ?? 0),
+      });
+    } catch (e) {
+      recognizedText.value += '\n\n(Gagal menyimpan ke server): $e';
+    }
+  }
+
+  ApiClient get _api {
+    if (!Get.isRegistered<ApiClient>()) {
+      Get.put(ApiClient(), permanent: true);
+    }
+    return Get.find<ApiClient>();
   }
 
   void shareText() {

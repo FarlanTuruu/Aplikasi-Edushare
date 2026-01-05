@@ -1,9 +1,9 @@
 // File: /lib/app/modules/speech/trash/views/trash_speech_view.dart
 
+import 'package:appedushare/app/modules/speech/trash/controllers/trash_speech_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../controllers/trash_speech_controller.dart';
 import '../../list/controllers/list_speech_controller.dart';
 import '../../list/views/list_speech_view.dart';
 import 'package:appedushare/app/routes/app_pages.dart';
@@ -64,7 +64,7 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
                       // TRASH LIST
                       Expanded(
                         child: Obx(() {
-                          final items = controller.trashRecordings;
+                          final items = controller.items;
                           if (items.isEmpty) {
                             return const Center(
                               child: Text(
@@ -78,8 +78,8 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
                             separatorBuilder: (_, __) =>
                                 const SizedBox(height: 12),
                             itemBuilder: (context, index) {
-                              final rec = items[index];
-                              return _trashCard(context, rec, purple);
+                              final t = items[index];
+                              return _trashCard(context, t, purple);
                             },
                           );
                         }),
@@ -376,7 +376,7 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
   }
 
   // TRASH CARD
-  Widget _trashCard(BuildContext context, Recording rec, Color purple) {
+  Widget _trashCard(BuildContext context, TranscriptionItem t, Color purple) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
@@ -400,7 +400,7 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  rec.title,
+                  t.snippet,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -408,20 +408,16 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  rec.time,
+                  _formatDate(t.createdAt),
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.restore, color: Colors.green),
-            onPressed: () => controller.restoreRecording(rec),
-          ),
-          IconButton(
             icon: const Icon(Icons.delete_forever, color: Colors.red),
             onPressed: () {
-              _showDeleteDialog(context, rec, purple);
+              _showDeleteDialog(context, t, purple);
             },
           ),
         ],
@@ -430,7 +426,11 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
   }
 
   // DELETE CONFIRMATION
-  void _showDeleteDialog(BuildContext context, Recording rec, Color purple) {
+  void _showDeleteDialog(
+    BuildContext context,
+    TranscriptionItem t,
+    Color purple,
+  ) {
     showDialog(
       context: context,
       builder: (_) => Dialog(
@@ -495,7 +495,7 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
                     ),
                     onPressed: () {
                       Get.back();
-                      controller.deletePermanently(rec);
+                      controller.deletePermanently(t);
                     },
                     child: const Text(
                       "Yes",
@@ -509,5 +509,29 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
         ),
       ),
     );
+  }
+
+  String _formatDate(DateTime? dt) {
+    if (dt == null) return '-';
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    final d = dt.day.toString().padLeft(2, '0');
+    final m = months[dt.month - 1];
+    final y = dt.year;
+    final hh = dt.hour.toString().padLeft(2, '0');
+    final mm = dt.minute.toString().padLeft(2, '0');
+    return '$d $m $y – $hh:$mm';
   }
 }

@@ -86,74 +86,14 @@ class ListSpeechView extends GetView<ListSpeechController> {
                       ),
                       const SizedBox(height: 16),
 
-                      // FILTER DROPDOWN
-                      Obx(
-                        () => GestureDetector(
-                          onTap: controller.toggleDropdown,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(controller.selectedFilter.value),
-                                    const SizedBox(width: 4),
-                                    const Icon(Icons.arrow_drop_down),
-                                  ],
-                                ),
-                              ),
-                              if (controller.isDropdownOpen.value)
-                                Container(
-                                  margin: const EdgeInsets.only(top: 6),
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade200,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: controller.filterOptions.map((
-                                      opt,
-                                    ) {
-                                      return GestureDetector(
-                                        onTap: () =>
-                                            controller.selectFilter(opt),
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 6,
-                                            horizontal: 12,
-                                          ),
-                                          child: Text(
-                                            opt,
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      // FILTER: dihapus untuk backend, pakai search saja
+                      const SizedBox.shrink(),
                       const SizedBox(height: 16),
 
                       // LIST RECORDINGS
                       Expanded(
                         child: Obx(() {
-                          final items = controller.filteredRecordings;
+                          final items = controller.filteredTranscriptions;
                           if (items.isEmpty) {
                             return const Center(
                               child: Text(
@@ -167,10 +107,10 @@ class ListSpeechView extends GetView<ListSpeechController> {
                             separatorBuilder: (_, __) =>
                                 const SizedBox(height: 12),
                             itemBuilder: (context, index) {
-                              final rec = items[index];
+                              final t = items[index];
                               return _recordingCard(
                                 context: context,
-                                recording: rec,
+                                transcription: t,
                                 purple: purple,
                                 controller: controller,
                               );
@@ -470,7 +410,7 @@ class ListSpeechView extends GetView<ListSpeechController> {
 
   Widget _recordingCard({
     required BuildContext context,
-    required Recording recording,
+    required TranscriptionItem transcription,
     required Color purple,
     required ListSpeechController controller,
   }) {
@@ -497,7 +437,7 @@ class ListSpeechView extends GetView<ListSpeechController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  recording.title,
+                  transcription.snippet,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -505,7 +445,7 @@ class ListSpeechView extends GetView<ListSpeechController> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  recording.time,
+                  _formatDate(transcription.createdAt),
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
@@ -513,7 +453,7 @@ class ListSpeechView extends GetView<ListSpeechController> {
           ),
           IconButton(
             onPressed: () {
-              _showDeleteDialog(context, controller, recording, purple);
+              _showDeleteDialog(context, controller, transcription, purple);
             },
             icon: const Icon(Icons.delete_outline),
           ),
@@ -525,7 +465,7 @@ class ListSpeechView extends GetView<ListSpeechController> {
   void _showDeleteDialog(
     BuildContext context,
     ListSpeechController controller,
-    Recording rec,
+    TranscriptionItem t,
     Color purple,
   ) {
     showDialog(
@@ -561,7 +501,7 @@ class ListSpeechView extends GetView<ListSpeechController> {
                   _roundedButton("No", Colors.white, purple, () => Get.back()),
                   _roundedButton("Yes", purple, Colors.white, () {
                     Get.back();
-                    controller.moveToTrash(rec);
+                    controller.deleteTranscription(t);
                   }),
                 ],
               ),
@@ -592,5 +532,30 @@ class ListSpeechView extends GetView<ListSpeechController> {
         style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
       ),
     );
+  }
+
+  String _formatDate(DateTime? dt) {
+    if (dt == null) return '-';
+    // Simple formatting: dd MMM yyyy – HH:mm
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    final d = dt.day.toString().padLeft(2, '0');
+    final m = months[dt.month - 1];
+    final y = dt.year;
+    final hh = dt.hour.toString().padLeft(2, '0');
+    final mm = dt.minute.toString().padLeft(2, '0');
+    return '$d $m $y – $hh:$mm';
   }
 }

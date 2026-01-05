@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:get/get.dart';
+import 'package:appedushare/app/data/api_client.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class StartSpeechController extends GetxController {
   final speech = stt.SpeechToText();
+  static const String backendBaseUrl = 'https://your-backend-host';
 
   // state utama
   final isRecording = false.obs;
@@ -68,7 +71,7 @@ class StartSpeechController extends GetxController {
         // hasil speech to text (Bahasa Indonesia)
         recognizedText.value = result.recognizedWords;
       },
-      localeId: _localeId ?? 'id_ID',      // 🔴 PENTING: Bahasa Indonesia
+      localeId: _localeId ?? 'id_ID', // 🔴 PENTING: Bahasa Indonesia
       listenMode: stt.ListenMode.dictation, // cocok untuk materi panjang
       partialResults: true,
     );
@@ -102,32 +105,34 @@ class StartSpeechController extends GetxController {
 
     isSaving.value = true;
     try {
-      // TODO: ganti dengan logic simpan ke DB / API / local storage Edushare
-      // contoh pseudo-code:
-      // await Get.find<SpeechRepository>().saveSpeech(
-      //   text: text,
-      //   duration: duration.value,
-      //   createdAt: DateTime.now(),
-      // );
-
-      await Future.delayed(const Duration(milliseconds: 300)); // dummy proses
+      await _api.postJson('speech', {
+        'text': text,
+        'source': 'live',
+        'language': 'id-ID',
+        'duration': duration.value,
+      });
 
       Get.snackbar(
         'Berhasil',
         'Transkrip berhasil disimpan sebagai materi Edushare.',
         snackPosition: SnackPosition.BOTTOM,
       );
-      // Optional: reset setelah simpan
-      // clearCurrentSpeech();
     } catch (e) {
       Get.snackbar(
         'Gagal',
-        'Terjadi kesalahan saat menyimpan transkrip.',
+        'Terjadi kesalahan saat menyimpan transkrip: $e',
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
       isSaving.value = false;
     }
+  }
+
+  ApiClient get _api {
+    if (!Get.isRegistered<ApiClient>()) {
+      Get.put(ApiClient(), permanent: true);
+    }
+    return Get.find<ApiClient>();
   }
 
   void clearCurrentSpeech() {
