@@ -17,6 +17,13 @@ class EditCollaborationController extends GetxController {
   late final CollaborationRepository _repo;
   late final ApiClient _api;
 
+  // Helper function untuk extract string dengan null-safety
+  String safeString(dynamic value) {
+    if (value == null) return '';
+    if (value.toString() == 'null') return '';
+    return value.toString().trim();
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -27,39 +34,94 @@ class EditCollaborationController extends GetxController {
     _api = Get.find<ApiClient>();
     _repo = CollaborationRepository(_api);
 
-    // Prefill from arguments
+    // Prefill from arguments dengan null-safety yang lebih baik
     final args = Get.arguments;
+
+    print('=== EDIT CONTROLLER INIT ===');
+    print('Arguments type: ${args.runtimeType}');
+    print('Arguments: $args');
+
     if (args is Map<String, dynamic>) {
-      collabId = (args['id'] ?? '').toString().isEmpty
-          ? null
-          : (args['id'] ?? '').toString();
-      mataKuliahController.text =
-          (args['mataKuliah'] ?? args['mata_kuliah'] ?? '').toString();
-      judulCatatanController.text = (args['title'] ?? args['judul'] ?? '')
-          .toString();
-      deskripsiController.text =
-          (args['deskripsi'] ?? args['description'] ?? '').toString();
-      linkDocsController.text = (args['link'] ?? args['link_docs'] ?? '')
-          .toString();
-      // Normalize created_at_date
-      final argCreated = (args['createdAt'] ?? args['created_at_date'] ?? '')
-          .toString();
-      if (argCreated.isNotEmpty) {
-        // Try parse any date and format to yyyy-MM-dd
-        try {
-          final dt = DateTime.parse(argCreated);
-          createdAtDate =
-              '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}'
-                  .toString();
-        } catch (_) {
-          createdAtDate = argCreated; // assume already yyyy-MM-dd
+      try {
+        // Extract ID dengan null-safety
+        final idValue = args['id'];
+        if (idValue != null &&
+            idValue.toString().isNotEmpty &&
+            idValue.toString() != 'null') {
+          collabId = idValue.toString();
         }
-      } else {
-        final now = DateTime.now();
-        createdAtDate =
-            '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
+        // Extract dan set semua field dengan null-safety
+        mataKuliahController.text = safeString(
+          args['mataKuliah'] ?? args['mata_kuliah'],
+        );
+
+        judulCatatanController.text = safeString(
+          args['title'] ?? args['judul'],
+        );
+
+        deskripsiController.text = safeString(
+          args['deskripsi'] ?? args['description'],
+        );
+
+        linkDocsController.text = safeString(args['link'] ?? args['link_docs']);
+
+        // Normalize created_at_date dengan null-safety
+        final argCreated = safeString(
+          args['createdAt'] ?? args['created_at_date'] ?? args['created_at'],
+        );
+
+        if (argCreated.isNotEmpty) {
+          // Try parse any date and format to yyyy-MM-dd
+          try {
+            final dt = DateTime.parse(argCreated);
+            createdAtDate =
+                '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+          } catch (e) {
+            print('Date parse error: $e');
+            // assume already yyyy-MM-dd or use today
+            if (argCreated.contains('-') && argCreated.length >= 10) {
+              createdAtDate = argCreated.substring(0, 10);
+            } else {
+              final now = DateTime.now();
+              createdAtDate =
+                  '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+            }
+          }
+        } else {
+          final now = DateTime.now();
+          createdAtDate =
+              '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+        }
+
+        print('✓ Fields initialized:');
+        print('  - ID: $collabId');
+        print('  - Title: ${judulCatatanController.text}');
+        print('  - Mata Kuliah: ${mataKuliahController.text}');
+        print('  - Deskripsi: ${deskripsiController.text}');
+        print('  - Link: ${linkDocsController.text}');
+        print('  - Created At: $createdAtDate');
+      } catch (e) {
+        print('✗ Error initializing fields: $e');
+        Get.snackbar(
+          'Error',
+          'Gagal memuat data: $e',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.redAccent,
+          colorText: Colors.white,
+        );
       }
+    } else {
+      print('✗ Invalid arguments type');
+      Get.snackbar(
+        'Error',
+        'Data tidak valid',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
     }
+    print('============================');
   }
 
   @override
@@ -72,7 +134,11 @@ class EditCollaborationController extends GetxController {
   }
 
   Future<void> updateCollaboration() async {
-    if ((collabId ?? '').isEmpty) {
+    print('=== UPDATE COLLABORATION ===');
+    print('Collab ID: $collabId');
+
+    // Validasi ID
+    if (collabId == null || collabId!.isEmpty || collabId == 'null') {
       Get.snackbar(
         'Error',
         'ID data tidak ditemukan',
@@ -82,8 +148,12 @@ class EditCollaborationController extends GetxController {
       );
       return;
     }
-    if (mataKuliahController.text.trim().isEmpty ||
-        judulCatatanController.text.trim().isEmpty) {
+
+    // Validasi field required
+    final mataKuliah = mataKuliahController.text.trim();
+    final judul = judulCatatanController.text.trim();
+
+    if (mataKuliah.isEmpty || judul.isEmpty) {
       Get.snackbar(
         'Validasi',
         'Harap isi Mata Kuliah dan Judul',
@@ -93,6 +163,7 @@ class EditCollaborationController extends GetxController {
       );
       return;
     }
+
     // Require token for update
     if ((_api.getToken() ?? '').isEmpty) {
       Get.snackbar(
@@ -106,9 +177,10 @@ class EditCollaborationController extends GetxController {
     }
 
     isLoading.value = true;
+
     try {
       // Ensure created_at_date is present (yyyy-MM-dd)
-      if ((createdAtDate ?? '').toString().trim().isEmpty) {
+      if (createdAtDate == null || createdAtDate!.isEmpty) {
         final now = DateTime.now();
         createdAtDate =
             '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
@@ -127,13 +199,18 @@ class EditCollaborationController extends GetxController {
       }
 
       final payload = {
-        'title': judulCatatanController.text.trim(),
-        'mata_kuliah': mataKuliahController.text.trim(),
+        'title': judul,
+        'mata_kuliah': mataKuliah,
         'description': deskripsiController.text.trim(),
         'link': safeLink,
         'created_at_date': createdAtDate,
       };
+
+      print('Payload: $payload');
+
       await _repo.update(collabId!, payload);
+
+      print('✓ Update successful');
 
       // Refresh list
       if (!Get.isRegistered<ListCollaborationController>()) {
@@ -151,6 +228,7 @@ class EditCollaborationController extends GetxController {
         colorText: Colors.white,
       );
     } catch (e) {
+      print('✗ Update error: $e');
       Get.snackbar(
         'Error',
         'Gagal menyimpan: $e',
@@ -161,5 +239,6 @@ class EditCollaborationController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+    print('===========================');
   }
 }

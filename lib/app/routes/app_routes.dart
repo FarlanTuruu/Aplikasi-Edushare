@@ -31,6 +31,7 @@ abstract class Routes {
   // COLLAB
   static const COLLAB_LIST = _Paths.COLLAB_LIST;
   static const COLLAB_CREATE = _Paths.COLLAB_CREATE;
+  static const COLLAB_EDIT = _Paths.COLLAB_EDIT;
   static const COLLAB_DETAIL = _Paths.COLLAB_DETAIL;
 
   // CHAT
@@ -74,6 +75,7 @@ abstract class _Paths {
   // COLLABORATION
   static const COLLAB_LIST = '/collab/list';
   static const COLLAB_CREATE = '/collab/create';
+  static const COLLAB_EDIT = '/collab/edit';
   static const COLLAB_DETAIL = '/collab/detail';
 
   // CHAT

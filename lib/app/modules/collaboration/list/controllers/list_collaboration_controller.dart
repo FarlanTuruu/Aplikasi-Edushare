@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:appedushare/app/data/api_client.dart';
 import 'package:appedushare/app/data/collaboration_repository.dart';
+import 'package:appedushare/app/routes/app_pages.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class ListCollaborationController extends GetxController {
   // Observable list of collaborations
@@ -167,7 +168,7 @@ class ListCollaborationController extends GetxController {
     }
   }
 
-  // Edit collaboration (only for owned items)
+  // ============= EDIT COLLABORATION (FIXED) =============
   Future<void> editCollaboration(int index) async {
     final item = collaborations[index];
 
@@ -178,54 +179,76 @@ class ListCollaborationController extends GetxController {
         'Masuk terlebih dahulu untuk mengedit',
         snackPosition: SnackPosition.BOTTOM,
         margin: const EdgeInsets.all(20),
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
       );
       return;
     }
 
-    final id = (item['id'] ?? '').toString();
-    if (id.isEmpty) {
+    // Safely extract ID with multiple null checks
+    final idValue = item['id'];
+    String id = '';
+    if (idValue != null) {
+      id = idValue.toString();
+    }
+
+    if (id.isEmpty || id == 'null') {
       Get.snackbar(
         'Error',
         'ID kolaborasi tidak tersedia',
         snackPosition: SnackPosition.BOTTOM,
         margin: const EdgeInsets.all(20),
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
       );
       return;
     }
 
-    try {
-      // Verify the item exists on the authenticated endpoint (owned by user)
-      final details = await _repo.show(id);
-      // Map details to edit arguments
-      final mapped = {
-        'id': details['id'] ?? id,
-        'title': details['title'] ?? item['title'] ?? '',
-        'mataKuliah':
-            details['mata_kuliah'] ??
-            details['mataKuliah'] ??
-            item['mataKuliah'] ??
-            '',
-        'deskripsi':
-            details['description'] ??
-            details['deskripsi'] ??
-            item['deskripsi'] ??
-            '',
-        'link': details['link'] ?? details['link_docs'] ?? item['link'] ?? '',
-        'createdAt':
-            details['created_at_date'] ??
-            details['createdAt'] ??
-            item['createdAt'] ??
-            '',
-      };
-      Get.toNamed('/collab/edit', arguments: mapped);
-    } catch (e) {
+    // Helper function untuk extract value dengan null-safety
+    String safeString(dynamic value) {
+      if (value == null) return '';
+      return value.toString();
+    }
+
+    // SOLUSI 1: Langsung navigasi dengan data yang sudah ada
+    // Tidak perlu fetch lagi karena data sudah lengkap di list
+    final editArgs = {
+      'id': id,
+      'title': safeString(item['title']),
+      'mataKuliah': safeString(item['mataKuliah']),
+      'mata_kuliah': safeString(item['mataKuliah']),
+      'deskripsi': safeString(item['deskripsi']),
+      'description': safeString(item['deskripsi']),
+      'link': safeString(item['link']),
+      'link_docs': safeString(item['link']),
+      'createdAt': safeString(item['createdAt']),
+      'created_at_date': safeString(item['createdAt']),
+    };
+
+    // Debug log
+    print('=== EDIT COLLABORATION DEBUG ===');
+    print('ID: $id');
+    print('Title: ${editArgs['title']}');
+    print('Mata Kuliah: ${editArgs['mataKuliah']}');
+    print('Full Data: $editArgs');
+    print('================================');
+
+    // Validasi data sebelum navigasi
+    if (editArgs['title']?.toString().isEmpty ?? true) {
       Get.snackbar(
-        'Tidak dapat mengedit',
-        'Item ini bukan milik Anda atau tidak ditemukan.',
+        'Error',
+        'Data tidak lengkap, tidak dapat mengedit',
         snackPosition: SnackPosition.BOTTOM,
         margin: const EdgeInsets.all(20),
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
       );
+      return;
     }
+
+    print('→ Navigating to edit page...');
+    // Navigasi ke halaman edit
+    Get.toNamed(Routes.COLLAB_EDIT, arguments: editArgs);
   }
 
   // Delete collaboration
@@ -256,6 +279,8 @@ class ListCollaborationController extends GetxController {
         'Data berhasil dihapus',
         snackPosition: SnackPosition.BOTTOM,
         margin: const EdgeInsets.all(20),
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
       );
     } catch (e) {
       Get.back();
@@ -264,6 +289,8 @@ class ListCollaborationController extends GetxController {
         'Gagal menghapus: $e',
         snackPosition: SnackPosition.BOTTOM,
         margin: const EdgeInsets.all(20),
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
       );
     }
   }

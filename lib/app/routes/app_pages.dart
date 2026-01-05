@@ -18,6 +18,8 @@ import '../modules/collaboration/create/bindings/create_collaboration_binding.da
 import '../modules/collaboration/create/views/create_collaboration_view.dart';
 import '../modules/collaboration/detail/bindings/detail_collaboration_binding.dart';
 import '../modules/collaboration/detail/views/detail_collaboration_view.dart';
+import '../modules/collaboration/edit/bindings/edit_collaboration_binding.dart';
+import '../modules/collaboration/edit/views/edit_collaboration_view.dart';
 import '../modules/collaboration/list/bindings/list_collaboration_binding.dart';
 import '../modules/collaboration/list/views/list_collaboration_view.dart';
 import '../modules/homepage/bindings/homepage_binding.dart';
@@ -158,6 +160,11 @@ class AppPages {
       name: _Paths.COLLAB_CREATE,
       page: () => const CreateCollaborationView(),
       binding: CreateCollaborationBinding(),
+    ),
+    GetPage(
+      name: _Paths.COLLAB_EDIT,
+      page: () => const EditCollaborationView(),
+      binding: EditCollaborationBinding(),
     ),
     GetPage(
       name: _Paths.COLLAB_DETAIL,
