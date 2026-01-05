@@ -1,28 +1,15 @@
-// Simple API config. Adjust base URL to your Laravel app.
-// Note: Android emulator cannot reach host's 127.0.0.1; use 10.0.2.2.
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:io' show Platform;
+// Base URL default langsung ke domain Railway kamu.
+// Bisa di-override saat run/build pakai --dart-define=API_BASE_URL=...
+const String apiBaseUrl = String.fromEnvironment(
+  'API_BASE_URL',
+  defaultValue: 'https://web-production-291d3.up.railway.app/api',
+);
 
-String get apiBaseUrl {
-  // Override via env-like switch if needed later.
-  const port = 8000;
-  if (kIsWeb) {
-    // Web runs in browser on the host; localhost works.
-    return 'http://127.0.0.1:$port/api';
-  }
-  if (Platform.isAndroid) {
-    // Android Studio emulator: 10.0.2.2 maps to host loopback.
-    return 'http://10.0.2.2:$port/api';
-  }
-  // iOS simulator, desktop, others can use loopback.
-  return 'http://127.0.0.1:$port/api';
-}
-
-// If you use JWT or Sanctum, store token securely (e.g., flutter_secure_storage).
-String? apiToken;
+// Simpan token (pindahkan ke secure storage untuk produksi).
+String? _apiToken;
 
 void setApiToken(String? token) {
-  apiToken = token;
+  _apiToken = token;
 }
 
-String? getApiToken() => apiToken;
+String? getApiToken() => _apiToken;
