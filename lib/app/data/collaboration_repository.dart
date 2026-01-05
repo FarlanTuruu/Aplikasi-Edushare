@@ -26,6 +26,10 @@ class CollaborationRepository {
     return await api.putJson('collaborations/$id', payload);
   }
 
+  Future<Map<String, dynamic>> show(String id) async {
+    return await api.getJson('collaborations/$id');
+  }
+
   Future<void> destroy(String id) async {
     await api.delete('collaborations/$id');
   }

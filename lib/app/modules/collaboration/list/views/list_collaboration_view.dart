@@ -1,6 +1,9 @@
+import 'package:appedushare/app/modules/collaboration/detail/bindings/detail_collaboration_binding.dart';
 import 'package:appedushare/app/modules/settings/profile/controllers/profile_settings_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:appedushare/app/routes/app_pages.dart';
+import 'package:appedushare/app/modules/collaboration/detail/views/detail_collaboration_view.dart';
 import '../controllers/list_collaboration_controller.dart';
 
 class ListCollaborationView extends GetView<ListCollaborationController> {
@@ -196,101 +199,131 @@ class ListCollaborationView extends GetView<ListCollaborationController> {
     int index,
     bool isTablet,
   ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      height: isTablet ? 100 : 90,
-      decoration: BoxDecoration(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          // Debug: pastikan tap terdeteksi
+          Get.snackbar(
+            'Navigasi',
+            'Membuka detail kolaborasi…',
+            snackPosition: SnackPosition.BOTTOM,
+            margin: const EdgeInsets.all(12),
+            duration: const Duration(milliseconds: 800),
+          );
+          try {
+            // Coba via named route (binding sudah di AppPages)
+            Get.toNamed(Routes.COLLAB_DETAIL, arguments: data);
+          } catch (_) {
+            // Fallback: langsung ke view dengan binding
+            Get.to(
+              () => const DetailCollaborationView(),
+              arguments: data,
+              binding: DetailCollaborationBinding(),
+            );
+          }
+        },
         borderRadius: BorderRadius.circular(20),
-        gradient: LinearGradient(
-          colors: [
-            const Color(
-              0xFFE1BEE7,
-            ), // Light Purple - konsisten dengan profile card
-            _primaryPurple, // Primary Purple
-          ],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: isTablet ? 20.0 : 16.0,
-          vertical: 12.0,
-        ),
-        child: Row(
-          children: [
-            // Date Box
-            Container(
-              width: isTablet ? 60 : 50,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300),
+        splashColor: Colors.white24,
+        highlightColor: Colors.white10,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          height: isTablet ? 100 : 90,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              colors: [
+                const Color(
+                  0xFFE1BEE7,
+                ), // Light Purple - konsisten dengan profile card
+                _primaryPurple, // Primary Purple
+              ],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    data['date'],
+            ],
+          ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: isTablet ? 20.0 : 16.0,
+              vertical: 12.0,
+            ),
+            child: Row(
+              children: [
+                // Date Box
+                Container(
+                  width: isTablet ? 60 : 50,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        data['date'],
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: isTablet ? 18 : 16,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      Text(
+                        data['day'],
+                        style: TextStyle(
+                          fontSize: isTablet ? 13 : 12,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+
+                // Title
+                Expanded(
+                  child: Text(
+                    data['title'],
                     style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: isTablet ? 18 : 16,
+                      fontSize: isTablet ? 17 : 16,
+                      fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  Text(
-                    data['day'],
-                    style: TextStyle(
-                      fontSize: isTablet ? 13 : 12,
-                      color: Colors.grey,
-                      fontWeight: FontWeight.w500,
-                    ),
+                ),
+
+                // Action Buttons (only when logged in to avoid editing public items)
+                if (controller.loggedIn)
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      _buildActionButton(
+                        'Edit',
+                        () => controller.editCollaboration(index),
+                        isTablet,
+                      ),
+                      const SizedBox(height: 8),
+                      _buildActionButton(
+                        'Delete',
+                        () => controller.deleteCollaboration(index),
+                        isTablet,
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 16),
-
-            // Title
-            Expanded(
-              child: Text(
-                data['title'],
-                style: TextStyle(
-                  fontSize: isTablet ? 17 : 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-
-            // Action Buttons
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                _buildActionButton(
-                  'Edit',
-                  () => controller.editCollaboration(index),
-                  isTablet,
-                ),
-                const SizedBox(height: 8),
-                _buildActionButton(
-                  'Delete',
-                  () => controller.deleteCollaboration(index),
-                  isTablet,
-                ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );

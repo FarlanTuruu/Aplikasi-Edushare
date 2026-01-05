@@ -22,8 +22,13 @@ class ListCollaborationController extends GetxController {
     _api = Get.find<ApiClient>();
     // Jangan register Repo ke GetX untuk menghindari instance dengan dependency berbeda
     _repo = CollaborationRepository(_api);
-    // Prefer public feed so visible to all users
-    loadCollaborationsPublic();
+    // If logged in, prefer owner feed; otherwise show public feed
+    final hasToken = (_api.getToken() ?? '').isNotEmpty;
+    if (hasToken) {
+      loadCollaborations(force: true);
+    } else {
+      loadCollaborationsPublic();
+    }
   }
 
   // ============= DATA METHODS =============
@@ -162,15 +167,65 @@ class ListCollaborationController extends GetxController {
     }
   }
 
-  // Edit collaboration
-  void editCollaboration(int index) {
+  // Edit collaboration (only for owned items)
+  Future<void> editCollaboration(int index) async {
     final item = collaborations[index];
-    Get.snackbar(
-      'Edit',
-      'Mengedit ${item['title']}',
-      snackPosition: SnackPosition.BOTTOM,
-      margin: EdgeInsets.all(20),
-    );
+
+    // Require login for editing
+    if ((_api.getToken() ?? '').isEmpty) {
+      Get.snackbar(
+        'Autentikasi',
+        'Masuk terlebih dahulu untuk mengedit',
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(20),
+      );
+      return;
+    }
+
+    final id = (item['id'] ?? '').toString();
+    if (id.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'ID kolaborasi tidak tersedia',
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(20),
+      );
+      return;
+    }
+
+    try {
+      // Verify the item exists on the authenticated endpoint (owned by user)
+      final details = await _repo.show(id);
+      // Map details to edit arguments
+      final mapped = {
+        'id': details['id'] ?? id,
+        'title': details['title'] ?? item['title'] ?? '',
+        'mataKuliah':
+            details['mata_kuliah'] ??
+            details['mataKuliah'] ??
+            item['mataKuliah'] ??
+            '',
+        'deskripsi':
+            details['description'] ??
+            details['deskripsi'] ??
+            item['deskripsi'] ??
+            '',
+        'link': details['link'] ?? details['link_docs'] ?? item['link'] ?? '',
+        'createdAt':
+            details['created_at_date'] ??
+            details['createdAt'] ??
+            item['createdAt'] ??
+            '',
+      };
+      Get.toNamed('/collab/edit', arguments: mapped);
+    } catch (e) {
+      Get.snackbar(
+        'Tidak dapat mengedit',
+        'Item ini bukan milik Anda atau tidak ditemukan.',
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(20),
+      );
+    }
   }
 
   // Delete collaboration
@@ -214,6 +269,8 @@ class ListCollaborationController extends GetxController {
   }
 
   // ============= NAVIGATION METHODS =============
+  // Expose login state for views
+  bool get loggedIn => (_api.getToken() ?? '').isNotEmpty;
   void goToProfile() => print("Navigate to Profile");
   void goToSettings() => print("Navigate to Settings");
   void navigateToHome() => print("Navigate to Home");
