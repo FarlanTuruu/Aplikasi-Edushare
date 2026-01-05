@@ -5,6 +5,7 @@ class MessageModel {
   final String text;
   final DateTime? createdAt;
   final bool? fromMe;
+  final String? senderAvatar;
 
   MessageModel({
     this.id,
@@ -13,6 +14,7 @@ class MessageModel {
     required this.text,
     this.createdAt,
     this.fromMe,
+    this.senderAvatar,
   });
 
   factory MessageModel.fromJson(Map<String, dynamic> json) {
@@ -44,6 +46,7 @@ class MessageModel {
       text: json['text']?.toString() ?? json['message']?.toString() ?? '',
       createdAt: created,
       fromMe: fromMe,
+      senderAvatar: json['sender_avatar']?.toString(),
     );
   }
 

@@ -41,8 +41,28 @@ class MessagesService extends GetxService {
 
   Future<void> loadMessages(int roomId) async {
     currentRoomId.value = roomId;
-    final list = await _repo.getMessages(roomId);
-    final parsed = list.map((e) {
+    final dynamic raw = await _repo.getMessages(roomId);
+    Iterable items = const [];
+    if (raw is List) {
+      items = raw;
+    } else if (raw is Map<String, dynamic>) {
+      final d = raw['data'];
+      if (d is List) {
+        items = d;
+      } else if (d is Map<String, dynamic>) {
+        // Support Laravel-style { data: { data: [...] , meta: ... } }
+        if (d['data'] is List) {
+          items = d['data'] as List;
+        } else if (d['messages'] is List) {
+          items = d['messages'] as List;
+        } else if (d['items'] is List) {
+          items = d['items'] as List;
+        }
+      } else if (raw['messages'] is List) {
+        items = raw['messages'] as List;
+      }
+    }
+    final parsed = items.map((e) {
       if (e is Map<String, dynamic>) {
         return MessageModel.fromJson(e);
       }

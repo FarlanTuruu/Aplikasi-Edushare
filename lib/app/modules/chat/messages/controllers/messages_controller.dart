@@ -6,6 +6,7 @@ import '../../../../services/messages_service.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../models/message_model.dart';
 import '../../../../services/follow_service.dart';
+import '../../../../data/config.dart';
 
 class MessagesController extends GetxController {
   late final MessagesService api;
@@ -101,10 +102,12 @@ class MessagesController extends GetxController {
     final meId = _currentUserId();
     final list = api.messages.map((MessageModel m) {
       final fromMe = m.fromMe ?? (meId != null && m.senderId == meId);
+      final avatar = _resolveImageUrl(m.senderAvatar ?? '');
       return {
         'fromMe': fromMe,
         'text': m.text,
         'time': m.createdAt?.toIso8601String(),
+        'avatar': avatar,
       };
     }).toList();
     messages.assignAll(list);
@@ -260,6 +263,18 @@ class MessagesController extends GetxController {
   bool _isFollowRequiredError(String text) {
     final t = text.toLowerCase();
     return t.contains('follow required');
+  }
+
+  String? _resolveImageUrl(String raw) {
+    if (raw.isEmpty) return null;
+    if (raw.startsWith('http')) return raw;
+    final base = apiBaseUrl;
+    final host = base.endsWith('/api')
+        ? base.substring(0, base.length - 4)
+        : base;
+    if (raw.startsWith('/')) return host + raw;
+    if (raw.startsWith('storage/')) return '$host/$raw';
+    return '$host/$raw';
   }
 
   void _markLastUnsent(String text) {
