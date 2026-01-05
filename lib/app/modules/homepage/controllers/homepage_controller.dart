@@ -9,6 +9,8 @@ import '../../../services/follow_service.dart';
 import '../../../services/messages_service.dart';
 import '../../../models/note_model.dart';
 import '../../../data/config.dart';
+import 'package:open_file/open_file.dart';
+import '../../../services/download_service.dart';
 
 class HomepageController extends GetxController {
   final selectedTab = 0.obs;
@@ -29,6 +31,14 @@ class HomepageController extends GetxController {
 
   late final ProfileSettingsController profileCtrl;
   final RxSet<String> savedNoteIds = <String>{}.obs;
+
+  // Dapatkan DownloadService
+  DownloadService get _downloadService {
+    if (!Get.isRegistered<DownloadService>()) {
+      Get.put(DownloadService(), permanent: true);
+    }
+    return Get.find<DownloadService>();
+  }
 
   @override
   void onInit() {
@@ -328,61 +338,14 @@ class HomepageController extends GetxController {
     }
   }
 
-  // --- FITUR 2: Download Dialog ---
+  // Method lama untuk backward compatibility
   void showDownloadDialog() {
-    Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Container(
-          height: 350,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            // Gradient Ungu sesuai desain download.png
-            gradient: const LinearGradient(
-              colors: [Color(0xFFE1BEE7), Color(0xFF4A148C)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'Note Succesfully\nDownloaded',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 20),
-              // Ikon Download Besar
-              const Icon(
-                Icons.download_rounded,
-                size: 100,
-                color: Colors.black,
-              ),
-              const SizedBox(height: 30),
-              ElevatedButton(
-                onPressed: () => Get.back(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 40,
-                    vertical: 12,
-                  ),
-                ),
-                child: const Text('Next'),
-              ),
-            ],
-          ),
-        ),
-      ),
+    Get.snackbar(
+      'Info',
+      'Gunakan tombol download pada kartu catatan',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.blue,
+      colorText: Colors.white,
     );
   }
 
@@ -567,6 +530,438 @@ class HomepageController extends GetxController {
         ? base.substring(0, base.length - 4)
         : base;
     return '$host/storage/$fileName';
+  }
+
+  // Download file dari catatan
+  Future<void> downloadNoteFile(Map<String, String> item) async {
+    final fileName = item['file_name'];
+    final noteId = item['id'];
+    final noteTitle = item['title'] ?? 'Catatan';
+
+    if (fileName == null || fileName.isEmpty) {
+      Get.snackbar(
+        'Info',
+        'Catatan ini tidak memiliki file untuk diunduh',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    try {
+      // Check apakah file sudah didownload sebelumnya
+      final existingPath = await _downloadService.getDownloadedFilePath(
+        fileName,
+      );
+
+      if (existingPath != null) {
+        // File sudah ada, tanya user mau download ulang atau buka
+        _showFileExistsDialog(existingPath, fileName, noteId, noteTitle);
+        return;
+      }
+
+      // Show progress dialog
+      _showDownloadProgressDialog(noteTitle);
+
+      // Download file
+      final filePath = await _downloadService.downloadFile(
+        fileName,
+        onProgress: (received, total) {
+          // Progress otomatis update lewat observable di DownloadService
+        },
+      );
+
+      // Close progress dialog
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+
+      if (filePath != null) {
+        _showDownloadSuccessDialog(fileName, filePath, noteTitle);
+      }
+    } catch (e) {
+      // Close progress dialog jika error
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+
+      String errorMessage = 'Gagal mengunduh file';
+
+      if (e.toString().contains('permission')) {
+        errorMessage = 'Izin storage diperlukan untuk download';
+      } else if (e.toString().contains('tidak ditemukan')) {
+        errorMessage = 'File tidak ditemukan di server';
+      } else if (e.toString().contains('timeout')) {
+        errorMessage = 'Download timeout - coba lagi';
+      }
+
+      Get.snackbar(
+        'Error Download',
+        errorMessage,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
+      );
+    }
+  }
+
+  // Dialog jika file sudah ada
+  void _showFileExistsDialog(
+    String existingPath,
+    String fileName,
+    String? noteId,
+    String noteTitle,
+  ) {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: const LinearGradient(
+              colors: [Color(0xFFE1BEE7), Color(0xFF4A148C)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.info_outline, size: 64, color: Colors.white),
+              const SizedBox(height: 16),
+              const Text(
+                'File Sudah Ada',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'File "$fileName" sudah pernah diunduh.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 14, color: Colors.white),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Get.back();
+                        // Download ulang
+                        _redownloadFile(fileName, noteTitle);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.white, width: 2),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text(
+                        'Download Ulang',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Get.back();
+                        _openFile(existingPath);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF4A148C),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text(
+                        'Buka File',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Re-download file
+  Future<void> _redownloadFile(String fileName, String noteTitle) async {
+    try {
+      // Hapus file lama
+      await _downloadService.deleteDownloadedFile(fileName);
+
+      // Show progress dialog
+      _showDownloadProgressDialog(noteTitle);
+
+      // Download ulang
+      final filePath = await _downloadService.downloadFile(fileName);
+
+      // Close progress dialog
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+
+      if (filePath != null) {
+        _showDownloadSuccessDialog(fileName, filePath, noteTitle);
+      }
+    } catch (e) {
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+
+      Get.snackbar(
+        'Error',
+        'Gagal mengunduh ulang: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  // Show progress dialog saat download
+  void _showDownloadProgressDialog(String noteTitle) {
+    Get.dialog(
+      WillPopScope(
+        onWillPop: () async => false,
+        child: Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: const LinearGradient(
+                colors: [Color(0xFFE1BEE7), Color(0xFF4A148C)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.download_rounded,
+                  size: 64,
+                  color: Colors.white,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Mengunduh "$noteTitle"',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 20),
+                Obx(() {
+                  final progress = _downloadService.downloadProgress.value;
+                  return Column(
+                    children: [
+                      LinearProgressIndicator(
+                        value: progress,
+                        backgroundColor: Colors.white.withOpacity(0.3),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${(progress * 100).toStringAsFixed(0)}%',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  );
+                }),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  // Dialog sukses download
+  void _showDownloadSuccessDialog(
+    String fileName,
+    String filePath,
+    String noteTitle,
+  ) {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: const LinearGradient(
+              colors: [Color(0xFFE1BEE7), Color(0xFF4A148C)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.check_circle_rounded,
+                size: 80,
+                color: Colors.white,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Download Berhasil!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                fileName,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 8),
+              FutureBuilder<int?>(
+                future: _downloadService.getFileSize(fileName),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData && snapshot.data != null) {
+                    final size = _downloadService.formatFileSize(
+                      snapshot.data!,
+                    );
+                    return Text(
+                      'Ukuran: $size',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Lokasi: Download',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.white.withOpacity(0.8),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Get.back(),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.white, width: 2),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text(
+                        'Tutup',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Get.back();
+                        _openFile(filePath);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF4A148C),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text(
+                        'Buka File',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Buka file yang sudah didownload
+  Future<void> _openFile(String filePath) async {
+    try {
+      final result = await OpenFile.open(filePath);
+
+      if (result.type != ResultType.done) {
+        Get.snackbar(
+          'Info',
+          'Tidak dapat membuka file. Silakan buka manual di folder Download',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.blue,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Gagal membuka file: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+    }
   }
 
   @override

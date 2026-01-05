@@ -396,8 +396,8 @@ class HomepageView extends GetView<HomepageController> {
                     Row(
                       children: [
                         GestureDetector(
-                          onTap: () => controller.showDownloadDialog(),
-                          child: _iconAction(Icons.bookmark_border),
+                          onTap: () => controller.downloadNoteFile(item),
+                          child: _iconAction(Icons.download),
                         ),
                         const SizedBox(width: 8),
                         Obx(() {

@@ -44,8 +44,13 @@ dependencies:
   permission_handler: ^12.0.1
   share_plus: ^12.0.1
   intl: ^0.18.1  # untuk format tanggal
-  image_picker: ^1.2.1
-  
+  image_picker: ^1.1.2
+  emoji_picker_flutter: ^2.0.0  # Untuk emoji picker
+  dio: ^5.4.0
+  path_provider: ^2.1.2
+  open_file: ^3.3.2
+  device_info_plus: ^10.1.0
+
 
 
 dev_dependencies:
