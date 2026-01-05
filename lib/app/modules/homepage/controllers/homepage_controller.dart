@@ -109,12 +109,18 @@ class HomepageController extends GetxController {
       final desc = (e['deskripsi'] ?? '').toString();
       final createdAt = (e['createdAt'] ?? '').toString();
       final link = (e['link'] ?? '').toString();
+      final viewers = (e['viewers'] ?? '0').toString();
+      final viewer1 = (e['viewer1'] ?? '').toString();
+      final viewer2 = (e['viewer2'] ?? '').toString();
       return {
         'title': title.isEmpty ? 'Tanpa Judul' : title,
         'desc': desc.isEmpty ? createdAt : desc,
-        'viewers': '0',
+        'viewers': viewers,
         'time': createdAt,
         'link': link,
+        // top-2 viewer avatars (URL)
+        'viewer1': viewer1,
+        'viewer2': viewer2,
       };
     }).toList();
     _allKolaborasi
@@ -276,6 +282,30 @@ class HomepageController extends GetxController {
     kolaborasiList.assignAll(filteredKolab);
   }
 
+  // Increment viewers and update avatar list locally when user opens collaboration
+  void bumpCollabViewers(Map<String, String> item) {
+    try {
+      final link = item['link'] ?? '';
+      final idx = _allKolaborasi.indexWhere((m) => m['link'] == link);
+      if (idx == -1) return;
+
+      final cur = Map<String, String>.from(_allKolaborasi[idx]);
+      final currentCount = int.tryParse(cur['viewers'] ?? '0') ?? 0;
+      cur['viewers'] = (currentCount + 1).toString();
+
+      // Put current user's avatar to the first slot, shift previous to second
+      final meAvatar = profileCtrl.profileImageUrl.value;
+      final prevFirst = cur['viewer1'] ?? '';
+      cur['viewer1'] = meAvatar;
+      cur['viewer2'] = prevFirst.isNotEmpty
+          ? prevFirst
+          : (cur['viewer2'] ?? '');
+
+      _allKolaborasi[idx] = cur;
+      _applyFilters();
+    } catch (_) {}
+  }
+
   // --- FITUR: Follow Author & create chat room ---
   Future<void> followAuthorOf(Map<String, String> item) async {
     final idStr = item['author_id'];
@@ -353,72 +383,6 @@ class HomepageController extends GetxController {
           ),
         ),
       ),
-    );
-  }
-
-  // --- FITUR 3: Chat Bottom Sheet ---
-  void showChatBottomSheet() {
-    Get.bottomSheet(
-      Container(
-        height: Get.height * 0.7, // Tinggi 70% layar
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(30),
-            topRight: Radius.circular(30),
-          ),
-        ),
-        child: Column(
-          children: [
-            const SizedBox(height: 10),
-            // Garis handle
-            Container(width: 50, height: 4, color: Colors.grey[300]),
-            const SizedBox(height: 20),
-
-            // List Chat
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                children: [
-                  _buildChatBubble("Mantap bang", "10:10"),
-                  _buildChatBubble("Catatannya lengkap terimakasih", "10:10"),
-                  _buildChatBubble("terimakasih bang mantap", "10:10"),
-                  _buildChatBubble("catatannya ada kurang", "10:10"),
-                ],
-              ),
-            ),
-
-            // Input Field
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  Icon(Icons.add, color: Colors.blue[400], size: 30),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      height: 45,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.grey[300]!),
-                      ),
-                      child: const TextField(
-                        decoration: InputDecoration(
-                          hintText: "Enter Input",
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-      isScrollControlled: true, // Agar bisa full height
     );
   }
 

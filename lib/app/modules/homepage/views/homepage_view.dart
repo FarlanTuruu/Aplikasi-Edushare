@@ -446,6 +446,25 @@ class HomepageView extends GetView<HomepageController> {
     );
   }
 
+  // Helper: small viewer avatar with white ring
+  Widget _viewerAvatarCircle(String? url) {
+    final ImageProvider imageProvider = (url != null && url.isNotEmpty)
+        ? NetworkImage(url)
+        : const NetworkImage('https://i.pravatar.cc/40?img=1');
+    return Container(
+      width: 22,
+      height: 22,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(1.5),
+        child: CircleAvatar(backgroundImage: imageProvider),
+      ),
+    );
+  }
+
   // --- LIST 2: CATATAN KOLABORASI ---
   Widget _buildKolaborasiList() {
     return Obx(() {
@@ -490,6 +509,7 @@ class HomepageView extends GetView<HomepageController> {
                     const SizedBox(width: 8),
                     GestureDetector(
                       onTap: () {
+                        controller.bumpCollabViewers(item);
                         final url = item['link'];
                         if (url is String && url.isNotEmpty) {
                           _launchUrl(url);
@@ -531,31 +551,20 @@ class HomepageView extends GetView<HomepageController> {
                 Row(
                   children: [
                     SizedBox(
-                      width: 40,
-                      height: 20,
+                      width: 46,
+                      height: 22,
                       child: Stack(
-                        children: const [
-                          Positioned(
-                            left: 0,
-                            child: CircleAvatar(
-                              radius: 10,
-                              backgroundImage: NetworkImage(
-                                'https://i.pravatar.cc/150?img=1',
-                              ),
-                            ),
-                          ),
+                        clipBehavior: Clip.none,
+                        children: [
+                          _viewerAvatarCircle(item['viewer2']),
                           Positioned(
                             left: 14,
-                            child: CircleAvatar(
-                              radius: 10,
-                              backgroundImage: NetworkImage(
-                                'https://i.pravatar.cc/150?img=2',
-                              ),
-                            ),
+                            child: _viewerAvatarCircle(item['viewer1']),
                           ),
                         ],
                       ),
                     ),
+                    const SizedBox(width: 6),
                     Text(
                       '$viewers Orang sedang melihat',
                       style: const TextStyle(
