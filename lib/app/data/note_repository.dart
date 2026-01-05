@@ -135,4 +135,25 @@ class NoteRepository {
   Future<void> unsave(String id) async {
     await api.delete('notes/$id/save');
   }
+
+  // Fetch saved/bookmarked notes. Support multiple possible endpoints.
+  Future<List<NoteModel>> fetchSaved() async {
+    List<dynamic> data;
+    try {
+      data = await api.getList('notes/saved');
+    } catch (_) {
+      try {
+        data = await api.getList('saved-notes');
+      } catch (_) {
+        data = const [];
+      }
+    }
+    return data
+        .map(
+          (e) => NoteModel.fromApi(
+            e is Map<String, dynamic> ? e : <String, dynamic>{},
+          ),
+        )
+        .toList();
+  }
 }

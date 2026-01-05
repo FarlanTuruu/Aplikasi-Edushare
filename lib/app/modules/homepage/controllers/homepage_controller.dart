@@ -28,6 +28,7 @@ class HomepageController extends GetxController {
   Timer? _pollTimer;
 
   late final ProfileSettingsController profileCtrl;
+  final RxSet<String> savedNoteIds = <String>{}.obs;
 
   @override
   void onInit() {
@@ -78,6 +79,12 @@ class HomepageController extends GetxController {
       (_) => _syncFromNotes(notesService),
     );
 
+    // Load saved notes and keep a reactive set of saved IDs
+    notesService.loadAllFromServer().then((_) {
+      _syncSavedIds(notesService);
+    });
+    ever(notesService.savedNotes, (_) => _syncSavedIds(notesService));
+
     // Polling ringan untuk auto-refresh (notes & collaboration)
     _pollTimer?.cancel();
     _pollTimer = Timer.periodic(const Duration(seconds: 20), (_) async {
@@ -86,6 +93,14 @@ class HomepageController extends GetxController {
         await listController.loadCollaborationsPublic(force: true);
       } catch (_) {}
     });
+  }
+
+  void _syncSavedIds(NotesService service) {
+    final ids = service.savedNotes.map((e) => e.id).toSet();
+    savedNoteIds
+      ..clear()
+      ..addAll(ids);
+    savedNoteIds.refresh();
   }
 
   void _syncFromCollaborations(ListCollaborationController listController) {
@@ -106,6 +121,42 @@ class HomepageController extends GetxController {
       ..clear()
       ..addAll(mapped);
     _applyFilters();
+  }
+
+  bool isNoteSaved(String? id) {
+    if (id == null || id.isEmpty) return false;
+    return savedNoteIds.contains(id);
+  }
+
+  Future<void> toggleSave(Map<String, String> item) async {
+    final id = item['id'];
+    if (id == null || id.isEmpty) {
+      Get.snackbar('Error', 'ID catatan tidak ditemukan');
+      return;
+    }
+    try {
+      final notesService = Get.find<NotesService>();
+      if (isNoteSaved(id)) {
+        await notesService.unsaveNote(id);
+        savedNoteIds.remove(id);
+        savedNoteIds.refresh();
+        Get.snackbar('Berhasil', 'Dihapus dari tersimpan');
+      } else {
+        await notesService.saveNote(id);
+        savedNoteIds.add(id);
+        savedNoteIds.refresh();
+        Get.snackbar('Berhasil', 'Catatan tersimpan');
+      }
+      // Optional: refresh SaveNotes module if already active
+      try {
+        final saveNotesCtrl = Get.find<dynamic>(
+          tag: 'SaveNotesController',
+        ); // may not exist; ignore failures
+        // No-op; retained for potential future integration
+      } catch (_) {}
+    } catch (e) {
+      Get.snackbar('Error', 'Gagal mengubah status simpan: ${e.toString()}');
+    }
   }
 
   void _syncFromNotes(NotesService service) {

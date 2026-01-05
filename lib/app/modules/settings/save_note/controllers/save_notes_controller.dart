@@ -1,6 +1,8 @@
 // lib/app/modules/settings/save_note/controllers/save_notes_controller.dart
 
 import 'package:get/get.dart';
+import '../../../../services/notes_service.dart';
+import '../../../../data/config.dart';
 
 class SaveNotesController extends GetxController {
   // Observable list of saved notes
@@ -10,6 +12,10 @@ class SaveNotesController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    // Ensure NotesService is available
+    if (!Get.isRegistered<NotesService>()) {
+      Get.put(NotesService(), permanent: true);
+    }
     loadSavedNotes();
   }
 
@@ -19,57 +25,42 @@ class SaveNotesController extends GetxController {
   Future<void> loadSavedNotes() async {
     try {
       isLoading.value = true;
+      final notesService = Get.find<NotesService>();
+      await notesService.refreshAll();
+      final saved = notesService.savedNotes.toList();
 
-      // Simulasi loading
-      await Future.delayed(const Duration(milliseconds: 800));
+      // Map NoteModel -> view map shape
+      final mapped = saved.map<Map<String, dynamic>>((note) {
+        final authorName = note.authorName ?? 'Unknown';
+        final authorImg = _resolveImageUrl(note.authorImage ?? '');
+        // Thumbnail: use note file if image, else placeholder
+        String thumb = 'https://picsum.photos/seed/saved-${note.id}/400/200';
+        final fn = note.fileName;
+        if (fn != null && fn.isNotEmpty) {
+          final lower = fn.toLowerCase();
+          final isImage =
+              lower.endsWith('.jpg') ||
+              lower.endsWith('.jpeg') ||
+              lower.endsWith('.png') ||
+              lower.endsWith('.gif') ||
+              lower.endsWith('.webp');
+          if (isImage) {
+            thumb = _buildFileUrl(fn);
+          }
+        }
+        return {
+          'id': note.id,
+          'author': authorName,
+          'authorImage': authorImg.isNotEmpty
+              ? authorImg
+              : 'https://i.pravatar.cc/150?img=47',
+          'title': note.title,
+          'thumbnail': thumb,
+          'date': note.fullDate,
+        };
+      }).toList();
 
-      // TODO: Load dari API atau local storage
-      // final response = await ApiService.getSavedNotes();
-      // savedNotes.value = response.data;
-
-      // Dummy data untuk testing
-      savedNotes.value = [
-        {
-          'id': '1',
-          'author': 'Alfi Aulia',
-          'authorImage': 'https://i.pravatar.cc/150?img=5',
-          'title':
-              'Catatan Untuk Mata Kuliah Pengembangan Industri 4.0 Untuk Semester 5',
-          'thumbnail':
-              'https://cdn.pixabay.com/photo/2016/11/19/14/00/code-1839406_1280.jpg',
-          'date': '2024-01-15',
-        },
-        {
-          'id': '2',
-          'author': 'Alfi Aulia',
-          'authorImage': 'https://i.pravatar.cc/150?img=5',
-          'title':
-              'Catatan Untuk Mata Kuliah Pengembangan Industri 4.0 Untuk Semester 5',
-          'thumbnail':
-              'https://cdn.pixabay.com/photo/2015/09/17/17/25/graduation-944312_1280.jpg',
-          'date': '2024-01-14',
-        },
-        {
-          'id': '3',
-          'author': 'Alfi Aulia',
-          'authorImage': 'https://i.pravatar.cc/150?img=5',
-          'title':
-              'Catatan Untuk Mata Kuliah Pengembangan Industri 4.0 Untuk Semester 5',
-          'thumbnail':
-              'https://cdn.pixabay.com/photo/2016/11/29/06/15/plans-1867745_1280.jpg',
-          'date': '2024-01-13',
-        },
-        {
-          'id': '4',
-          'author': 'Alfi Aulia',
-          'authorImage': 'https://i.pravatar.cc/150?img=5',
-          'title':
-              'Catatan Untuk Mata Kuliah Pengembangan Industri 4.0 Untuk Semester 5',
-          'thumbnail':
-              'https://cdn.pixabay.com/photo/2017/08/30/01/05/milky-way-2695569_1280.jpg',
-          'date': '2024-01-12',
-        },
-      ];
+      savedNotes.assignAll(mapped);
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -102,10 +93,11 @@ class SaveNotesController extends GetxController {
   // ============================================================
   Future<void> unsaveNote(String noteId) async {
     try {
-      // TODO: Call API to unsave
-      // await ApiService.unsaveNote(noteId);
-
-      // Remove from list
+      if (!Get.isRegistered<NotesService>()) {
+        Get.put(NotesService(), permanent: true);
+      }
+      final notesService = Get.find<NotesService>();
+      await notesService.unsaveNote(noteId);
       savedNotes.removeWhere((note) => note['id'] == noteId);
 
       Get.snackbar(
@@ -128,5 +120,25 @@ class SaveNotesController extends GetxController {
   // ============================================================
   Future<void> refreshData() async {
     await loadSavedNotes();
+  }
+
+  String _resolveImageUrl(String raw) {
+    if (raw.isEmpty) return raw;
+    if (raw.startsWith('http')) return raw;
+    final base = apiBaseUrl;
+    final host = base.endsWith('/api')
+        ? base.substring(0, base.length - 4)
+        : base;
+    if (raw.startsWith('/')) return host + raw;
+    if (raw.startsWith('storage/')) return '$host/$raw';
+    return '$host/$raw';
+  }
+
+  String _buildFileUrl(String fileName) {
+    final base = apiBaseUrl;
+    final host = base.endsWith('/api')
+        ? base.substring(0, base.length - 4)
+        : base;
+    return '$host/storage/$fileName';
   }
 }

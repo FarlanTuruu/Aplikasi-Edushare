@@ -12,6 +12,7 @@ class NotesService extends GetxService {
   final draftNotes = <NoteModel>[].obs;
   final scheduledNotes = <NoteModel>[].obs;
   final archivedNotes = <NoteModel>[].obs; // 🆕 TAMBAHAN
+  final savedNotes = <NoteModel>[].obs; // 🆕 Saved/bookmarked notes
 
   @override
   void onInit() {
@@ -101,6 +102,10 @@ class NotesService extends GetxService {
     try {
       final archived = await _repo.fetchArchived();
       archivedNotes.assignAll(archived);
+    } catch (_) {}
+    try {
+      final saved = await _repo.fetchSaved();
+      savedNotes.assignAll(saved);
     } catch (_) {}
   }
 
@@ -229,6 +234,24 @@ class NotesService extends GetxService {
         allNotes.refresh();
       }
     }
+  }
+
+  // -------------------------------------------------------------
+  // SAVE / UNSAVE NOTE (Bookmarks)
+  // -------------------------------------------------------------
+  Future<void> saveNote(String noteId) async {
+    await _repo.save(noteId);
+    // Optionally refresh saved list; server is source of truth
+    try {
+      final saved = await _repo.fetchSaved();
+      savedNotes.assignAll(saved);
+    } catch (_) {}
+  }
+
+  Future<void> unsaveNote(String noteId) async {
+    await _repo.unsave(noteId);
+    savedNotes.removeWhere((e) => e.id == noteId);
+    savedNotes.refresh();
   }
 
   // -------------------------------------------------------------
