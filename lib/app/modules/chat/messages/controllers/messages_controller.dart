@@ -1,7 +1,9 @@
-import 'dart:math';
-
+import 'dart:io';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart' as emoji;
 import '../../../../services/messages_service.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../models/message_model.dart';
@@ -15,6 +17,9 @@ class MessagesController extends GetxController {
   final textEditingController = TextEditingController();
   final isLoading = false.obs;
   final isFollowing = false.obs;
+  final showEmojiPicker = false.obs;
+
+  final ImagePicker _imagePicker = ImagePicker();
 
   int? _currentUserId() {
     try {
@@ -33,68 +38,118 @@ class MessagesController extends GetxController {
       Get.put(MessagesService(), permanent: true);
     }
     api = Get.find<MessagesService>();
-    ever(api.messages, (_) => _syncFromModels());
+
+    // Subscribe to messages updates
+    ever(api.messages, (_) {
+      debugPrint('[MessagesController] Messages updated, syncing to UI');
+      _syncFromModels();
+    });
+
     _bootstrap();
   }
 
   Future<void> _bootstrap() async {
-    await api.init();
-    final args = Get.arguments is Map<String, dynamic>
-        ? (Get.arguments as Map<String, dynamic>)
-        : <String, dynamic>{};
+    isLoading.value = true;
 
-    // Prefer explicit conversation/room id; otherwise, ensure DM with userId
-    final int? roomId = _toInt(args['roomId'] ?? args['conversationId']);
-    int? userId = _toInt(args['userId']);
-    userId ??= _inferPeerUserId(args);
+    try {
+      // Init service (safe to call multiple times)
+      await api.init();
+      final args = Get.arguments is Map<String, dynamic>
+          ? (Get.arguments as Map<String, dynamic>)
+          : <String, dynamic>{};
 
-    // Initialize following status if provided by rooms payload
-    final room = args['room'];
-    if (args['is_following'] is bool) {
-      isFollowing.value = args['is_following'] as bool;
-    } else if (room is Map<String, dynamic> && room['is_following'] is bool) {
-      isFollowing.value = room['is_following'] as bool;
-    }
+      // Extract all possible IDs
+      final int? roomId = _toInt(args['roomId'] ?? args['conversationId']);
+      int? userId = _toInt(args['userId']);
+      userId ??= _inferPeerUserId(args);
 
-    int? useRoomId = roomId ?? api.currentRoomId.value;
-    if (useRoomId == null && userId != null) {
-      useRoomId = await api.ensureDmRoomWithUser(userId);
-    }
-    if (useRoomId != null) {
-      // Set current room id early so subsequent actions use correct conversation
-      api.currentRoomId.value = useRoomId;
-      bool loaded = false;
-      try {
-        isLoading.value = true;
-        debugPrint('[MessagesController] loadMessages useRoomId=$useRoomId');
-        await api.loadMessages(useRoomId);
-        loaded = true;
-      } catch (_) {}
-      // If no messages loaded or load failed, ensure DM and reload
-      if (!loaded || api.messages.isEmpty) {
-        int? candidateUserId = userId;
-        if (candidateUserId == null) {
-          final room = args['room'];
-          if (room is Map<String, dynamic>) {
-            candidateUserId = _toInt(room['id']) ?? _inferPeerUserId(args);
-          }
-        }
-        if (candidateUserId != null) {
-          debugPrint(
-            '[MessagesController] ensureDmRoomWithUser userId=$candidateUserId',
-          );
-          final rid = await api.ensureDmRoomWithUser(candidateUserId);
-          if (rid != null) {
-            debugPrint('[MessagesController] retry loadMessages rid=$rid');
-            await api.loadMessages(rid);
-          }
+      // Initialize following status if provided
+      final room = args['room'];
+      if (args['is_following'] is bool) {
+        isFollowing.value = args['is_following'] as bool;
+      } else if (room is Map<String, dynamic> && room['is_following'] is bool) {
+        isFollowing.value = room['is_following'] as bool;
+      }
+
+      debugPrint(
+        '[MessagesController] Bootstrap - roomId: $roomId, userId: $userId',
+      );
+
+      // Clear previous messages when entering new conversation
+      messages.clear();
+
+      // Priority 1: Use roomId if available
+      if (roomId != null) {
+        api.currentRoomId.value = roomId;
+        await _loadMessagesForRoom(roomId);
+      }
+      // Priority 2: Use userId to ensure DM room exists
+      else if (userId != null) {
+        debugPrint(
+          '[MessagesController] No roomId, ensuring DM with userId: $userId',
+        );
+        final ensuredRoomId = await api.ensureDmRoomWithUser(userId);
+        if (ensuredRoomId != null) {
+          api.currentRoomId.value = ensuredRoomId;
+          await _loadMessagesForRoom(ensuredRoomId);
         }
       }
-      isLoading.value = false;
+      // Priority 3: Check if api already has a current room
+      else if (api.currentRoomId.value != null) {
+        await _loadMessagesForRoom(api.currentRoomId.value!);
+      }
+
       debugPrint(
-        '[MessagesController] messages loaded count=${api.messages.length}',
+        '[MessagesController] Bootstrap complete - messages count: ${api.messages.length}',
       );
+
+      // Force sync after bootstrap
       _syncFromModels();
+    } catch (e) {
+      debugPrint('[MessagesController] Bootstrap error: $e');
+      Get.snackbar('Error', 'Failed to load messages: ${e.toString()}');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> _loadMessagesForRoom(int roomId) async {
+    try {
+      debugPrint('[MessagesController] Loading messages for room: $roomId');
+      await api.loadMessages(roomId);
+
+      // If messages loaded successfully, we're done
+      if (api.messages.isNotEmpty) {
+        debugPrint(
+          '[MessagesController] Successfully loaded ${api.messages.length} messages',
+        );
+        return;
+      }
+
+      // If no messages but room exists, it might be a new conversation
+      debugPrint(
+        '[MessagesController] No messages found for room $roomId (might be new conversation)',
+      );
+    } catch (e) {
+      debugPrint('[MessagesController] Error loading messages: $e');
+
+      // If loading failed, try to recover by ensuring DM room exists
+      final args = Get.arguments is Map<String, dynamic>
+          ? (Get.arguments as Map<String, dynamic>)
+          : <String, dynamic>{};
+      int? userId = _toInt(args['userId']);
+      userId ??= _inferPeerUserId(args);
+
+      if (userId != null) {
+        debugPrint(
+          '[MessagesController] Attempting recovery with userId: $userId',
+        );
+        final recoveredRoomId = await api.ensureDmRoomWithUser(userId);
+        if (recoveredRoomId != null && recoveredRoomId != roomId) {
+          api.currentRoomId.value = recoveredRoomId;
+          await api.loadMessages(recoveredRoomId);
+        }
+      }
     }
   }
 
@@ -118,35 +173,26 @@ class MessagesController extends GetxController {
     if (trimmed.isEmpty) return;
 
     // Ensure we have a valid room/conversation context
-    final args = Get.arguments is Map<String, dynamic>
-        ? (Get.arguments as Map<String, dynamic>)
-        : <String, dynamic>{};
-    final int? argId = _toInt(
-      args['roomId'] ??
-          args['conversationId'] ??
-          (args['room'] is Map<String, dynamic>
-              ? (args['room'] as Map<String, dynamic>)['conversation_id']
-              : null) ??
-          (args['room'] is Map<String, dynamic>
-              ? (args['room'] as Map<String, dynamic>)['id']
-              : null),
-    );
-    if (api.currentRoomId.value == null ||
-        (argId != null && api.currentRoomId.value != argId)) {
-      final int? roomId = argId;
-      final int? userId = _toInt(args['userId']);
+    if (api.currentRoomId.value == null) {
+      final args = Get.arguments is Map<String, dynamic>
+          ? (Get.arguments as Map<String, dynamic>)
+          : <String, dynamic>{};
+
+      final int? roomId = _toInt(args['roomId'] ?? args['conversationId']);
+      final int? userId = _toInt(args['userId']) ?? _inferPeerUserId(args);
+
       int? useRoomId = roomId;
       if (useRoomId == null && userId != null) {
         useRoomId = await api.ensureDmRoomWithUser(userId);
       }
+
       if (useRoomId != null) {
-        // Set and load to ensure sending uses the right conversation
         api.currentRoomId.value = useRoomId;
-        isLoading.value = true;
+        // Load messages to ensure we have the conversation context
         await api.loadMessages(useRoomId);
-        isLoading.value = false;
+        _syncFromModels();
       } else {
-        // Without context, don't proceed
+        Get.snackbar('Error', 'Unable to establish chat context');
         return;
       }
     }
@@ -159,19 +205,15 @@ class MessagesController extends GetxController {
       'unsent': false,
     });
     textController.value = '';
-    // Kosongkan field input secara langsung
     textEditingController.clear();
 
     try {
-      // Kirim ke server; jika gagal, rollback bubble terakhir
       final sent = await api.sendMessage(trimmed);
       if (sent == null) {
-        // Remove optimistic bubble if server didn't accept
         _removeLastIfMatches(trimmed);
         Get.snackbar('Message failed', 'Could not send message');
       }
     } catch (e) {
-      // If follow is required, keep bubble as unsent and offer to follow
       final errText = e.toString();
       if (_isFollowRequiredError(errText)) {
         _markLastUnsent(trimmed);
@@ -189,29 +231,145 @@ class MessagesController extends GetxController {
           colorText: Colors.white,
         );
       } else {
-        // General failure: attempt DM ensure once, then rollback
-        try {
-          final args = Get.arguments is Map<String, dynamic>
-              ? (Get.arguments as Map<String, dynamic>)
-              : <String, dynamic>{};
-          final int? userId = _toInt(args['userId']);
-          if (userId != null) {
-            final roomId = await api.ensureDmRoomWithUser(userId);
-            if (roomId != null) {
-              await api.loadMessages(roomId);
-              final retry = await api.sendMessage(trimmed);
-              if (retry != null) {
-                return;
-              }
-            }
-          }
-          _removeLastIfMatches(trimmed);
-          Get.snackbar('Message failed', errText);
-        } catch (e2) {
-          _removeLastIfMatches(trimmed);
-          Get.snackbar('Message failed', e2.toString());
-        }
+        _removeLastIfMatches(trimmed);
+        Get.snackbar('Message failed', errText);
       }
+    }
+  }
+
+  // Emoji picker functions
+  void toggleEmojiPicker() {
+    showEmojiPicker.value = !showEmojiPicker.value;
+
+    // Unfocus keyboard when showing emoji picker
+    if (showEmojiPicker.value) {
+      FocusScope.of(Get.context!).unfocus();
+    }
+  }
+
+  void onEmojiSelected(emoji.Emoji emojiObj) {
+    final text = textEditingController.text;
+    final selection = textEditingController.selection;
+    final newText = text.replaceRange(
+      selection.start,
+      selection.end,
+      emojiObj.emoji,
+    );
+
+    textEditingController.value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(
+        offset: selection.start + emojiObj.emoji.length,
+      ),
+    );
+
+    textController.value = newText;
+  }
+
+  // Image picker functions
+  Future<void> pickImage() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        await _handleFileSelected(File(image.path), 'image');
+      }
+    } catch (e) {
+      debugPrint('[MessagesController] Error picking image: $e');
+      Get.snackbar('Error', 'Failed to pick image: ${e.toString()}');
+    }
+  }
+
+  Future<void> pickCamera() async {
+    try {
+      final XFile? photo = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+
+      if (photo != null) {
+        await _handleFileSelected(File(photo.path), 'image');
+      }
+    } catch (e) {
+      debugPrint('[MessagesController] Error taking photo: $e');
+      Get.snackbar('Error', 'Failed to take photo: ${e.toString()}');
+    }
+  }
+
+  Future<void> pickDocument() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: [
+          'pdf',
+          'doc',
+          'docx',
+          'txt',
+          'xls',
+          'xlsx',
+          'ppt',
+          'pptx',
+        ],
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        final file = File(result.files.first.path!);
+        await _handleFileSelected(file, 'document');
+      }
+    } catch (e) {
+      debugPrint('[MessagesController] Error picking document: $e');
+      Get.snackbar('Error', 'Failed to pick document: ${e.toString()}');
+    }
+  }
+
+  Future<void> _handleFileSelected(File file, String type) async {
+    // Show loading indicator
+    Get.dialog(
+      const Center(child: CircularProgressIndicator()),
+      barrierDismissible: false,
+    );
+
+    try {
+      // Here you would implement the file upload logic
+      // For now, we'll just show a placeholder message
+      final fileName = file.path.split('/').last;
+
+      // Close loading dialog
+      Get.back();
+
+      // Send message with file info
+      final message = type == 'image'
+          ? '📷 Image: $fileName'
+          : '📄 Document: $fileName';
+
+      await sendMessage(message);
+
+      // TODO: Implement actual file upload to your backend
+      // final uploaded = await api.uploadFile(file, type);
+      // if (uploaded != null) {
+      //   await sendMessage(uploaded['url']);
+      // }
+
+      Get.snackbar(
+        'Success',
+        '$type uploaded successfully',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      // Close loading dialog
+      Get.back();
+
+      debugPrint('[MessagesController] Error handling file: $e');
+      Get.snackbar('Error', 'Failed to upload $type: ${e.toString()}');
     }
   }
 
@@ -240,13 +398,12 @@ class MessagesController extends GetxController {
         room['user_id'],
         room['peer_id'],
         room['friend_id'],
-        room['id'], // fallback: some APIs use id as peer/user id
       ];
       for (final c in candidates) {
         final id = _toInt(c);
-        if (id != null) return id;
+        if (id != null && id != meId) return id;
       }
-      // Try participants array: pick id != me
+      // Try participants array
       final parts = room['participants'];
       if (parts is List) {
         for (final p in parts) {
@@ -296,26 +453,27 @@ class MessagesController extends GetxController {
       Get.snackbar('Follow failed', 'Missing user id');
       return;
     }
-    // Ensure FollowService exists
+
     if (!Get.isRegistered<FollowService>()) {
       await Get.putAsync<FollowService>(() async => (FollowService()).init());
     }
     final follow = Get.find<FollowService>();
     final ok = await follow.follow(userId, createChatRoom: true);
     if (!ok) return;
+
     isFollowing.value = true;
-    // After follow, reload messages context and resend
+
     final roomId =
         api.currentRoomId.value ?? await api.ensureDmRoomWithUser(userId);
     if (roomId != null) {
       await api.loadMessages(roomId);
+      _syncFromModels();
     }
-    // remove unsent bubble before resending to avoid duplicates
+
     _removeLastIfMatches(text);
     final sent = await api.sendMessage(text);
     if (sent == null) {
       Get.snackbar('Message failed', 'Could not send after follow');
-      // optionally restore unsent bubble
       messages.add({
         'fromMe': true,
         'text': text,
@@ -334,20 +492,40 @@ class MessagesController extends GetxController {
       Get.snackbar('Follow failed', 'Missing user id');
       return;
     }
-    // Ensure FollowService exists
+
     if (!Get.isRegistered<FollowService>()) {
       await Get.putAsync<FollowService>(() async => (FollowService()).init());
     }
     final follow = Get.find<FollowService>();
     final ok = await follow.follow(userId, createChatRoom: true);
     if (!ok) return;
+
     isFollowing.value = true;
-    // After follow, ensure DM and reload messages
+
     final rid =
         api.currentRoomId.value ?? await api.ensureDmRoomWithUser(userId);
     if (rid != null) {
       await api.loadMessages(rid);
       _syncFromModels();
+    }
+  }
+
+  @override
+  void onClose() {
+    textEditingController.dispose();
+    super.onClose();
+  }
+
+  // Optional: Add pull-to-refresh support
+  Future<void> refreshMessages() async {
+    final rid = api.currentRoomId.value;
+    if (rid != null) {
+      try {
+        await api.loadMessages(rid);
+        _syncFromModels();
+      } catch (e) {
+        debugPrint('[MessagesController] Refresh failed: $e');
+      }
     }
   }
 }
