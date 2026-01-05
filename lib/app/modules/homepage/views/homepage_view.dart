@@ -400,12 +400,18 @@ class HomepageView extends GetView<HomepageController> {
                           child: _iconAction(Icons.bookmark_border),
                         ),
                         const SizedBox(width: 8),
-                        _iconAction(Icons.favorite_border),
+                        Obx(() {
+                          final noteId = item['id'] ?? '';
+                          final saved = controller.isNoteSaved(noteId);
+                          return GestureDetector(
+                            onTap: () => controller.toggleSave(item),
+                            child: _iconActionColored(
+                              saved ? Icons.favorite : Icons.favorite_border,
+                              saved ? Colors.red : Colors.black,
+                            ),
+                          );
+                        }),
                         const SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: () => controller.showChatBottomSheet(),
-                          child: _iconAction(Icons.comment_outlined),
-                        ),
                       ],
                     ),
                   ],
@@ -426,6 +432,17 @@ class HomepageView extends GetView<HomepageController> {
         shape: BoxShape.circle,
       ),
       child: Icon(icon, size: 18, color: Colors.black),
+    );
+  }
+
+  Widget _iconActionColored(IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(icon, size: 18, color: color),
     );
   }
 
