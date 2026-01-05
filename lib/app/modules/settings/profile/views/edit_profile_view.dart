@@ -9,10 +9,12 @@ import '../controllers/edit_profile_controller.dart';
 class EditProfileView extends GetView<EditProfileController> {
   const EditProfileView({Key? key}) : super(key: key);
 
+  static const Color _purple = Color(0xFF4A1F7A);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF5B2C91),
+      backgroundColor: _purple,
       body: SafeArea(
         child: Column(
           children: [
@@ -23,7 +25,7 @@ class EditProfileView extends GetView<EditProfileController> {
             Expanded(
               child: Container(
                 decoration: const BoxDecoration(
-                  color: Colors.white,
+                  color: Color(0xFFF8F4FB),
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(40),
                     topRight: Radius.circular(40),
@@ -75,7 +77,7 @@ class EditProfileView extends GetView<EditProfileController> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavBar(),
+      bottomNavigationBar: _buildBottomNavigation(),
     );
   }
 
@@ -84,7 +86,7 @@ class EditProfileView extends GetView<EditProfileController> {
   // ============================================================
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(20.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -99,32 +101,17 @@ class EditProfileView extends GetView<EditProfileController> {
                 'Edit Profile',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
-          Row(
-            children: [
-              Obx(
-                () => CircleAvatar(
-                  radius: 20,
-                  backgroundImage: _imageProvider(
-                    controller.profileImageUrl.value,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              InkWell(
-                onTap: () => Get.toNamed('/settings/profile'),
-                child: const Icon(
-                  Icons.settings,
-                  color: Colors.white,
-                  size: 28,
-                ),
-              ),
-            ],
+          Obx(
+            () => CircleAvatar(
+              radius: 20,
+              backgroundImage: _imageProvider(controller.profileImageUrl.value),
+            ),
           ),
         ],
       ),
@@ -150,7 +137,7 @@ class EditProfileView extends GetView<EditProfileController> {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF5B2C91),
+                  color: _purple,
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 2),
                 ),
@@ -175,9 +162,7 @@ class EditProfileView extends GetView<EditProfileController> {
     if (p.startsWith('http://') || p.startsWith('https://')) {
       return NetworkImage(p);
     }
-    // Local file path from picker
     if (kIsWeb) {
-      // Web cannot read local files via FileImage; fallback placeholder
       return const NetworkImage('https://i.pravatar.cc/150?img=47');
     }
     return FileImage(File(p));
@@ -209,7 +194,7 @@ class EditProfileView extends GetView<EditProfileController> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.black, width: 1.5),
+            border: Border.all(color: const Color(0xFFE2D6F0)),
           ),
           child: TextField(
             controller: controller,
@@ -221,7 +206,7 @@ class EditProfileView extends GetView<EditProfileController> {
               border: InputBorder.none,
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(vertical: 12),
-              prefixIcon: Icon(icon, color: const Color(0xFF5B2C91), size: 20),
+              prefixIcon: Icon(icon, color: _purple, size: 20),
             ),
           ),
         ),
@@ -240,10 +225,10 @@ class EditProfileView extends GetView<EditProfileController> {
         child: ElevatedButton(
           onPressed: controller.isLoading.value ? null : controller.saveProfile,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5B2C91),
+            backgroundColor: _purple,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(25),
+              borderRadius: BorderRadius.circular(12),
             ),
             disabledBackgroundColor: Colors.grey,
           ),
@@ -266,56 +251,143 @@ class EditProfileView extends GetView<EditProfileController> {
   }
 
   // ============================================================
-  // BOTTOM NAVBAR
+  // BOTTOM NAVIGATION
   // ============================================================
-  Widget _buildBottomNavBar() {
+  Widget _buildBottomNavigation() {
     return Container(
-      height: 70,
+      height: 80,
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 1,
+            spreadRadius: 5,
             blurRadius: 10,
           ),
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildNavItem(
-            Icons.home_outlined,
-            false,
-            () => Get.toNamed('/homepage'),
+          // Tombol Home
+          IconButton(
+            icon: const Icon(Icons.home, color: Colors.black54, size: 28),
+            onPressed: () {
+              Get.toNamed('/homepage');
+            },
           ),
-          _buildNavItem(
-            Icons.chat_bubble_outline,
-            false,
-            () => Get.toNamed('/chat/rooms'),
+
+          // Tombol Chat
+          IconButton(
+            icon: const Icon(
+              Icons.chat_bubble_outline,
+              color: Colors.black54,
+              size: 28,
+            ),
+            onPressed: () {
+              Get.toNamed('/chat/rooms');
+            },
           ),
-          _buildNavItem(
-            Icons.add_circle_outline,
-            false,
-            () => Get.toNamed('/notes/create'),
+
+          // Tombol Tambah (Add) - Show dialog
+          GestureDetector(
+            onTap: _showCreateActionDialog,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.black54, width: 1.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.add, color: Colors.black54, size: 24),
+            ),
           ),
-          _buildNavItem(
-            Icons.mic_none,
-            false,
-            () => Get.toNamed('/speech/list'),
+
+          // Tombol Mic
+          IconButton(
+            icon: const Icon(
+              Icons.mic_outlined,
+              color: Colors.black54,
+              size: 28,
+            ),
+            onPressed: () {
+              Get.toNamed('/speech/start');
+            },
           ),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem(IconData icon, bool isActive, VoidCallback onTap) {
+  void _showCreateActionDialog() {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Buat Konten Baru',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              _dialogActionButton(
+                icon: Icons.note_add_outlined,
+                label: 'Upload Materi',
+                onTap: () {
+                  Get.back();
+                  Get.toNamed('/notes/create');
+                },
+              ),
+              const SizedBox(height: 12),
+              _dialogActionButton(
+                icon: Icons.upload_file_outlined,
+                label: 'Upload Catatan',
+                onTap: () {
+                  Get.back();
+                  Get.toNamed('/collab/create');
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _dialogActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
-      child: Icon(
-        icon,
-        size: 30,
-        color: isActive ? const Color(0xFF5B2C91) : Colors.grey,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _purple.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: _purple, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
       ),
     );
   }

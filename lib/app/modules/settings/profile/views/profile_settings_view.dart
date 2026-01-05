@@ -9,16 +9,18 @@ import '../controllers/profile_settings_controller.dart';
 class ProfileSettingsView extends GetView<ProfileSettingsController> {
   const ProfileSettingsView({Key? key}) : super(key: key);
 
+  static const Color _purple = Color(0xFF4A1F7A);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF5B2C91),
+      backgroundColor: _purple,
       body: SafeArea(
         child: Column(
           children: [
             // Header
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(20.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -26,30 +28,17 @@ class ProfileSettingsView extends GetView<ProfileSettingsController> {
                     'Profile',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  Row(
-                    children: [
-                      Obx(
-                        () => CircleAvatar(
-                          radius: 20,
-                          backgroundImage: _imageProvider(
-                            controller.profileImageUrl.value,
-                          ),
-                        ),
+                  Obx(
+                    () => CircleAvatar(
+                      radius: 20,
+                      backgroundImage: _imageProvider(
+                        controller.profileImageUrl.value,
                       ),
-                      const SizedBox(width: 12),
-                      InkWell(
-                        onTap: () {}, // Settings action if needed
-                        child: const Icon(
-                          Icons.settings,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
@@ -59,7 +48,7 @@ class ProfileSettingsView extends GetView<ProfileSettingsController> {
             Expanded(
               child: Container(
                 decoration: const BoxDecoration(
-                  color: Colors.white,
+                  color: Color(0xFFF8F4FB),
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(40),
                     topRight: Radius.circular(40),
@@ -147,7 +136,7 @@ class ProfileSettingsView extends GetView<ProfileSettingsController> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavBar(),
+      bottomNavigationBar: _buildBottomNavigation(),
     );
   }
 
@@ -219,58 +208,141 @@ class ProfileSettingsView extends GetView<ProfileSettingsController> {
     );
   }
 
-  Widget _buildBottomNavBar() {
+  Widget _buildBottomNavigation() {
     return Container(
-      height: 70,
+      height: 80,
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 5,
             blurRadius: 10,
-            offset: const Offset(0, -2),
           ),
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildNavItem(
-            Icons.home_outlined,
-            false,
-            () => Get.toNamed('/homepage'),
+          // Tombol Home
+          IconButton(
+            icon: const Icon(Icons.home, color: Colors.black54, size: 28),
+            onPressed: () {
+              Get.toNamed('/homepage');
+            },
           ),
-          _buildNavItem(
-            Icons.chat_bubble_outline,
-            false,
-            () => Get.toNamed('/chat/rooms'),
+
+          // Tombol Chat
+          IconButton(
+            icon: const Icon(
+              Icons.chat_bubble_outline,
+              color: Colors.black54,
+              size: 28,
+            ),
+            onPressed: () {
+              Get.toNamed('/chat/rooms');
+            },
           ),
-          _buildNavItem(
-            Icons.add_circle_outline,
-            false,
-            () => Get.toNamed('/notes/create'),
+
+          // Tombol Tambah (Add) - Show dialog
+          GestureDetector(
+            onTap: _showCreateActionDialog,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.black54, width: 1.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.add, color: Colors.black54, size: 24),
+            ),
           ),
-          _buildNavItem(
-            Icons.mic_outlined,
-            false,
-            () => Get.toNamed('/speech/list'),
+
+          // Tombol Mic
+          IconButton(
+            icon: const Icon(
+              Icons.mic_outlined,
+              color: Colors.black54,
+              size: 28,
+            ),
+            onPressed: () {
+              Get.toNamed('/speech/start');
+            },
           ),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem(IconData icon, bool isActive, VoidCallback onTap) {
+  void _showCreateActionDialog() {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Buat Konten Baru',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              _dialogActionButton(
+                icon: Icons.note_add_outlined,
+                label: 'Upload Materi',
+                onTap: () {
+                  Get.back();
+                  Get.toNamed('/notes/create');
+                },
+              ),
+              const SizedBox(height: 12),
+              _dialogActionButton(
+                icon: Icons.upload_file_outlined,
+                label: 'Upload Catatan',
+                onTap: () {
+                  Get.back();
+                  Get.toNamed('/collab/create');
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _dialogActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        width: 60,
-        height: 60,
-        decoration: const BoxDecoration(
-          color: Colors.transparent,
-          shape: BoxShape.circle,
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
         ),
-        child: Center(child: Icon(icon, color: Colors.black, size: 30)),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _purple.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: _purple, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
       ),
     );
   }

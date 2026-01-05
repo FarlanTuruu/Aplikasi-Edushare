@@ -384,13 +384,12 @@ class CreateCollaborationView extends GetView<CreateCollaborationController> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
+          // Tombol Home
           IconButton(
-            icon: const Icon(
-              Icons.home_outlined,
-              color: Colors.black54,
-              size: 28,
-            ),
-            onPressed: () => Get.toNamed('/homepage'),
+            icon: const Icon(Icons.home, color: Colors.black54, size: 28),
+            onPressed: () {
+              Get.toNamed('/homepage');
+            },
           ),
           IconButton(
             icon: const Icon(
