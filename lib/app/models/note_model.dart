@@ -10,6 +10,9 @@ class NoteModel {
   final String? fileName;
   final String? status; // e.g., list, draft, scheduled, archived
   final int? authorId; // user_id of note owner
+  final String? authorName; // optional author display name
+  final String?
+  authorImage; // optional author avatar url (may be absolute/relative)
 
   NoteModel({
     required this.id,
@@ -20,6 +23,8 @@ class NoteModel {
     this.fileName,
     this.status,
     this.authorId,
+    this.authorName,
+    this.authorImage,
   });
 
   // helper untuk menampilkan
@@ -36,6 +41,8 @@ class NoteModel {
     String? fileName,
     String? status,
     int? authorId,
+    String? authorName,
+    String? authorImage,
   }) {
     return NoteModel(
       id: id ?? this.id,
@@ -46,6 +53,8 @@ class NoteModel {
       fileName: fileName ?? this.fileName,
       status: status ?? this.status,
       authorId: authorId ?? this.authorId,
+      authorName: authorName ?? this.authorName,
+      authorImage: authorImage ?? this.authorImage,
     );
   }
 
@@ -61,6 +70,8 @@ class NoteModel {
       'fileName': fileName,
       'status': status,
       'author_id': authorId,
+      if (authorName != null) 'author_name': authorName,
+      if (authorImage != null) 'author_image': authorImage,
     };
   }
 
@@ -94,6 +105,21 @@ class NoteModel {
             map['owner_id'] ??
             (map['author'] is Map ? (map['author'] as Map)['id'] : null),
       ),
+      authorName:
+          (map['author_name'] ??
+                  (map['author'] is Map
+                      ? (map['author'] as Map)['name']
+                      : null))
+              ?.toString(),
+      authorImage:
+          (map['author_image'] ??
+                  (map['author'] is Map
+                      ? ((map['author'] as Map)['image_url'] ??
+                            (map['author'] as Map)['image'] ??
+                            (map['author'] as Map)['photo'] ??
+                            (map['author'] as Map)['avatar'])
+                      : null))
+              ?.toString(),
     );
   }
 
@@ -143,6 +169,21 @@ class NoteModel {
             map['owner_id'] ??
             (map['author'] is Map ? (map['author'] as Map)['id'] : null),
       ),
+      authorName:
+          (map['author_name'] ??
+                  (map['author'] is Map
+                      ? (map['author'] as Map)['name']
+                      : null))
+              ?.toString(),
+      authorImage:
+          (map['author_image'] ??
+                  (map['author'] is Map
+                      ? ((map['author'] as Map)['image_url'] ??
+                            (map['author'] as Map)['image'] ??
+                            (map['author'] as Map)['photo'] ??
+                            (map['author'] as Map)['avatar'])
+                      : null))
+              ?.toString(),
     );
   }
 

@@ -277,11 +277,15 @@ class HomepageView extends GetView<HomepageController> {
                     // Header Card (Avatar, Nama, Tombol Ikuti)
                     Row(
                       children: [
-                        const CircleAvatar(
+                        CircleAvatar(
                           radius: 18,
-                          backgroundImage: NetworkImage(
-                            'https://i.pravatar.cc/150?img=5',
-                          ),
+                          backgroundImage:
+                              (item['author_image'] != null &&
+                                  item['author_image']!.isNotEmpty)
+                              ? NetworkImage(item['author_image']!)
+                              : const NetworkImage(
+                                  'https://i.pravatar.cc/150?img=47',
+                                ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
@@ -289,7 +293,10 @@ class HomepageView extends GetView<HomepageController> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                item['name'] ?? 'Materi',
+                                (item['author_name'] != null &&
+                                        item['author_name']!.isNotEmpty)
+                                    ? item['author_name']!
+                                    : (item['name'] ?? 'Materi'),
                                 style: const TextStyle(
                                   color: Colors.black87,
                                   fontWeight: FontWeight.bold,

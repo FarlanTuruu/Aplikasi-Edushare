@@ -1,3 +1,4 @@
+import 'package:appedushare/app/modules/settings/profile/controllers/profile_settings_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/list_collaboration_controller.dart';
@@ -8,6 +9,23 @@ class ListCollaborationView extends GetView<ListCollaborationController> {
   // Definisi Warna Utama - KONSISTEN dengan create_collaboration_view
   static const Color _primaryPurple = Color(0xFF4A148C);
   static const Color _secondaryPurple = Color(0xFF7B1FA2);
+
+  ProfileSettingsController get _profileCtrl {
+    if (!Get.isRegistered<ProfileSettingsController>()) {
+      Get.put(ProfileSettingsController(), permanent: true);
+    }
+    return Get.find<ProfileSettingsController>();
+  }
+
+  // Helper to build avatar image provider from resolved profile URL
+  ImageProvider<Object>? _avatarProvider(ProfileSettingsController p) {
+    final url = p.profileImageUrl.value;
+    if (url.isEmpty) return null;
+    if (url.startsWith('http')) {
+      return NetworkImage(url);
+    }
+    return null; // Avoid local FileImage on homepage; backend provides absolute URL
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -113,30 +131,56 @@ class ListCollaborationView extends GetView<ListCollaborationController> {
           // Profile & Settings
           Row(
             children: [
-              GestureDetector(
-                onTap: controller.goToProfile,
-                child: Container(
-                  width: isTablet ? 48 : 40,
-                  height: isTablet ? 48 : 40,
+              // ===== FOTO PROFIL HEADER (FIXED) =====
+              Obx(() {
+                final p = _profileCtrl;
+                final provider = _avatarProvider(p);
+                final name = p.userName.value;
+                final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+
+                return Container(
+                  width: 35,
+                  height: 35,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.white, width: 1.5),
-                    image: const DecorationImage(
-                      image: NetworkImage('https://i.pravatar.cc/150?img=5'),
-                      fit: BoxFit.cover,
-                    ),
+                    color: Colors.white.withOpacity(0.2),
                   ),
-                ),
-              ),
-              SizedBox(width: isTablet ? 16 : 12),
-              GestureDetector(
-                onTap: controller.goToSettings,
-                child: Icon(
-                  Icons.settings,
-                  color: Colors.white,
-                  size: isTablet ? 32 : 28,
-                ),
-              ),
+                  child: ClipOval(
+                    child: provider != null
+                        ? Image(
+                            // [TAMBAHKAN INI]
+                            key: ValueKey(p.imageVersion.value),
+
+                            image: provider,
+                            width: 35,
+                            height: 35,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Center(
+                                child: Text(
+                                  initial,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              );
+                            },
+                          )
+                        : Center(
+                            child: Text(
+                              initial,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                  ),
+                );
+              }),
+              // ======================================
             ],
           ),
         ],

@@ -126,6 +126,17 @@ class HomepageController extends GetxController {
           imageUrl = _buildFileUrl(fn);
         }
       }
+      // Tentukan avatar author: gunakan dari payload publik jika tersedia.
+      String authorImage = '';
+      if (note.authorImage != null && note.authorImage!.isNotEmpty) {
+        authorImage = _resolveImageUrl(note.authorImage!);
+      } else {
+        // Fallback: jika note milik user saat ini, pakai foto profilnya
+        final meId = profileCtrl.userId.value;
+        if (note.authorId != null && meId != null && note.authorId == meId) {
+          authorImage = profileCtrl.profileImageUrl.value;
+        }
+      }
       return {
         'id': note.id,
         'name': note.mataKuliah.isNotEmpty ? note.mataKuliah : 'Materi',
@@ -139,9 +150,26 @@ class HomepageController extends GetxController {
         'full_date': note.fullDate,
         // User target untuk follow
         'author_id': (note.authorId?.toString() ?? ''),
+        // Avatar author publik bila tersedia (tetap tampil setelah logout)
+        'author_image': authorImage,
+        // Nama author jika tersedia
+        'author_name': note.authorName ?? '',
       };
     }).toList();
     diskusiList.assignAll(items);
+  }
+
+  // Resolve absolute URL for public images similar to profile resolver
+  String _resolveImageUrl(String raw) {
+    if (raw.isEmpty) return raw;
+    if (raw.startsWith('http')) return raw;
+    final base = apiBaseUrl;
+    final host = base.endsWith('/api')
+        ? base.substring(0, base.length - 4)
+        : base;
+    if (raw.startsWith('/')) return host + raw;
+    if (raw.startsWith('storage/')) return '$host/$raw';
+    return '$host/$raw';
   }
 
   // --- FITUR 1: Buka Halaman Detail ---

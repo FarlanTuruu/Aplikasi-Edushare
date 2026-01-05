@@ -1,5 +1,6 @@
 // File: /lib/app/modules/notes/scheduled/views/scheduled_notes_view.dart
 
+import 'package:appedushare/app/modules/settings/profile/controllers/profile_settings_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/scheduled_notes_controller.dart';
@@ -11,6 +12,23 @@ class ScheduledNotesView extends GetView<ScheduledNotesController> {
   // 🎨 KONSISTENSI WARNA
   static const Color _primaryPurple = Color(0xFF4A148C);
   static const Color _secondaryPurple = Color(0xFF7B1FA2);
+
+  ProfileSettingsController get _profileCtrl {
+    if (!Get.isRegistered<ProfileSettingsController>()) {
+      Get.put(ProfileSettingsController(), permanent: true);
+    }
+    return Get.find<ProfileSettingsController>();
+  }
+
+  // Helper to build avatar image provider from resolved profile URL
+  ImageProvider<Object>? _avatarProvider(ProfileSettingsController p) {
+    final url = p.profileImageUrl.value;
+    if (url.isEmpty) return null;
+    if (url.startsWith('http')) {
+      return NetworkImage(url);
+    }
+    return null; // Avoid local FileImage on homepage; backend provides absolute URL
+  }
 
   bool _isInNotesModule() {
     final currentRoute = Get.currentRoute;
@@ -106,23 +124,56 @@ class ScheduledNotesView extends GetView<ScheduledNotesController> {
           ),
           Row(
             children: [
-              GestureDetector(
-                onTap: () {
-                  Get.toNamed('/settings/profile');
-                },
-                child: Container(
-                  width: isTablet ? 48 : 40,
-                  height: isTablet ? 48 : 40,
+              // ===== FOTO PROFIL HEADER (FIXED) =====
+              Obx(() {
+                final p = _profileCtrl;
+                final provider = _avatarProvider(p);
+                final name = p.userName.value;
+                final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+
+                return Container(
+                  width: 35,
+                  height: 35,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.white, width: 1.5),
-                    image: const DecorationImage(
-                      image: NetworkImage('https://i.pravatar.cc/150?img=5'),
-                      fit: BoxFit.cover,
-                    ),
+                    color: Colors.white.withOpacity(0.2),
                   ),
-                ),
-              ),
+                  child: ClipOval(
+                    child: provider != null
+                        ? Image(
+                            // [TAMBAHKAN INI]
+                            key: ValueKey(p.imageVersion.value),
+
+                            image: provider,
+                            width: 35,
+                            height: 35,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Center(
+                                child: Text(
+                                  initial,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              );
+                            },
+                          )
+                        : Center(
+                            child: Text(
+                              initial,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                  ),
+                );
+              }),
+              // ======================================
               SizedBox(width: isTablet ? 16 : 12),
               GestureDetector(
                 onTap: () {

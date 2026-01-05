@@ -1,5 +1,6 @@
 // File 1: /lib/app/modules/notes/detail/views/detail_notes_view.dart
 
+import 'package:appedushare/app/modules/settings/profile/controllers/profile_settings_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/detail_notes_controller.dart';
@@ -10,6 +11,23 @@ class DetailNotesView extends GetView<DetailNotesController> {
   // 🎨 KONSISTENSI WARNA
   static const Color _primaryPurple = Color(0xFF4A148C);
   static const Color _secondaryPurple = Color(0xFF7B1FA2);
+
+  ProfileSettingsController get _profileCtrl {
+    if (!Get.isRegistered<ProfileSettingsController>()) {
+      Get.put(ProfileSettingsController(), permanent: true);
+    }
+    return Get.find<ProfileSettingsController>();
+  }
+
+  // Helper to build avatar image provider from resolved profile URL
+  ImageProvider<Object>? _avatarProvider(ProfileSettingsController p) {
+    final url = p.profileImageUrl.value;
+    if (url.isEmpty) return null;
+    if (url.startsWith('http')) {
+      return NetworkImage(url);
+    }
+    return null; // Avoid local FileImage on homepage; backend provides absolute URL
+  }
 
   @override
   Widget build(BuildContext context) {
