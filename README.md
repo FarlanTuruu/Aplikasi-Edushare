@@ -46,3 +46,6 @@ Link desain prototipe:
 - **Dart**
 - **GetX State Management**
 - **GetCLI Project Structure**
+
+## Total Download
+- ![Downloads](https://img.shields.io/github/downloads/L4NTuruu/Aplikasi-Edushare/total)
