@@ -1,4 +1,4 @@
-// Ganti seluruh class TrashSpeechView di trash_speech_view.dart dengan kode berikut:
+// File: /lib/app/modules/speech/trash/views/trash_speech_view.dart
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -6,39 +6,23 @@ import 'package:get/get.dart';
 import '../controllers/trash_speech_controller.dart';
 import '../../list/controllers/list_speech_controller.dart';
 import '../../list/views/list_speech_view.dart';
+import 'package:appedushare/app/routes/app_pages.dart';
+import 'package:appedushare/app/modules/settings/profile/controllers/profile_settings_controller.dart';
 
 class TrashSpeechView extends GetView<TrashSpeechController> {
   const TrashSpeechView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const purple = Color(0xFF4A1F7A);
+    const purple = Color(0xFF4A148C);
 
     return Scaffold(
       backgroundColor: purple,
       body: SafeArea(
         child: Column(
           children: [
-            // HEADER
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Speech To Teks",
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
-                  Row(
-                    children: const [
-                      CircleAvatar(radius: 20),
-                      SizedBox(width: 8),
-                      Icon(Icons.settings, color: Colors.white),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+            // 🔹 HEADER DINAMIS (SAMA SEPERTI HOMEPAGE & ROOMS)
+            _buildHeader(purple),
 
             // BODY
             Expanded(
@@ -114,9 +98,101 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
     );
   }
 
+  // 🔸 HEADER DINAMIS - Load data dari ProfileSettingsController
+  Widget _buildHeader(Color purple) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            'Speech To Teks',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          Row(
+            children: [
+              // Avatar Profil Dinamis
+              GestureDetector(
+                onTap: () => Get.toNamed(Routes.PROFILE),
+                child: Obx(() {
+                  final p = _profileCtrl;
+                  final name = p.userName.value;
+                  final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+                  final provider = _avatarProvider(p);
+
+                  return Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1.5),
+                      color: provider == null
+                          ? Colors.white.withOpacity(0.2)
+                          : Colors.transparent,
+                    ),
+                    child: provider != null
+                        ? ClipOval(
+                            child: Image(
+                              image: provider,
+                              width: 40,
+                              height: 40,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : Center(
+                            child: Text(
+                              initial,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                  );
+                }),
+              ),
+              const SizedBox(width: 12),
+              // Icon Settings
+              GestureDetector(
+                onTap: () => Get.toNamed(Routes.PROFILE),
+                child: const Icon(
+                  Icons.settings,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 🔸 Helper: Ensure ProfileSettingsController exists
+  ProfileSettingsController get _profileCtrl {
+    if (!Get.isRegistered<ProfileSettingsController>()) {
+      Get.put(ProfileSettingsController(), permanent: true);
+    }
+    return Get.find<ProfileSettingsController>();
+  }
+
+  // 🔸 Helper: Build avatar image provider dari resolved profile URL
+  ImageProvider<Object>? _avatarProvider(ProfileSettingsController p) {
+    final url = p.profileImageUrl.value;
+    if (url.isEmpty) return null;
+    if (url.startsWith('http')) {
+      return NetworkImage(url);
+    }
+    return null;
+  }
+
   // 🔸 Bottom Navigation (KONSISTEN DENGAN HOMEPAGE)
   Widget _buildBottomNavigation() {
-    const purple = Color(0xFF4A1F7A);
+    const purple = Color(0xFF4A148C);
 
     return Container(
       height: 80,
@@ -192,7 +268,7 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
 
   // 🔸 Dialog Create Action (SAMA SEPERTI DI HOMEPAGE)
   void _showCreateActionDialog() {
-    const purple = Color(0xFF4A1F7A);
+    const purple = Color(0xFF4A148C);
 
     Get.dialog(
       Dialog(
@@ -208,7 +284,7 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
               ),
               const SizedBox(height: 20),
 
-              // Tombol Buat Catatan Kolaborasi
+              // Tombol Upload Materi
               _dialogActionButton(
                 icon: Icons.note_add_outlined,
                 label: 'Upload Materi',
@@ -219,7 +295,7 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
               ),
               const SizedBox(height: 12),
 
-              // Tombol Upload Materi
+              // Tombol Upload Catatan
               _dialogActionButton(
                 icon: Icons.upload_file_outlined,
                 label: 'Upload Catatan',
@@ -228,7 +304,6 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
                   Get.toNamed('/collab/create');
                 },
               ),
-              const SizedBox(height: 12),
             ],
           ),
         ),
@@ -242,7 +317,7 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
     required String label,
     required VoidCallback onTap,
   }) {
-    const purple = Color(0xFF4A1F7A);
+    const purple = Color(0xFF4A148C);
 
     return InkWell(
       onTap: onTap,
@@ -364,7 +439,7 @@ class TrashSpeechView extends GetView<TrashSpeechController> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             gradient: const LinearGradient(
-              colors: [Color(0xFF9D84C8), Color(0xFF4A1F7A)],
+              colors: [Color(0xFF9D84C8), Color(0xFF4A148C)],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),

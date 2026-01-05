@@ -1,4 +1,4 @@
-// Ganti seluruh class StartSpeechView di start_speech_view.dart dengan kode berikut:
+// File: /lib/app/modules/speech/start/views/start_speech_view.dart
 
 import 'package:appedushare/app/modules/speech/upload/controllers/upload_speech_controller.dart';
 import 'package:appedushare/app/modules/speech/upload/views/upload_speech_view.dart';
@@ -10,37 +10,23 @@ import '../../list/views/list_speech_view.dart';
 import '../../trash/controllers/trash_speech_controller.dart';
 import '../../trash/views/trash_speech_view.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:appedushare/app/routes/app_pages.dart';
+import 'package:appedushare/app/modules/settings/profile/controllers/profile_settings_controller.dart';
 
 class StartSpeechView extends GetView<StartSpeechController> {
   const StartSpeechView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const purple = Color(0xFF4A1F7A);
+    const purple = Color(0xFF4A148C);
 
     return Scaffold(
       backgroundColor: purple,
       body: SafeArea(
         child: Column(
           children: [
-            // 🔹 HEADER
-            const Padding(
-              padding: EdgeInsets.all(20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Speech To Teks",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  CircleAvatar(radius: 20),
-                ],
-              ),
-            ),
+            // 🔹 HEADER DINAMIS (SAMA SEPERTI HOMEPAGE & ROOMS)
+            _buildHeader(purple),
 
             // 🔹 BODY PUTIH
             Expanded(
@@ -240,9 +226,101 @@ class StartSpeechView extends GetView<StartSpeechController> {
     );
   }
 
+  // 🔸 HEADER DINAMIS - Load data dari ProfileSettingsController
+  Widget _buildHeader(Color purple) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            'Speech To Teks',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          Row(
+            children: [
+              // Avatar Profil Dinamis
+              GestureDetector(
+                onTap: () => Get.toNamed(Routes.PROFILE),
+                child: Obx(() {
+                  final p = _profileCtrl;
+                  final name = p.userName.value;
+                  final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+                  final provider = _avatarProvider(p);
+
+                  return Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1.5),
+                      color: provider == null
+                          ? Colors.white.withOpacity(0.2)
+                          : Colors.transparent,
+                    ),
+                    child: provider != null
+                        ? ClipOval(
+                            child: Image(
+                              image: provider,
+                              width: 40,
+                              height: 40,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : Center(
+                            child: Text(
+                              initial,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                  );
+                }),
+              ),
+              const SizedBox(width: 12),
+              // Icon Settings
+              GestureDetector(
+                onTap: () => Get.toNamed(Routes.PROFILE),
+                child: const Icon(
+                  Icons.settings,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 🔸 Helper: Ensure ProfileSettingsController exists
+  ProfileSettingsController get _profileCtrl {
+    if (!Get.isRegistered<ProfileSettingsController>()) {
+      Get.put(ProfileSettingsController(), permanent: true);
+    }
+    return Get.find<ProfileSettingsController>();
+  }
+
+  // 🔸 Helper: Build avatar image provider dari resolved profile URL
+  ImageProvider<Object>? _avatarProvider(ProfileSettingsController p) {
+    final url = p.profileImageUrl.value;
+    if (url.isEmpty) return null;
+    if (url.startsWith('http')) {
+      return NetworkImage(url);
+    }
+    return null;
+  }
+
   // 🔸 Popup Upload
   void _showUploadDialog(BuildContext context, {bool isVideo = false}) {
-    const purple = Color(0xFF4A1F7A);
+    const purple = Color(0xFF4A148C);
 
     showDialog(
       context: context,
@@ -306,7 +384,7 @@ class StartSpeechView extends GetView<StartSpeechController> {
                             const Icon(
                               Icons.cloud_upload_outlined,
                               size: 42,
-                              color: Color(0xFF4A1F7A),
+                              color: Color(0xFF4A148C),
                             ),
                             const SizedBox(height: 10),
                             const Text.rich(
@@ -317,7 +395,7 @@ class StartSpeechView extends GetView<StartSpeechController> {
                                   TextSpan(
                                     text: 'Browse',
                                     style: TextStyle(
-                                      color: Color(0xFF4A1F7A),
+                                      color: Color(0xFF4A148C),
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -452,7 +530,7 @@ class StartSpeechView extends GetView<StartSpeechController> {
 
   // 🔸 Tombol Mode
   Widget _modeButton(String label, {VoidCallback? onTap}) {
-    const purple = Color(0xFF4A1F7A);
+    const purple = Color(0xFF4A148C);
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -476,7 +554,7 @@ class StartSpeechView extends GetView<StartSpeechController> {
 
   // 🔸 Bottom Navigation (KONSISTEN DENGAN HOMEPAGE)
   Widget _buildBottomNavigation() {
-    const purple = Color(0xFF4A1F7A);
+    const purple = Color(0xFF4A148C);
 
     return Container(
       height: 80,
@@ -547,7 +625,7 @@ class StartSpeechView extends GetView<StartSpeechController> {
 
   // 🔸 Dialog Create Action (SAMA SEPERTI DI HOMEPAGE)
   void _showCreateActionDialog() {
-    const purple = Color(0xFF4A1F7A);
+    const purple = Color(0xFF4A148C);
 
     Get.dialog(
       Dialog(
@@ -563,7 +641,7 @@ class StartSpeechView extends GetView<StartSpeechController> {
               ),
               const SizedBox(height: 20),
 
-              // Tombol Buat Catatan Kolaborasi
+              // Tombol Upload Materi
               _dialogActionButton(
                 icon: Icons.note_add_outlined,
                 label: 'Upload Materi',
@@ -574,7 +652,7 @@ class StartSpeechView extends GetView<StartSpeechController> {
               ),
               const SizedBox(height: 12),
 
-              // Tombol Upload Materi
+              // Tombol Upload Catatan
               _dialogActionButton(
                 icon: Icons.upload_file_outlined,
                 label: 'Upload Catatan',
@@ -583,7 +661,6 @@ class StartSpeechView extends GetView<StartSpeechController> {
                   Get.toNamed('/collab/create');
                 },
               ),
-              const SizedBox(height: 12),
             ],
           ),
         ),
@@ -597,7 +674,7 @@ class StartSpeechView extends GetView<StartSpeechController> {
     required String label,
     required VoidCallback onTap,
   }) {
-    const purple = Color(0xFF4A1F7A);
+    const purple = Color(0xFF4A148C);
 
     return InkWell(
       onTap: onTap,
