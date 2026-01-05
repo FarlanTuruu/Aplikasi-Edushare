@@ -170,25 +170,7 @@ class RoomsView extends GetView<RoomsController> {
             ],
           ),
           const SizedBox(height: 20),
-          // Search Bar (Optional - bisa dihapus karena sudah ada di body)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            height: 45,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.search, color: Colors.grey[400]),
-                const SizedBox(width: 8),
-                Text(
-                  'Search',
-                  style: TextStyle(color: Colors.grey[400], fontSize: 14),
-                ),
-              ],
-            ),
-          ),
+          // Search Bar dihapus karena sudah ada di body
         ],
       ),
     );

@@ -1,3 +1,5 @@
+// File: /lib/app/modules/homepage/views/detailmateri_view.dart
+
 import 'package:appedushare/app/modules/settings/profile/controllers/profile_settings_controller.dart';
 import 'package:appedushare/app/routes/app_pages.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +9,7 @@ import 'package:pdfx/pdfx.dart';
 import 'package:http/http.dart' as http;
 import '../../../services/auth_service.dart';
 import '../../../data/config.dart';
+import '../controllers/homepage_controller.dart';
 
 class DetailMateriView extends StatelessWidget {
   final Map<String, dynamic> data;
@@ -26,7 +29,7 @@ class DetailMateriView extends StatelessWidget {
     if (url.startsWith('http')) {
       return NetworkImage(url);
     }
-    return null; // Avoid local FileImage on homepage; backend provides absolute URL
+    return null;
   }
 
   @override
@@ -56,75 +59,116 @@ class DetailMateriView extends StatelessWidget {
           SafeArea(
             bottom: false,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+              child: Column(
                 children: [
-                  Text(
-                    'Materi', // Judul Halaman
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
+                  // Baris Atas: Judul & Profil
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Avatar Profil
-                      GestureDetector(
-                        onTap: () => Get.toNamed(Routes.PROFILE),
-                        child: Obx(() {
-                          final p = _profileCtrl;
-                          final name = p.userName.value;
-                          final initial = name.isNotEmpty
-                              ? name[0].toUpperCase()
-                              : '?';
-                          final provider = _avatarProvider(p);
-                          return Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white,
-                                width: 1.5,
-                              ),
-                              color: provider == null
-                                  ? Colors.white.withOpacity(0.2)
-                                  : Colors.transparent,
-                            ),
-                            child: provider != null
-                                ? ClipOval(
-                                    child: Image(
-                                      image: provider,
-                                      width: 40,
-                                      height: 40,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  )
-                                : Center(
-                                    child: Text(
-                                      initial,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                          );
-                        }),
-                      ),
-                      const SizedBox(width: 12),
-                      // Icon Settings
-                      GestureDetector(
-                        onTap: () => Get.toNamed(Routes.PROFILE),
-                        child: const Icon(
-                          Icons.settings,
+                      const Text(
+                        'Materi',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
                           color: Colors.white,
-                          size: 28,
                         ),
                       ),
+                      Row(
+                        children: [
+                          // Avatar Profil
+                          GestureDetector(
+                            onTap: () => Get.toNamed(Routes.PROFILE),
+                            child: Obx(() {
+                              final p = _profileCtrl;
+                              final name = p.userName.value;
+                              final initial = name.isNotEmpty
+                                  ? name[0].toUpperCase()
+                                  : '?';
+                              final provider = _avatarProvider(p);
+                              return Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 1.5,
+                                  ),
+                                  color: provider == null
+                                      ? Colors.white.withOpacity(0.2)
+                                      : Colors.transparent,
+                                ),
+                                child: provider != null
+                                    ? ClipOval(
+                                        child: Image(
+                                          image: provider,
+                                          width: 40,
+                                          height: 40,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      )
+                                    : Center(
+                                        child: Text(
+                                          initial,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                              );
+                            }),
+                          ),
+                          const SizedBox(width: 12),
+                          // Icon Settings
+                          GestureDetector(
+                            onTap: () => Get.toNamed(Routes.PROFILE),
+                            child: const Icon(
+                              Icons.settings,
+                              color: Colors.white,
+                              size: 28,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
+                  ),
+                  const SizedBox(height: 20),
+                  // Search Bar (Optional - bisa dihapus jika tidak diperlukan)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    height: 45,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.search, color: Colors.grey[400]),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            readOnly: true,
+                            onTap: () =>
+                                Get.back(), // Kembali ke homepage untuk search
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Cari catatan atau kolaborasi...',
+                              hintStyle: TextStyle(
+                                color: Colors.grey[400],
+                                fontSize: 14,
+                              ),
+                              border: InputBorder.none,
+                              isDense: true,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -137,11 +181,15 @@ class DetailMateriView extends StatelessWidget {
               width: double.infinity,
               decoration: const BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.only(topLeft: Radius.circular(40)),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(45),
+                  topRight: Radius.circular(45),
+                ),
               ),
               child: ClipRRect(
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(40),
+                  topLeft: Radius.circular(45),
+                  topRight: Radius.circular(45),
                 ),
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(24),
@@ -149,7 +197,7 @@ class DetailMateriView extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 10),
-                      // Tombol Tab statis (Hanya visual agar mirip desain)
+                      // Tombol Tab statis
                       Row(
                         children: [
                           _staticTab("Diskusi dan Materi", true),
@@ -311,7 +359,7 @@ class DetailMateriView extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 80), // Spasi untuk navbar bawah
+                      const SizedBox(height: 80),
                     ],
                   ),
                 ),
@@ -321,25 +369,78 @@ class DetailMateriView extends StatelessWidget {
         ],
       ),
 
-      // Bottom Nav (Statis saja untuk detail view)
+      // Bottom Navigation Bar - UPDATED (Konsisten dengan Homepage)
       bottomNavigationBar: Container(
         height: 80,
-        color: Colors.white,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 5,
+              blurRadius: 10,
+            ),
+          ],
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: const BoxDecoration(
-                color: Color(0xFF4A148C),
-                shape: BoxShape.circle,
+            // Tombol Home - Tetap Highlight & Bisa Kembali
+            GestureDetector(
+              onTap: () => Get.back(), // Kembali ke homepage
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: primaryPurple, // Tetap highlight
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.home, color: Colors.white, size: 28),
               ),
-              child: const Icon(Icons.home, color: Colors.white),
             ),
-            const Icon(Icons.more_horiz, size: 30, color: Colors.black54),
-            const Icon(Icons.add_box_outlined, size: 30, color: Colors.black54),
-            const Icon(Icons.mic_none, size: 30, color: Colors.black54),
+
+            // Tombol Chat
+            IconButton(
+              icon: const Icon(
+                Icons.chat_bubble_outline,
+                color: Colors.black54,
+                size: 28,
+              ),
+              onPressed: () {
+                Get.toNamed('/chat/rooms');
+              },
+            ),
+
+            // Tombol Tambah
+            GestureDetector(
+              onTap: () {
+                if (Get.isRegistered<HomepageController>()) {
+                  Get.find<HomepageController>().showCreateActionDialog();
+                } else {
+                  _showCreateActionDialog(context);
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black54, width: 1.5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.add, color: Colors.black54, size: 24),
+              ),
+            ),
+
+            // Tombol Voice/Speech
+            IconButton(
+              icon: const Icon(
+                Icons.mic_outlined,
+                color: Colors.black54,
+                size: 28,
+              ),
+              onPressed: () {
+                Get.toNamed('/speech/start');
+              },
+            ),
           ],
         ),
       ),
@@ -373,7 +474,6 @@ class DetailMateriView extends StatelessWidget {
   }
 
   Future<PdfDocument> _loadPdfDocument(String url) async {
-    // Include Authorization header if token is set, some storages require it
     String? token;
     if (Get.isRegistered<AuthService>()) {
       token = Get.find<AuthService>().getApiToken();
@@ -398,21 +498,18 @@ class DetailMateriView extends StatelessWidget {
     }
     try {
       final uri = Uri.parse(fullUrl);
-      // Coba external app terlebih dulu
       final extLaunched = await launchUrl(
         uri,
         mode: LaunchMode.externalApplication,
       );
       if (extLaunched) return;
 
-      // Fallback ke mode default platform
       final defLaunched = await launchUrl(
         uri,
         mode: LaunchMode.platformDefault,
       );
       if (defLaunched) return;
 
-      // Fallback terakhir: in-app webview (jika tersedia)
       final inAppLaunched = await launchUrl(uri, mode: LaunchMode.inAppWebView);
       if (!inAppLaunched) {
         Get.snackbar('Error', 'Tidak dapat membuka file');
@@ -420,5 +517,86 @@ class DetailMateriView extends StatelessWidget {
     } catch (e) {
       Get.snackbar('Error', 'Gagal membuka file: $e');
     }
+  }
+
+  // Helper method untuk dialog create (fallback)
+  void _showCreateActionDialog(BuildContext context) {
+    const purple = Color(0xFF4A148C);
+
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Buat Konten Baru',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+
+              _dialogActionButton(
+                icon: Icons.note_add_outlined,
+                label: 'Upload Materi',
+                onTap: () {
+                  Get.back();
+                  Get.toNamed('/notes/create');
+                },
+              ),
+              const SizedBox(height: 12),
+
+              _dialogActionButton(
+                icon: Icons.upload_file_outlined,
+                label: 'Upload Catatan',
+                onTap: () {
+                  Get.back();
+                  Get.toNamed('/collab/create');
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _dialogActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    const purple = Color(0xFF4A148C);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: purple.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: purple, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
