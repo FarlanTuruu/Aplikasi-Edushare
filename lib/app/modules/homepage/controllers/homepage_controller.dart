@@ -13,6 +13,8 @@ import '../../../data/config.dart';
 class HomepageController extends GetxController {
   final selectedTab = 0.obs;
   final commentController = TextEditingController();
+  final searchQuery = ''.obs;
+  final TextEditingController searchTextController = TextEditingController();
 
   void changeTab(int index) => selectedTab.value = index;
 
@@ -20,6 +22,9 @@ class HomepageController extends GetxController {
   final diskusiList = <Map<String, String>>[].obs;
   // Kolaborasi di Homepage akan mengambil dari ListCollaborationController
   final kolaborasiList = <Map<String, String>>[].obs;
+  // Sumber data asli sebelum difilter
+  final List<Map<String, String>> _allDiskusi = [];
+  final List<Map<String, String>> _allKolaborasi = [];
   Timer? _pollTimer;
 
   late final ProfileSettingsController profileCtrl;
@@ -97,7 +102,10 @@ class HomepageController extends GetxController {
         'link': link,
       };
     }).toList();
-    kolaborasiList.assignAll(mapped);
+    _allKolaborasi
+      ..clear()
+      ..addAll(mapped);
+    _applyFilters();
   }
 
   void _syncFromNotes(NotesService service) {
@@ -156,7 +164,10 @@ class HomepageController extends GetxController {
         'author_name': note.authorName ?? '',
       };
     }).toList();
-    diskusiList.assignAll(items);
+    _allDiskusi
+      ..clear()
+      ..addAll(items);
+    _applyFilters();
   }
 
   // Resolve absolute URL for public images similar to profile resolver
@@ -175,6 +186,43 @@ class HomepageController extends GetxController {
   // --- FITUR 1: Buka Halaman Detail ---
   void openDetailMateri(Map<String, dynamic> item) {
     Get.to(() => DetailMateriView(data: item));
+  }
+
+  // --- Search Handling ---
+  void setSearchQuery(String q) {
+    searchQuery.value = q;
+    _applyFilters();
+  }
+
+  void clearSearch() {
+    searchTextController.clear();
+    setSearchQuery('');
+  }
+
+  void _applyFilters() {
+    final q = searchQuery.value.trim().toLowerCase();
+    bool contains(String? v) => (v ?? '').toLowerCase().contains(q);
+
+    if (q.isEmpty) {
+      diskusiList.assignAll(_allDiskusi);
+      kolaborasiList.assignAll(_allKolaborasi);
+      return;
+    }
+
+    final filteredDiskusi = _allDiskusi.where((m) {
+      return contains(m['title']) ||
+          contains(m['name']) ||
+          contains(m['description']) ||
+          contains(m['mata_kuliah']) ||
+          contains(m['author_name']);
+    }).toList();
+
+    final filteredKolab = _allKolaborasi.where((m) {
+      return contains(m['title']) || contains(m['desc']) || contains(m['link']);
+    }).toList();
+
+    diskusiList.assignAll(filteredDiskusi);
+    kolaborasiList.assignAll(filteredKolab);
   }
 
   // --- FITUR: Follow Author & create chat room ---
@@ -510,6 +558,7 @@ class HomepageController extends GetxController {
   void onClose() {
     _pollTimer?.cancel();
     _pollTimer = null;
+    searchTextController.dispose();
     super.onClose();
   }
 }

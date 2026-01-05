@@ -1,3 +1,5 @@
+import 'package:appedushare/app/modules/settings/profile/controllers/profile_settings_controller.dart';
+import 'package:appedushare/app/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -9,6 +11,23 @@ import '../../../data/config.dart';
 class DetailMateriView extends StatelessWidget {
   final Map<String, dynamic> data;
   const DetailMateriView({super.key, required this.data});
+
+  ProfileSettingsController get _profileCtrl {
+    if (!Get.isRegistered<ProfileSettingsController>()) {
+      Get.put(ProfileSettingsController(), permanent: true);
+    }
+    return Get.find<ProfileSettingsController>();
+  }
+
+  // Helper to build avatar image provider from resolved profile URL
+  ImageProvider<Object>? _avatarProvider(ProfileSettingsController p) {
+    final url = p.profileImageUrl.value;
+    if (url.isEmpty) return null;
+    if (url.startsWith('http')) {
+      return NetworkImage(url);
+    }
+    return null; // Avoid local FileImage on homepage; backend provides absolute URL
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,14 +70,60 @@ class DetailMateriView extends StatelessWidget {
                   ),
                   Row(
                     children: [
-                      CircleAvatar(
-                        radius: 18,
-                        backgroundImage: NetworkImage(
-                          'https://i.pravatar.cc/150?img=5',
+                      // Avatar Profil
+                      GestureDetector(
+                        onTap: () => Get.toNamed(Routes.PROFILE),
+                        child: Obx(() {
+                          final p = _profileCtrl;
+                          final name = p.userName.value;
+                          final initial = name.isNotEmpty
+                              ? name[0].toUpperCase()
+                              : '?';
+                          final provider = _avatarProvider(p);
+                          return Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 1.5,
+                              ),
+                              color: provider == null
+                                  ? Colors.white.withOpacity(0.2)
+                                  : Colors.transparent,
+                            ),
+                            child: provider != null
+                                ? ClipOval(
+                                    child: Image(
+                                      image: provider,
+                                      width: 40,
+                                      height: 40,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : Center(
+                                    child: Text(
+                                      initial,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                          );
+                        }),
+                      ),
+                      const SizedBox(width: 12),
+                      // Icon Settings
+                      GestureDetector(
+                        onTap: () => Get.toNamed(Routes.PROFILE),
+                        child: const Icon(
+                          Icons.settings,
+                          color: Colors.white,
+                          size: 28,
                         ),
                       ),
-                      SizedBox(width: 10),
-                      Icon(Icons.settings, color: Colors.white),
                     ],
                   ),
                 ],

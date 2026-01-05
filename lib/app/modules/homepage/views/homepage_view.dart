@@ -182,7 +182,7 @@ class HomepageView extends GetView<HomepageController> {
             const SizedBox(height: 20),
             // Search Bar
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               height: 45,
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -192,10 +192,37 @@ class HomepageView extends GetView<HomepageController> {
                 children: [
                   Icon(Icons.search, color: Colors.grey[400]),
                   const SizedBox(width: 8),
-                  Text(
-                    'Search',
-                    style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                  Expanded(
+                    child: TextField(
+                      controller: controller.searchTextController,
+                      onChanged: controller.setSearchQuery,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Cari catatan atau kolaborasi...',
+                        hintStyle: TextStyle(
+                          color: Colors.grey[400],
+                          fontSize: 14,
+                        ),
+                        border: InputBorder.none,
+                        isDense: true,
+                      ),
+                    ),
                   ),
+                  Obx(() {
+                    final hasQuery = controller.searchQuery.value.isNotEmpty;
+                    if (!hasQuery) return const SizedBox.shrink();
+                    return GestureDetector(
+                      onTap: controller.clearSearch,
+                      child: Icon(
+                        Icons.close,
+                        color: Colors.grey[500],
+                        size: 20,
+                      ),
+                    );
+                  }),
                 ],
               ),
             ),
