@@ -60,6 +60,7 @@ abstract class _Paths {
   static const SPEECH_START = '/speech/start';
   static const SPEECH_UPLOAD = '/speech/upload';
   static const SPEECH_TRASH = '/speech/trash';
+  static const DETAIL_SPEECH = '/speech/detail';
 
   // NOTES
   static const NOTE_LIST = '/notes/list';

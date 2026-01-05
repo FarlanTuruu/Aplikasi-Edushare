@@ -1,6 +1,7 @@
 // File: app_pages.dart
 import 'package:appedushare/app/modules/homepage/views/homepage_view.dart';
 import 'package:appedushare/app/modules/settings/profile/bindings/edit_profile_binding.dart';
+import 'package:appedushare/app/modules/speech/detail/views/detail_speech_view.dart';
 import 'package:get/get.dart';
 
 import '../modules/auth/forgot_password/bindings/forgetpassword_binding.dart';
@@ -38,6 +39,7 @@ import '../modules/settings/profile/views/edit_profile_view.dart';
 import '../modules/settings/profile/views/profile_settings_view.dart';
 import '../modules/settings/save_note/bindings/save_notes_binding.dart';
 import '../modules/settings/save_note/views/save_notes_view.dart';
+import '../modules/speech/detail/bindings/detail_speech_binding.dart';
 import '../modules/speech/start/bindings/start_speech_binding.dart';
 import '../modules/speech/start/views/start_speech_view.dart';
 import '../modules/speech/upload/bindings/upload_speech_binding.dart';
@@ -98,6 +100,11 @@ class AppPages {
       name: _Paths.SPEECH_TRASH,
       page: () => const TrashSpeechView(),
       binding: TrashSpeechBinding(),
+    ),
+    GetPage(
+      name: _Paths.DETAIL_SPEECH,
+      page: () => const DetailSpeechView(),
+      binding: DetailSpeechBinding(),
     ),
 
     // -----------------------

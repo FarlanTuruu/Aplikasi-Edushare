@@ -414,50 +414,80 @@ class ListSpeechView extends GetView<ListSpeechController> {
     required Color purple,
     required ListSpeechController controller,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(color: purple, shape: BoxShape.circle),
-            child: const Icon(Icons.play_arrow, color: Colors.white),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  transcription.snippet,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _formatDate(transcription.createdAt),
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: () {
+        Get.toNamed('/speech/detail', arguments: transcription);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 4,
+              offset: Offset(0, 2),
             ),
-          ),
-          IconButton(
-            onPressed: () {
-              _showDeleteDialog(context, controller, transcription, purple);
-            },
-            icon: const Icon(Icons.delete_outline),
-          ),
-        ],
+          ],
+        ),
+        child: Row(
+          children: [
+            // ▶️ ICON PLAY
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(color: purple, shape: BoxShape.circle),
+              child: const Icon(Icons.play_arrow, color: Colors.white),
+            ),
+            const SizedBox(width: 12),
+
+            // 📝 TEXT
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    transcription.snippet,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.calendar_today,
+                        size: 12,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _formatDate(transcription.createdAt),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // 🗑 DELETE (STOP PROPAGATION)
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              onPressed: () {
+                _showDeleteDialog(context, controller, transcription, purple);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
